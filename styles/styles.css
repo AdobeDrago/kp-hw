@@ -1,4 +1,74 @@
 @font-face {
+  font-family: 'Gotham 3r';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-3r.woff") format("woff");
+}
+
+@font-face {
+  font-family: 'Gotham 4r';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-4r.woff") format("woff");
+}
+
+@font-face {
+  font-family: 'Gotham 5r';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-5r.woff") format("woff");
+}
+
+@font-face {
+  font-family: 'Gotham 7r';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-7r.woff") format("woff");
+}
+
+@font-face {
+  font-family: gotham-fallback;
+  size-adjust: 100%;
+  src: local('Arial');
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-condensed-bold.woff2") format("woff2");
+}
+
+@font-face {
   font-family: Montserrat;
   font-style: normal;
   font-weight: 100 900;

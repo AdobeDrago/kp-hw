@@ -1,57 +1,230 @@
 footer {
-  a {
-    text-decoration: none;
-  }
-
-  .footer-content {
-    max-width: var(--grid-container-width);
-    margin: 48px auto;
-    font-size: 14px;
-  }
-
-  .section-legal ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .section-copyright p {
-    margin: 0;
-  }
-
-  .section {
-    .default-content {
-      max-width: initial;
-      margin: initial;
-    }
-  }
+  font-size: 14px;
 }
 
+/* ── Nav section (section 1) ── */
+footer .fragment-content > .section:first-child {
+  background-color: #003b71;
+  padding: 40px 24px;
+}
+
+footer .fragment-content > .section:first-child .default-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.footer-nav-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-nav-col h4 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  font-family: 'Gotham 5r', gotham-fallback, sans-serif;
+}
+
+.footer-nav-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-nav-col li {
+  margin: 0;
+}
+
+.footer-nav-col a:any-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+.footer-nav-col a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.footer-external-icon {
+  width: 12px;
+  height: 12px;
+  fill: currentcolor;
+  flex-shrink: 0;
+}
+
+/* ── Legal links section (section 2) ── */
+footer .fragment-content > .section:nth-child(2) {
+  background-color: #0d1c3d;
+  padding: 32px 24px;
+}
+
+footer .fragment-content > .section:nth-child(2) .default-content {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* KP logo (inline SVG via <use>) */
+footer .fragment-content > .section:nth-child(2) p {
+  margin: 0;
+  line-height: 0;
+}
+
+footer .fragment-content > .section:nth-child(2) svg.icon {
+  width: auto;
+  height: 24px;
+}
+
+/* Legal links list */
+footer .fragment-content > .section:nth-child(2) ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 24px;
+}
+
+footer .fragment-content > .section:nth-child(2) li {
+  margin: 0;
+}
+
+footer .fragment-content > .section:nth-child(2) a:any-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.9;
+  transition: opacity 0.2s ease;
+}
+
+footer .fragment-content > .section:nth-child(2) a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* ── Social + disclaimer section (section 3) ── */
+footer .fragment-content > .section:nth-child(3) {
+  background-color: #0d1c3d;
+  padding: 32px 24px 40px;
+}
+
+footer .fragment-content > .section:nth-child(3) .default-content {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Social icons */
+footer .fragment-content > .section:nth-child(3) ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: flex;
+  gap: 12px;
+}
+
+footer .fragment-content > .section:nth-child(3) li {
+  margin: 0;
+}
+
+footer .fragment-content > .section:nth-child(3) li a:any-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #fff;
+  text-decoration: none;
+  font-size: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 22px;
+  transition: opacity 0.2s ease;
+}
+
+footer .fragment-content > .section:nth-child(3) li a:hover {
+  opacity: 0.85;
+}
+
+footer .fragment-content > .section:nth-child(3) li a[title="Twitter"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230d1c3d' d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.26 5.636L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z'/%3E%3C/svg%3E");
+}
+
+footer .fragment-content > .section:nth-child(3) li a[title="Facebook"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230d1c3d' d='M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z'/%3E%3C/svg%3E");
+}
+
+footer .fragment-content > .section:nth-child(3) li a[title="YouTube"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230d1c3d' d='M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z'/%3E%3C/svg%3E");
+}
+
+footer .fragment-content > .section:nth-child(3) li a[title="Pinterest"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230d1c3d' d='M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z'/%3E%3C/svg%3E");
+}
+
+footer .fragment-content > .section:nth-child(3) li a[title="Instagram"] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230d1c3d' d='M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z'/%3E%3C/svg%3E");
+}
+
+footer .fragment-content > .section:nth-child(3) p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #fff;
+  opacity: 0.8;
+}
+
+footer .fragment-content > .section:nth-child(3) p:last-child {
+  margin-bottom: 0;
+  opacity: 1;
+}
+
+footer .fragment-content > .section:nth-child(3) p a:any-link {
+  color: #fff;
+}
+
+/* ── Desktop ── */
 @media (width >= 900px) {
-  footer {
-    margin: 0;
+  footer .fragment-content > .section:first-child {
+    padding: 48px 32px;
+  }
 
-    .section-legal {
-      display: flex;
-      justify-content: end;
-      gap: var(--spacing-xl);
-      margin-bottom: 24px;
+  footer .fragment-content > .section:first-child .default-content {
+    flex-direction: row;
+    gap: 40px;
+  }
 
-      ul {
-        display: flex;
-        justify-content: end;
-        gap: var(--spacing-xl);
-      }
+  .footer-nav-col {
+    flex: 1;
+  }
 
-      li {
-        margin: 0;
-      }
-    }
+  footer .fragment-content > .section:nth-child(2) {
+    padding: 32px;
+  }
 
-    .section-copyright {
-      display: flex;
-      justify-content: end;
-      gap: var(--spacing-xl);
-    }
+  footer .fragment-content > .section:nth-child(2) ul {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px 32px;
+  }
+
+  footer .fragment-content > .section:nth-child(3) {
+    padding: 32px 32px 48px;
   }
 }
