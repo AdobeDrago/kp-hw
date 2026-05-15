@@ -263,8 +263,8 @@
   --breadcrumb-height: 24px;
 
   /* KP brand colors */
-  --color-navy: #0d1c3d;
-  --color-blue: #003b71;
+  --color-navy: #003b71;
+  --color-blue: #0074ad;
   --color-blue-accent: #0074ad;
   --color-pale-blue: #f0f7fa;
   --color-light-blue: #e6f2f7;
@@ -312,7 +312,7 @@
   --button-padding: 12px 24px;
   --button-font-size: 16px;
   --button-transition: background-color 0.2s ease, border-color 0.2s ease;
-  --color-button-primary: #3d6fa8;
+  --color-button-primary: var(--color-blue);
 
   /* KP nav */
   --nav-height: 64px;
@@ -366,12 +366,22 @@ a {
 
   &.btn {
     display: inline-block;
-    line-height: 1;
+    line-height: 1.375;
     font-weight: 500;
+    font-size: var(--button-font-size);
     text-decoration: none;
-    border: 2px solid;
-    padding: 8px 12px;
+    border: 2px solid transparent;
+    border-radius: var(--button-border-radius);
+    padding: var(--button-padding);
     box-sizing: border-box;
+    cursor: pointer;
+    transition: var(--button-transition);
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+      cursor: pointer;
+    }
 
     &.btn-outline {
       background: transparent;
@@ -381,7 +391,7 @@ a {
   &.btn-accent {
     color: #fff;
     background: var(--color-accent);
-    border: 2px solid var(--color-accent);
+    border-color: var(--color-accent);
 
     &.btn-outline {
       color: var(--color-accent);
@@ -389,22 +399,38 @@ a {
   }
 
   &.btn-primary {
-    color: var(--color-background);
-    background-color: var(--color-text);
+    color: var(--color-white);
+    background-color: var(--color-button-primary);
+    border-color: var(--color-button-primary);
+
+    &:hover,
+    &:focus {
+      background-color: var(--color-navy);
+      border-color: var(--color-navy);
+      color: var(--color-white);
+    }
 
     &.btn-outline {
-      color: var(--color-text);
+      color: var(--color-button-primary);
       background: transparent;
     }
   }
 
   &.btn-secondary {
-    color: var(--color-background);
-    background-color: var(--color-gray-500);
-    border: 2px solid var(--color-gray-500);
+    color: var(--color-navy);
+    background-color: var(--color-pale-blue);
+    border: 2px solid var(--color-blue-accent);
+
+    &:hover,
+    &:focus {
+      background-color: var(--color-button-primary);
+      border-color: var(--color-button-primary);
+      color: var(--color-white);
+    }
 
     &.btn-outline {
-      color: var(--color-gray-500);
+      color: var(--color-navy);
+      background: transparent;
     }
   }
 
@@ -420,7 +446,6 @@ a {
 }
 
 a:any-link {
-  text-decoration: underline;
   word-break: break-word;
   transition: color 0.2s ease;
 }
@@ -487,10 +512,12 @@ button.button.secondary {
 a.button.secondary:hover,
 a.button.secondary:focus,
 button.button.secondary:hover,
-button.button.secondary:focus {
-  background-color: var(--color-blue-accent);
-  border-color: var(--color-blue-accent);
-  color: var(--color-white);
+button.button.secondary:focus,
+.btn.secondary:hover,
+.btn.secondary:focus  {
+  background-color: var(--color-button-primary);
+  border-color: var(--color-button-primary);
+  color: var(--color-white) !important;
   text-decoration: underline;
 }
 
@@ -504,9 +531,11 @@ button.button.primary {
 a.button.primary:hover,
 a.button.primary:focus,
 button.button.primary:hover,
-button.button.primary:focus {
-  background-color: var(--color-blue);
-  border-color: var(--color-blue);
+button.button.primary:focus,
+.btn.primary:hover,
+.btn.primary:focus {
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
   color: var(--color-white);
 }
 

@@ -274,10 +274,6 @@
     margin-top: 0;
     margin-bottom: 1em;
   }
-
-  .hero:not(.landing) .hero-foreground .fg-text a:any-link:not(.button) {
-    color: var(--color-link);
-  }
 }
 
 /* Desktop: white card floats on the left over full-bleed image */
@@ -319,10 +315,6 @@
     line-height: 1.5;
     margin-top: 0;
     margin-bottom: 1em;
-  }
-
-  .hero:not(.landing) .hero-foreground .fg-text a:any-link:not(.button) {
-    color: var(--color-link);
   }
 }
 
@@ -379,7 +371,7 @@ main .section:has(.hero.landing) > .block-content {
     font-size: var(--heading-font-size-xxl);
     font-weight: 600;
     line-height: 1.2;
-    color: var(--color-navy);
+    color: #000;
     margin-top: 0;
   }
 
@@ -393,14 +385,6 @@ main .section:has(.hero.landing) > .block-content {
 
   .hero.landing .hero-foreground .fg-text p.button-container {
     margin-bottom: 0;
-  }
-
-  .hero.landing .hero-foreground .fg-text a.button {
-    display: block;
-    width: 100%;
-    text-align: center;
-    white-space: normal;
-    box-sizing: border-box;
   }
 }
 
@@ -450,7 +434,7 @@ main .section:has(.hero.landing) > .block-content {
     line-height: 1.15;
     letter-spacing: -0.02em;
     font-weight: 600;
-    color: var(--color-navy);
+    color: #000;
     margin-top: 0;
   }
 
@@ -463,12 +447,5 @@ main .section:has(.hero.landing) > .block-content {
 
   .hero.landing .hero-foreground .fg-text p.button-container {
     margin-bottom: 0;
-  }
-
-  .hero.landing .hero-foreground .fg-text a.button {
-    display: inline-block;
-    white-space: nowrap;
-    border-radius: 999px;
-    padding: 14px 36px;
   }
 }
