@@ -90,6 +90,7 @@
   }
 
   > .default-content {
+    margin-top: 1rem;
     margin-bottom: var(--bottom-spacing);
 
     > *:first-child {
