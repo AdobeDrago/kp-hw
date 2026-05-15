@@ -711,7 +711,7 @@ aem-sidekick {
   }
 
   .section > .default-content {
-    padding: 0 32px;
+    padding: 0;
   }
 }
 

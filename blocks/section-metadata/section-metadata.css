@@ -5,9 +5,9 @@
 
   padding: var(--top-bottom-spacing) 0;
 
-  > * {
+  /* > * {
     color: light-dark(var(--color-dark), var(--color-light));
-  }
+  } */
 
   &.grid-2 {
     --grid-size: 2;
