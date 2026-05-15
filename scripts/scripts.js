@@ -31,6 +31,12 @@ const decorateArea = ({ area = document }) => {
   };
 
   eagerLoad(area, 'img');
+
+  // Remove empty/broken image paragraphs (EDS artifact from empty doc lines)
+  area.querySelectorAll('p > img:only-child').forEach((img) => {
+    const src = img.getAttribute('src') ?? '';
+    if (!src || src === 'about:error') img.closest('p').remove();
+  });
 };
 
 export async function loadPage() {

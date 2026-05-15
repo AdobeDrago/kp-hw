@@ -674,6 +674,12 @@ img {
   height: auto;
 }
 
+/* EDS artifact: empty doc lines produce <p><img src=""></p> — hide them */
+p:has(> img:only-child[src=""]),
+p:has(> img:only-child[src="about:error"]) {
+  display: none;
+}
+
 svg {
   width: 20px;
   height: 20px;

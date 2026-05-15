@@ -1,0 +1,80 @@
+.accordion {
+  .accordion-item {
+    border: none;
+    border-bottom: 1px solid #dadada;
+    border-radius: 0;
+    overflow: visible;
+
+    & + .accordion-item {
+      margin-top: 0;
+    }
+
+    &[open] {
+      border-bottom: none;
+      border-radius: 12px;
+      overflow: hidden;
+      background-color: #f0f7fa;
+      margin-bottom: 8px;
+
+      & + .accordion-item {
+        border-top: 1px solid #dadada;
+      }
+
+      summary {
+        background-color: transparent;
+        color: #1b3a6b;
+      }
+
+      summary::before {
+        background-color: #1b3a6b;
+        border-color: #1b3a6b;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cline x1='5' y1='10' x2='15' y2='10' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+      }
+
+      .accordion-item-body {
+        border-top: none;
+        background-color: #f0f7fa;
+      }
+    }
+
+    p {
+      margin: 0;
+    }
+
+    summary {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      list-style: none;
+      overflow: auto;
+      font-weight: 700;
+      color: #1b3a6b;
+      background-color: transparent;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::before {
+        content: '';
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #1b3a6b;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cline x1='5' y1='10' x2='15' y2='10' stroke='%231b3a6b' stroke-width='2' stroke-linecap='round'/%3E%3Cline x1='10' y1='5' x2='10' y2='15' stroke='%231b3a6b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-color: transparent;
+      }
+    }
+
+    .accordion-item-body {
+      padding: 16px 20px 16px 52px;
+      background-color: var(--color-background);
+    }
+  }
+}
