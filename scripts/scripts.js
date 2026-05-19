@@ -43,7 +43,18 @@ export async function loadPage() {
   setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
   await loadArea();
 }
+// UE: pre-process DOM before ak.js
+if (window.location.hostname.includes('ue.da.live')) {
+  await import('../ue/scripts/ue-prepare.js');
+}
+
 await loadPage();
+
+// UE Editor support
+if (window.location.hostname.includes('ue.da.live')) {
+  await import('../ue/scripts/ue.js').then(({ default: ue }) => ue());
+}
+
 
 (function da() {
   const { searchParams } = new URL(window.location.href);

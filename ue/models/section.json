@@ -1,0 +1,130 @@
+{
+  "definitions": [
+    {
+      "title": "Section",
+      "id": "section",
+      "plugins": {
+        "da": {
+          "unsafeHTML": "<div></div>"
+        }
+      },
+      "filter": "section",
+      "model": "section"
+    }
+  ],
+  "models": [
+    {
+      "id": "section",
+      "fields": [
+        {
+          "component": "tab",
+          "label": "Style",
+          "name": "tab1"
+        },
+        {
+          "component": "multiselect",
+          "name": "style",
+          "label": "Style",
+          "options": [
+            { "name": "Highlight", "value": "highlight" },
+            { "name": "Center", "value": "center" },
+            { "name": "Container", "value": "container" },
+            { "name": "Dark Scheme", "value": "dark-scheme" },
+            { "name": "Light Scheme", "value": "light-scheme" },
+            { "name": "Peek Background", "value": "peek-background" }
+          ]
+        },
+        {
+          "component": "text",
+          "name": "background",
+          "label": "Background",
+          "description": "Any CSS color (hex, rgb, named) or color-token-* for design tokens or image path",
+          "valueType": "string"
+        },
+        {
+          "component": "tab",
+          "label": "Layout",
+          "name": "tab2"
+        },
+        {
+          "component": "select",
+          "name": "grid",
+          "label": "Grid Columns",
+          "options": [
+            { "name": "No Grid", "value": "" },
+            { "name": "2", "value": "2" },
+            { "name": "3", "value": "3" },
+            { "name": "4", "value": "4" },
+            { "name": "5", "value": "5" },
+            { "name": "6", "value": "6" }
+          ]
+        },
+        {
+          "component": "select",
+          "name": "gap",
+          "label": "Gap",
+          "options": [
+            { "name": "None", "value": "" },
+            { "name": "X-Small", "value": "xs" },
+            { "name": "Small", "value": "s" },
+            { "name": "Medium", "value": "m" },
+            { "name": "Large", "value": "l" },
+            { "name": "X-Large", "value": "xl" },
+            { "name": "XX-Large", "value": "xxl" }
+          ]
+        },
+        {
+          "component": "select",
+          "name": "spacing",
+          "label": "Spacing",
+          "options": [
+            { "name": "None", "value": "" },
+            { "name": "X-Small", "value": "xs" },
+            { "name": "Small", "value": "s" },
+            { "name": "Medium", "value": "m" },
+            { "name": "Large", "value": "l" },
+            { "name": "X-Large", "value": "xl" },
+            { "name": "XX-Large", "value": "xxl" }
+          ]
+        },
+        {
+          "component": "select",
+          "name": "container",
+          "label": "Container Width",
+          "options": [
+            { "name": "None", "value": "" },
+            { "name": "Narrow (2 col)", "value": "2" },
+            { "name": "Medium (4 col)", "value": "4" },
+            { "name": "Wide (6 col)", "value": "6" }
+          ]
+        },
+        {
+          "component": "select",
+          "name": "layout",
+          "label": "Layout",
+          "options": [
+            { "name": "None", "value": "" },
+            { "name": "Bento", "value": "bento" }
+          ]
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "section",
+      "components": [
+        "text",
+        "image",
+        "advanced-tabs",
+        "card",
+        "columns",
+        "fragment",
+        "hero",
+        "schedule",
+        "table",
+        "youtube"
+      ]
+    }
+  ]
+}
