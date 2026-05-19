@@ -1,0 +1,31 @@
+{
+  "definitions": [
+    {
+      "title": "Advanced Tabs",
+      "id": "advanced-tabs",
+      "model": "advanced-tabs",
+      "plugins": {
+        "da": {
+          "unsafeHTML": "<div class=\"advanced-tabs\"><div><div><ul><li>Tab 1</li><li>Tab 2</li></ul></div></div></div>",
+          "fields": [
+            { "name": "tabs", "selector": "div>div>ul" }
+          ]
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "advanced-tabs",
+      "fields": [
+        {
+          "component": "richtext",
+          "name": "tabs",
+          "label": "Tab Names (bullet list)",
+          "valueType": "string"
+        }
+      ]
+    }
+  ],
+  "filters": []
+}
