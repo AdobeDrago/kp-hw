@@ -1,31 +1,20 @@
 import { createPicture } from '../../scripts/utils/picture.js';
 
 export default function init(el) {
-  const introDiv = document.createElement('div');
-  introDiv.className = 'cards-icon-intro';
-
   const iconsRow = document.createElement('ul');
   iconsRow.className = 'cards-icon-icons-row';
 
   [...el.children].forEach((row) => {
-    const hasImage = row.querySelector('picture');
-
-    if (!hasImage) {
-      // Intro text card
-      while (row.firstElementChild) introDiv.append(row.firstElementChild);
-    } else {
-      // Icon card
-      const li = document.createElement('li');
-      [...row.children].forEach((div) => {
-        if (div.children.length === 1 && div.querySelector('picture')) {
-          div.className = 'cards-icon-card-image';
-        } else {
-          div.className = 'cards-icon-card-body';
-        }
-        li.append(div);
-      });
-      iconsRow.append(li);
-    }
+    const li = document.createElement('li');
+    [...row.children].forEach((div) => {
+      if (div.children.length === 1 && div.querySelector('picture')) {
+        div.className = 'cards-icon-card-image';
+      } else {
+        div.className = 'cards-icon-card-body';
+      }
+      li.append(div);
+    });
+    iconsRow.append(li);
   });
 
   iconsRow.querySelectorAll('picture > img').forEach((img) => {
@@ -34,7 +23,6 @@ export default function init(el) {
   });
 
   el.textContent = '';
-  if (introDiv.hasChildNodes()) el.append(introDiv);
   if (iconsRow.hasChildNodes()) el.append(iconsRow);
 
   el.querySelectorAll('a[href]').forEach((a) => {
