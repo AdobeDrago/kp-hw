@@ -259,7 +259,7 @@
   --body-line-height: 1.6;
 
   /* misc */
-  --header-height: 64px;
+  --header-height: 60px;  /* mobile: logo bar only */
   --breadcrumb-height: 24px;
 
   /* KP brand colors */
@@ -357,8 +357,9 @@ body {
 }
 
 header {
-  display: none;
-  height: var(--header-height);
+  /* Reserve the header's space from the very first paint to prevent CLS */
+  display: block;
+  min-height: var(--header-height);
 }
 
 a {
@@ -726,6 +727,7 @@ aem-sidekick {
 @media (width >= 900px) {
   :root {
     --heading-font-size-xxl: 40px;
+    --header-height: 168px; /* desktop: utility + logo + nav bars */
   }
 
   .section > .default-content {

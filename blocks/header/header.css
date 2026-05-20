@@ -1,14 +1,3 @@
-/* ── Header height tokens ── */
-:root {
-  --header-height: 60px; /* mobile: logo bar only */
-}
-
-@media (width >= 900px) {
-  :root {
-    --header-height: 168px; /* desktop: utility + logo + nav bars */
-  }
-}
-
 /* ── Header element ── */
 header {
   display: block;
@@ -16,7 +5,8 @@ header {
   left: 0;
   right: 0;
   z-index: 1000;
-  height: auto;
+  /* Reserve the full nav height immediately so content below never shifts */
+  min-height: var(--header-height);
 }
 
 /* Allow full-screen overlay when mobile menu is open */
