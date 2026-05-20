@@ -1,0 +1,50 @@
+{
+  "definitions": [
+    {
+      "title": "Card",
+      "id": "card",
+      "model": "card",
+      "plugins": {
+        "da": {
+          "unsafeHTML": "<div class=\"card\"><div><div><picture><source type=\"image/webp\" srcset=\"\"><img loading=\"lazy\" alt=\"Card image\" src=\"\"></picture></div></div><div><div><p><strong>Card Title</strong></p><p>Card description goes here.</p></div></div></div>",
+          "fields": [
+            { "name": "image", "selector": "div:nth-child(1)>div>picture>img[src]" },
+            { "name": "imageAlt", "selector": "div:nth-child(1)>div>picture>img[alt]" },
+            { "name": "content", "selector": "div:nth-child(2)>div" }
+          ]
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "card",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Image",
+          "required": true,
+          "multi": false,
+          "validation": { "customErrorMsg": "Image is required" }
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "imageAlt",
+          "label": "Image Alt",
+          "required": true,
+          "validation": { "customErrorMsg": "Alt Text is required" }
+        },
+        {
+          "component": "richtext",
+          "name": "content",
+          "label": "Content",
+          "valueType": "string"
+        }
+      ]
+    }
+  ],
+  "filters": []
+}

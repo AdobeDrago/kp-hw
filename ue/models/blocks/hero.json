@@ -1,0 +1,41 @@
+{
+  "definitions": [
+    {
+      "title": "Hero",
+      "id": "hero",
+      "model": "hero",
+      "plugins": {
+        "da": {
+          "unsafeHTML": "<div class=\"hero\"><div><div><picture><img loading=\"lazy\" alt=\"\" src=\"https://main--author-kit--aemsites.aem.live/media_1674c029fe1c222fe6f72c3bf0ad7fdf41e16eca9.jpg\"></picture></div></div><div><div><h2>Hero Heading</h2><p>Description text goes here.</p><p><em><strong><a href=\"https://example.com\">Call to Action</a></strong></em></p></div></div></div>",
+          "fields": [
+            { "name": "image", "selector": "div:nth-child(1)>picture>img[src]" },
+            { "name": "content", "selector": "div:nth-child(2)>div" }
+          ]
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "hero",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Background Image",
+          "required": true,
+          "multi": false,
+          "validation": { "customErrorMsg": "Image is required" }
+        },
+        {
+          "component": "richtext",
+          "name": "content",
+          "label": "Content",
+          "valueType": "string"
+        }
+      ]
+    }
+  ],
+  "filters": []
+}

@@ -1,0 +1,14 @@
+{
+  "definitions": [
+    {
+      "title": "Text",
+      "id": "text",
+      "plugins": {
+        "da": {
+          "unsafeHTML": "<p>Text goes here</p>"
+        }
+      }
+    }
+  ],
+  "models": []
+}
