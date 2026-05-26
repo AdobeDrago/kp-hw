@@ -54,16 +54,20 @@ EDS pre-renders section-metadata on the server side into classes and data attrib
 | Single block (no style) | `<div>` |
 | Single block — pale-blue background | `<div class="pale-blue">` |
 | Default content only — pale-blue background | `<div class="pale-blue">` |
-| Card row (heading + 3 cards) | `<div data-grid="3" data-gap="s" data-spacing="m">` |
-| Table rates group (heading + 3 table striped) | `<div data-grid="3" data-gap="xl" data-spacing="md">` |
+| Card row — 2 cards | `<div data-grid="2" data-gap="s" data-spacing="m">` |
+| Card row — 3 cards | `<div data-grid="3" data-gap="s" data-spacing="m">` |
+| Card row — 4 cards | `<div data-grid="4" data-gap="s" data-spacing="m">` |
+| Single card (no row) | `<div>` |
+| Table rates group — 2 tables | `<div data-grid="2" data-gap="xl" data-spacing="md">` |
+| Table rates group — 3 tables | `<div data-grid="3" data-gap="xl" data-spacing="md">` |
 | Summary of benefits (multiple table caption striped) | `<div class="table-grid">` |
 | Footnotes | `<div class="footnotes">` |
 | Default content only (no style) | `<div>` |
 
 **Grouping rules:**
 - Most blocks → one block per section
-- Card rows → heading + all cards (typically 3) go in ONE section with `data-grid` attributes
-- Table rates groups → heading + all sibling tables go in ONE section with `data-grid` attributes
+- Card rows → heading + all cards go in ONE section; use `data-grid` value matching the actual card count
+- Table rates groups → heading + all sibling tables go in ONE section; use `data-grid` value matching the actual table count
 - Summary of benefits → heading + all `table caption striped` blocks in ONE section with `table-grid` class
 - A heading or intro text that introduces a block belongs in the **same section** as that block
 - Standalone default content (headings, paragraphs, lists, links — no block) gets its own section
@@ -456,14 +460,46 @@ Wrap all sections in the page wrapper:
 
 ---
 
-### Step 4c — Validate Before Output
+### Step 4c — Handle Edge Cases
+
+Apply these rules before generating HTML for any section.
+
+#### Content that cannot be migrated
+
+| Situation | What to do |
+|---|---|
+| Embedded form | Output any visible heading and body text as default content. Add a plain link to the form URL if one exists. Flag in Step 5. |
+| iFrame embed (non-video) | Cannot migrate. Output a default content section with a note: `<p>[Embedded content — manual migration required: [iframe src URL]]</p>`. Flag in Step 5. |
+| Non-YouTube video | Use `columns-media` with the video URL as a link if there is accompanying text. If no accompanying text, output as a default content link. Flag in Step 5. |
+| PDF / download link | Treat as a regular `<a href>` link. No special handling needed. |
+
+#### Missing or absent content
+
+| Situation | What to do |
+|---|---|
+| Page has no hero | Do not force one. Start with the first meaningful content section. |
+| Page has no legal/footnote text | Omit the `<div class="footnotes">` section entirely. |
+| Employer logo not found in nav | Output `<picture></picture>` as an empty placeholder. Flag in Step 5. |
+
+#### Image issues
+
+| Situation | What to do |
+|---|---|
+| Image has no alt text | Use `alt=""`. Flag every instance in Step 5. |
+| Image src is relative (e.g. `../../img/photo.jpg`) | Reconstruct as an absolute URL using the source site origin. |
+| Image is a tracking pixel or 1×1 spacer | Skip it — do not include in the output. |
+| Image URL appears malformed | Include as-is. Flag in Step 5. The business owner will catch it during preview. |
+
+---
+
+### Step 4d — Validate Before Output
 
 Before producing the final HTML file, verify:
 
 - [ ] Section count matches the mapping plan
 - [ ] Every heading, paragraph, link, and phone number from the content manifest is present
 - [ ] Every image has a `<picture>` wrapper with `loading="lazy"`
-- [ ] The last section is always `<div class="footnotes">` with legal text
+- [ ] If legal/footnote text exists, it is the last section in `<div class="footnotes">`
 - [ ] No `<html>` or `<head>` tags present
 - [ ] No placeholder text — all content is real
 
@@ -483,7 +519,7 @@ needed per site, and EMA does not generate one.
 
 ---
 
-### Step 4d — Generate the Nav File
+### Step 4e — Generate the Nav File
 
 Using the nav manifest from `skills/01-discover-pages`, generate a single `nav.html`
 file to be uploaded to DA at `/fragments/nav/header`.

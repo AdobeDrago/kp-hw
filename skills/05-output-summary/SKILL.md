@@ -35,9 +35,12 @@ From the generated HTML files, count:
 
 Identify any sections or content that may need human review:
 - **All external image URLs** — every image in the generated HTML still points to the source CDN (`choose.kaiserpermanente.org/content/dam/...`). These work immediately but should be replaced with DA media URLs (`./media_[hash].[ext]`) after the business owner uploads images to DA
-- Images that could not be fetched or had missing alt text
+- **Images with missing alt text** — every `alt=""` that was auto-filled because the source had no alt text
+- **Malformed image URLs** — any image src that appeared broken or malformed in the source
+- **Missing employer logo** — if the nav employer logo could not be found
+- **Sections mapped to default content due to no block match** — list the page, section number, and a brief description of the content pattern
+- **Embedded content that could not be migrated** — forms, iframes, unsupported video embeds; include the source URL
 - Sections that used default content but may benefit from a block
-- Content patterns that didn't cleanly match a block mapping rule
 - Employer-specific content that may need brand/legal approval
 - Phone numbers, plan codes, or enrollment URLs that should be verified
 

@@ -115,7 +115,22 @@ Follow this priority order — do not skip steps:
 
 ---
 
-### Step 3e — Output the Mapping Plan
+### Step 3e — Resolve Ambiguous Block Decisions
+
+When the right block isn't immediately obvious, apply these tie-breaker rules:
+
+| Ambiguity | Rule |
+|---|---|
+| `columns` vs `icons list` | Use `icons list` if icons/images are the primary visual element with short supporting labels. Use `columns` if text content is the primary element. |
+| `accordion` vs `tabs` | Use `tabs` if items have equal visual weight and are displayed side-by-side. Use `accordion` if items are collapsible Q&A or expand-on-demand patterns. |
+| Heading sits between two sections | The heading belongs in the same section as the block it introduces. If no block follows, it is standalone default content. |
+| Section content matches no block | Map to default content. In the mapping plan, note: `default content — no block match` and describe the content pattern. Flag in Step 5 for review. |
+| Page has no hero section | Do not force a hero. Map the first section to whatever content is actually there. |
+| Page has no footnotes/legal text | Omit the footnotes section from the mapping plan entirely. |
+
+---
+
+### Step 3f — Output the Mapping Plan
 
 For each page, produce a mapping plan before any HTML is generated:
 
@@ -137,7 +152,7 @@ For each page, produce a mapping plan before any HTML is generated:
 | 11 | Legal footnotes | default content | — | footnotes |
 ```
 
-**Do not proceed to HTML generation until this mapping plan is reviewed and correct.**
+**Do not proceed to HTML generation until this mapping plan is confirmed correct.**
 
 ---
 

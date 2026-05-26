@@ -69,7 +69,7 @@ For each section record:
 | **Headings** | Every H1, H2, H3 with exact text |
 | **Body text** | Every paragraph, exactly as written |
 | **Links & CTAs** | Link text + href for every anchor |
-| **Images** | Full absolute image URL + alt text — always capture the complete URL (e.g. `https://choose.kaiserpermanente.org/content/dam/...`) |
+| **Images** | Full absolute image URL + alt text — always capture the complete URL (e.g. `https://choose.kaiserpermanente.org/content/dam/...`). If the src is relative, reconstruct it as absolute using the source site origin. If alt text is absent, record it as missing. Skip tracking pixels and 1×1 spacer images entirely. |
 | **Lists** | Every list item, ordered or unordered |
 | **Phone numbers / hours** | Exactly as displayed |
 | **Legal / footnote text** | Exactly as written |
