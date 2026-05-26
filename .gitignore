@@ -8,4 +8,6 @@ helix-importer-ui
 *.bak
 .idea
 .wrangler
-.claude
+.claude/*
+!.claude/commands/
+!.claude/commands/**
