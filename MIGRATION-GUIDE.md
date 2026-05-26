@@ -4,88 +4,18 @@ A guide for migrating a Kaiser Permanente secondary sales site into AEM Edge Del
 
 ---
 
-## What you need
+## Before you start
 
-One URL — the root of the secondary site to migrate.
+Complete these steps once per new employer site, before running EMA:
 
-**Example:** `https://choose.kaiserpermanente.org/google`
+**1. Create and configure the fork**
+- Fork this repository (`ak-kaiserpermanente`) into a new GitHub repo for the employer
+- Set up a DA workspace and connect it to the forked repo
+- Set up the `.page` / `.live` preview and publish environments
 
----
+**2. Update the footer**
 
-## How to run it
-
-Open Claude Code in this repository and type:
-
-```
-/migrate-secondary-site
-```
-
-Provide the source URL when asked. EMA handles the rest.
-
----
-
-## What EMA does
-
-EMA runs five steps and pauses for your confirmation before moving to the next:
-
-| Step | What happens |
-|---|---|
-| 1 — Discover pages | Finds every page on the site and captures the full nav structure |
-| 2 — Extract content | Reads each page section by section — all text, images, links, and legal copy exactly as written |
-| 3 — Map to blocks | Assigns the correct AEM block to each section using the ak-kaiserpermanente block library |
-| 4 — Generate HTML | Produces one DA-ready HTML file per page plus a `nav.html` for the site header |
-| 5 — Migration summary | Reports what was migrated, what blocks were used, and what needs review |
-
----
-
-## What you get back
-
-At the end of the migration, EMA produces a set of HTML files and a summary report.
-
-### Files generated
-
-| File | DA upload path |
-|---|---|
-| `nav.html` | `/fragments/nav/header` |
-| `index.html` | `/[employer-name]/index` |
-| `plans.html` | `/[employer-name]/plans` |
-| `getting-care.html` | `/[employer-name]/getting-care` |
-| *(one file per page)* | `/[employer-name]/[page-name]` |
-
-### Migration summary
-
-- Total pages migrated, sections, and blocks used
-- A checklist of items that need review before publishing
-
----
-
-## Uploading to DA
-
-1. Go to [DA](https://da.live/#/adobedrago/ak-kaiserpermanente/)
-2. Upload `nav.html` first → `/fragments/nav/header`
-3. Create a new folder `/[employer-name]/`
-4. Upload each page file to its corresponding path
-5. Preview the site at:
-   `https://main--ak-kaiserpermanente--adobedrago.aem.page/[employer-name]/`
-
----
-
-## Before you publish
-
-Review the flagged items in the migration summary before going live:
-
-- **Images** — all images point to the source CDN and will load immediately, but should be replaced with DA media URLs after uploading images to DA
-- **Missing alt text** — any image that had no alt text in the source; auto-filled with empty `alt=""` and flagged for review
-- **Unmigrated content** — forms, iframes, or embedded videos that could not be automatically migrated and need manual handling
-- **No-match sections** — any section that didn't fit a known block and was output as default content
-
----
-
-## One-time fork setup
-
-Each secondary site is a fork of this repository with its own GitHub repo, DA, and `.page/.live` site. Before a forked site goes live, one code change is required:
-
-In `blocks/footer/footer.js`, update `FOOTER_PATH` to load the shared footer from the template site:
+In the forked repo's `blocks/footer/footer.js`, change `FOOTER_PATH` to load the shared footer from the template site:
 
 ```js
 // Change this:
@@ -95,4 +25,108 @@ const FOOTER_PATH = '/fragments/nav/footer';
 const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer';
 ```
 
-This is done once per fork — it is not part of the per-migration steps above.
+This is done once per fork. Skip this step if it has already been done.
+
+**3. Have the source URL ready**
+
+You need the root URL of the secondary site to migrate.
+
+**Example:** `https://choose.kaiserpermanente.org/google`
+
+---
+
+## How to run EMA
+
+Go to the [Experience Modernization Agent](https://aemcoder.adobe.io/) and type:
+
+```
+Migrate https://choose.kaiserpermanente.org/[employer] to AEM
+```
+
+EMA will run each step and pause to show you its output before moving on. Review what EMA produces at each pause and type **"continue"** (or correct any issues) to proceed.
+
+---
+
+## What EMA does
+
+EMA runs five steps in sequence:
+
+### Step 1 — Discover pages
+EMA fetches the source site homepage and extracts:
+- Every page in the site (from the navigation)
+- The full nav structure (utility bar, logos, primary links)
+
+**EMA pauses here.** Review the page inventory and nav manifest. Confirm all pages are found before proceeding.
+
+### Step 2 — Extract content
+For each page, EMA reads the HTML and captures every section in plain language — all headings, body text, images, links, phone numbers, and legal copy, exactly as written. Nothing is summarised or skipped.
+
+**EMA pauses here.** Review the content manifest for any pages that look wrong or incomplete.
+
+### Step 3 — Map to blocks
+EMA assigns the correct AEM block and section style to every section on every page, using the block library defined in this repository. EMA references block screenshots to resolve ambiguous layouts.
+
+**EMA pauses here.** Review the mapping plan. This is the best point to catch incorrect block assignments before HTML is generated.
+
+### Step 4 — Generate HTML
+EMA produces one DA-ready HTML file per page, plus one `nav.html` for the site header. All content from the manifest is included — a partial migration is never acceptable.
+
+### Step 5 — Migration summary
+EMA produces a full report: pages migrated, blocks used, and a checklist of items to review before publishing.
+
+---
+
+## What EMA produces
+
+### Files
+
+The employer slug is derived from the source URL path — for example, `https://choose.kaiserpermanente.org/google` produces a slug of `google`.
+
+| File | DA upload path |
+|---|---|
+| `nav.html` | `/fragments/nav/header` |
+| `index.html` | `/google/index` |
+| `plans.html` | `/google/plans` |
+| `getting-care.html` | `/google/getting-care` |
+| *(one file per page)* | `/[slug]/[page-name]` |
+
+### Migration summary
+
+The summary includes:
+- Total pages, sections, and block usage counts
+- A checklist of every item that needs human review before publishing
+
+---
+
+## What EMA will NOT do
+
+- **Push to DA or GitHub** — EMA produces files; uploading is a manual step
+- **Create new blocks** — only blocks already in this repository are used
+- **Edit CSS or JavaScript** — code changes are out of scope
+- **Translate or rewrite content** — all content is migrated exactly as it appears on the source site
+- **Replace images** — images remain on the source CDN until you upload them to DA and update the URLs
+
+---
+
+## Uploading to DA
+
+1. Go to [DA](https://da.live/#/adobedrago/ak-kaiserpermanente/)
+2. Upload `nav.html` first → `/fragments/nav/header`
+3. Create a folder `/[slug]/` (e.g. `/google/`)
+4. Upload each page file to its path inside that folder
+5. Preview the site at:
+   `https://main--[fork-repo]--adobedrago.aem.page/[slug]/`
+
+---
+
+## Before you publish
+
+The migration summary will flag these items for review:
+
+| Item | What to do |
+|---|---|
+| **External image URLs** | Images load immediately from the source CDN. After uploading images to DA, replace source URLs with DA media URLs (`./media_[hash].[ext]`) |
+| **Missing alt text** | Images with no alt text in the source were auto-filled with `alt=""`. Add descriptive alt text for accessibility. |
+| **Unmigrated content** | Forms, iframes, or unsupported embeds that need manual handling. The flagged item includes the source URL. |
+| **No-match sections** | Sections that didn't fit any block and were output as default content. Review whether a block should be applied. |
+| **Missing employer logo** | If the nav employer logo wasn't found during scraping, a placeholder was used. Replace it with the correct image. |

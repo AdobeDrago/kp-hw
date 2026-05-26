@@ -27,7 +27,22 @@ content extraction and nav HTML generation.
 
 ## Workflow
 
-### Step 1a — Fetch the Homepage
+### Step 1a — Derive the Employer Slug
+
+From the source URL, extract the employer slug — the path segment immediately after the domain.
+This slug is used as the folder name in DA and as the prefix for all page file names.
+
+| Source URL | Employer slug |
+|---|---|
+| `https://choose.kaiserpermanente.org/google` | `google` |
+| `https://choose.kaiserpermanente.org/cityofsandiego` | `cityofsandiego` |
+| `https://choose.kaiserpermanente.org/pshb` | `pshb` |
+
+Record the slug. It is used in every subsequent step.
+
+---
+
+### Step 1c — Fetch the Homepage
 
 Fetch the source site homepage HTML.
 
@@ -39,7 +54,7 @@ Fetch the source site homepage HTML.
 
 ---
 
-### Step 1b — Capture the Full Nav Structure
+### Step 1d — Capture the Full Nav Structure
 
 From the homepage HTML, locate the site header and extract all three nav sections.
 
@@ -89,7 +104,7 @@ Examples:
 
 ---
 
-### Step 1c — Build the Page Inventory
+### Step 1e — Build the Page Inventory
 
 Using the Section 3 nav links from Step 1b, compile the full list of pages to migrate.
 Always include the homepage (the provided root URL) as page #1.
@@ -105,7 +120,7 @@ For each page, determine its type:
 
 ---
 
-### Step 1d — Output the Page Inventory and Nav Manifest
+### Step 1f — Output the Page Inventory and Nav Manifest
 
 Present both outputs before proceeding:
 
