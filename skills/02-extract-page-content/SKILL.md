@@ -36,7 +36,21 @@ For each page in the inventory, fetch the full HTML.
 
 ---
 
-### Step 2b — Identify Section Boundaries
+### Step 2b — Strip Decorative Icons Before Extracting
+
+Before reading any content, remove all "opens in new tab" SVG and image icons from the HTML.
+These appear after links throughout KP source pages as decorative UI elements — they are not content.
+
+Identify and discard any element that matches:
+- An `<svg>` immediately following or inside an `<a>` tag
+- An `<img>` with alt text containing "new tab", "external", or an empty alt immediately following a link
+- Any element with a class name containing `external`, `new-tab`, `icon-external`, or similar
+
+Capture only the link text and href — never the icon element.
+
+---
+
+### Step 2d — Identify Section Boundaries
 
 Scan the page top to bottom and identify where one content section ends and another begins.
 
@@ -50,7 +64,7 @@ Mark each section with a number (Section 1, Section 2, etc.).
 
 ---
 
-### Step 2c — Describe Each Section Neutrally
+### Step 2e — Describe Each Section Neutrally
 
 For every section, write a plain-language description of **what you see** — not what block it should become. Describe content patterns, not implementation.
 
@@ -76,7 +90,7 @@ For each section record:
 
 ---
 
-### Step 2d — Output the Content Manifest
+### Step 2f — Output the Content Manifest
 
 For each page, produce a structured manifest:
 
