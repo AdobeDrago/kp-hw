@@ -95,6 +95,7 @@ the section's content pattern against the snapshots in the `snapshots/` folder.
 Determine if the section has a distinct background or layout requirement:
 - Light teal/blue background → `style: pale-blue`
 - Hero section on homepage only → `style: full-width`
+- **Any card section (1, 2, 3, or 4 cards)** → `grid: N`, `gap: s`, `spacing: m` — always required, even for a single card
 - Multiple tables side by side → `style: table-grid`
 - Legal/footnote text (always last section) → `style: footnotes`
 - No special styling → no section-metadata needed (plain `<div>` wrapper)

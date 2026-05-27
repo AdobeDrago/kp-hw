@@ -48,14 +48,17 @@ Styling and layout are controlled by a `section-metadata` block placed at the **
 |---|---|
 | Hero (landing) — homepage only | `style: full-width` |
 | Light blue/teal background | `style: pale-blue` |
-| Card row — 2 cards | `grid: 2`, `gap: s`, `spacing: m` |
-| Card row — 3 cards | `grid: 3`, `gap: s`, `spacing: m` |
-| Card row — 4 cards | `grid: 4`, `gap: s`, `spacing: m` |
+| Card section — 1 card | `grid: 1`, `gap: s`, `spacing: m` |
+| Card section — 2 cards | `grid: 2`, `gap: s`, `spacing: m` |
+| Card section — 3 cards | `grid: 3`, `gap: s`, `spacing: m` |
+| Card section — 4 cards | `grid: 4`, `gap: s`, `spacing: m` |
 | Table rates group — 2 tables | `grid: 2`, `gap: xl`, `spacing: md` |
 | Table rates group — 3 tables | `grid: 3`, `gap: xl`, `spacing: md` |
 | Summary of benefits | `style: table-grid` |
 | Footnotes | `style: footnotes` |
 | All other sections | No section-metadata needed |
+
+> **Card rule:** Every section containing one or more `card` blocks **always** requires section-metadata with `grid`, `gap`, and `spacing` — even when there is only a single card. Never omit section-metadata from a card section.
 
 **Section-metadata block format:**
 
@@ -99,7 +102,7 @@ Multiple keys example (card row, 3 cards):
 
 **Grouping rules:**
 - Most blocks → one block per section
-- Card rows → heading + all cards in ONE section + section-metadata with matching `grid` count
+- Card sections → heading + all cards (1, 2, 3, or 4) in ONE section + section-metadata with matching `grid` count — **always required, even for a single card**
 - Table rates groups → heading + all sibling tables in ONE section + section-metadata with matching `grid` count
 - Summary of benefits → heading + all `table caption striped` blocks in ONE section with `style: table-grid`
 - A heading or intro text that introduces a block belongs in the **same section** as that block
@@ -390,7 +393,7 @@ Same 2-row structure. Row 1 has an empty column placeholder. Row 2 has the text 
 </div>
 ```
 
-> **Card row section-metadata:** When multiple cards share a section, add `section-metadata` with `grid`, `gap`, and `spacing` at the bottom of the section — after the last card block. See Section Structure Rules above for the correct values per card count.
+> **Card section-metadata:** Every card section — whether it has 1, 2, 3, or 4 cards — must have `section-metadata` with `grid`, `gap`, and `spacing` at the bottom of the section, after the last card block. Set `grid` to the number of cards present. See Section Structure Rules above for the correct values.
 
 ---
 
@@ -600,6 +603,7 @@ Before producing the final HTML file, verify:
 - [ ] No placeholder text — all content is real
 - [ ] **Tabs block:** Every `<picture>` inside a tab panel is wrapped in `<p><picture>...</picture></p>` — bare `<picture>` elements without a `<p>` wrapper will break the text/image column split
 - [ ] **Card block:** Each row's content is wrapped in a single `<div>` column — bare `<h3>`, `<p>`, `<a>` directly inside a row will render as multiple columns
+- [ ] **Card block:** Every section containing card blocks has a `section-metadata` block with `grid`, `gap: s`, and `spacing: m` — this is required even when there is only one card in the section
 - [ ] **Hero block:** Image row and text row are separate `<div>` siblings — NOT two columns inside one row
 - [ ] **Nav fragment:** All `<picture>` elements include a `<source>` child — missing `<source>` causes a JS crash in `decoratePictures`
 - [ ] **Nav fragment:** Every nav link points to a page that exists (was verified as HTTP 200 in Step 1). Do not include dead links (404 pages) in the nav.
