@@ -653,18 +653,97 @@ The nav has three sections — one `<div>` per section inside `<main>`.
 
 ## Output
 
-Present each generated document as a **DA-ready preview in EMA** — do NOT write files
-to the filesystem or save to an output directory.
+### Step 4f — Write Content Files to the Workspace
 
-One preview per page (e.g. `index`, `plans`, `getting-care`) plus one `nav` preview.
-Each preview contains the complete, validated HTML ready for the user to upload to DA
-via EMA's upload button.
+After generating and validating all HTML, write each file to the **workspace content
+directory** so it appears in EMA's preview panel immediately.
 
-DA upload paths for reference:
-- `nav` → `/fragments/nav/header`
-- `index` → `/index`
-- `plans` → `/plans`
-- *(and so on for each page)*
+The workspace content directory is located at:
+```
+/workspace/current/content/
+```
+
+> This is a symlink that resolves to the repo's `content/` folder. EMA reads from
+> this directory to render previews. Writing here puts pages into a **preview state**
+> — the author can review them in EMA and then click "Upload Content" to push to DA.
+
+#### File naming and paths
+
+Write each file as `{page-name}.plain.html`:
+
+| Generated page | Write to path |
+|---|---|
+| Homepage | `/workspace/current/content/index.plain.html` |
+| Plans | `/workspace/current/content/plans.plain.html` |
+| Getting Care | `/workspace/current/content/getting-care.plain.html` |
+| Members | `/workspace/current/content/members-page.plain.html` |
+| Support | `/workspace/current/content/support.plain.html` |
+| *(any other page)* | `/workspace/current/content/{slug}.plain.html` |
+
+#### Nav file — MUST go to fragments path
+
+The nav file **must** be written to the fragments directory, NOT to the workspace root:
+
+```
+/workspace/current/content/fragments/nav/header.plain.html
+```
+
+> **IMPORTANT:** Never write a `nav.plain.html` file to the root content directory.
+> The nav always lives at `fragments/nav/header.plain.html`. Create the directory
+> structure if it does not exist (`mkdir -p` the fragments/nav path first).
+
+#### HTML file format
+
+When writing to the workspace, output only the inner content — no `<body>`, `<header>`,
+`<main>`, or `<footer>` wrapper tags. The file should start directly with the first
+`<div>` section and end with the last `</div>` section.
+
+**Correct** (for workspace `.plain.html` files):
+```html
+
+<div>
+  <div class="hero landing">
+    ...
+  </div>
+</div>
+<div>
+  ...
+</div>
+```
+
+**Incorrect** (do NOT include page wrapper):
+```html
+<body>
+  <header></header>
+  <main>
+    ...
+  </main>
+  <footer></footer>
+</body>
+```
+
+The page wrapper (`<body>`, `<header>`, `<main>`, `<footer>`) is used only in the
+Step 4 inline preview output shown in conversation — it is NOT written to files.
+
+#### Cleanup old content
+
+Before writing the new files, remove any boilerplate or leftover content from the
+workspace that is not part of this migration:
+- Remove `/workspace/current/content/docs/` if it exists (block library examples)
+- Remove any `.plain.html` files in the root content directory that are not part of
+  the current migration (e.g. old `pshb.plain.html`, default `index.plain.html`)
+- Do NOT remove `fragments/nav/footer.plain.html` or `fragments/404.plain.html`
+  — these are shared assets
+
+#### Verification
+
+After writing all files, verify:
+- [ ] Each page file exists at the correct path
+- [ ] Nav file is at `fragments/nav/header.plain.html` (NOT in root)
+- [ ] No `nav.plain.html` exists in the root content directory
+- [ ] File content starts with `<div>` (no page wrapper tags)
+
+---
 
 Continue directly to Step 5 (`skills/05-output-summary`) for the migration report — do not pause or wait.
 
