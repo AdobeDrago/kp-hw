@@ -15,21 +15,7 @@ Complete these steps once per new employer site, before running EMA:
   - Example: `https://da.live/#/{org}/kp-google`
 - Set up the `.page` / `.live` preview and publish environments
 
-**2. Update the footer**
-
-In the forked repo's `blocks/footer/footer.js`, change `FOOTER_PATH` to load the shared footer from the template site:
-
-```js
-// Change this:
-const FOOTER_PATH = '/fragments/nav/footer';
-
-// To this:
-const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer';
-```
-
-This is done once per fork. Skip this step if it has already been done.
-
-**3. Have the source URL ready**
+**2. Have the source URL ready**
 
 You need the root URL of the secondary site to migrate.
 
@@ -45,7 +31,7 @@ Go to the [Experience Modernization Agent](https://aemcoder.adobe.io/) and type:
 Migrate https://choose.kaiserpermanente.org/[employer] to AEM
 ```
 
-EMA will run each step and pause to show you its output before moving on. Review what EMA produces at each pause and type **"continue"** (or correct any issues) to proceed.
+EMA runs all five steps continuously end-to-end without pausing. When complete, review the output and upload the files to DA.
 
 ---
 
@@ -58,20 +44,14 @@ EMA fetches the source site homepage and extracts:
 - Every page in the site (from the navigation)
 - The full nav structure (utility bar, logos, primary links)
 
-**EMA pauses here.** Review the page inventory and nav manifest. Confirm all pages are found before proceeding.
-
 ### Step 2 — Extract content
 For each page, EMA reads the HTML and captures every section in plain language — all headings, body text, images, links, phone numbers, and legal copy, exactly as written. Nothing is summarised or skipped.
-
-**EMA pauses here.** Review the content manifest for any pages that look wrong or incomplete.
 
 ### Step 3 — Map to blocks
 EMA assigns the correct AEM block and section style to every section on every page, using the block library defined in this repository. EMA references block screenshots to resolve ambiguous layouts.
 
-**EMA pauses here.** Review the mapping plan. This is the best point to catch incorrect block assignments before HTML is generated.
-
 ### Step 4 — Generate HTML
-EMA produces one DA-ready HTML file per page, plus one `nav.html` for the site header. All content from the manifest is included — a partial migration is never acceptable.
+EMA produces one DA-ready HTML file per page, plus `nav.html` and `footer.html`. All content from the manifest is included — a partial migration is never acceptable.
 
 ### Step 5 — Migration summary
 EMA produces a full report: pages migrated, blocks used, and a checklist of items to review before publishing.
@@ -87,6 +67,7 @@ Files upload directly to the root of the DA workspace for the forked repo — th
 | File | DA upload path |
 |---|---|
 | `nav.html` | `/fragments/nav/header` |
+| `footer.html` | `/fragments/nav/footer` |
 | `index.html` | `/index` |
 | `plans.html` | `/plans` |
 | `getting-care.html` | `/getting-care` |
@@ -114,7 +95,9 @@ The summary includes:
 
 1. Go to your DA workspace: `https://da.live/#/{org}/kp-{employer}/`
    - Example: `https://da.live/#/adobedrago/kp-google`
-2. Upload `nav.html` → `/fragments/nav/header`
+2. Upload fragment files:
+   - `nav.html` → `/fragments/nav/header`
+   - `footer.html` → `/fragments/nav/footer`
 3. Upload each page file to the root of the workspace:
    - `index.html` → `/index`
    - `plans.html` → `/plans`

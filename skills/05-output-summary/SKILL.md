@@ -65,6 +65,7 @@ There is no employer subfolder — the workspace itself is the employer's site.
 | # | File | Destination (DA path) | Description |
 |---|------|-----------------------|-------------|
 | — | nav.html | /fragments/nav/header | Site navigation |
+| — | footer.html | /fragments/nav/footer | Site footer (sourced from template site) |
 | 1 | index.html | /index | Home page |
 | 2 | plans.html | /plans | Plans & Benefits |
 | 3 | getting-care.html | /getting-care | Getting Care |
@@ -118,7 +119,9 @@ Total sections: [N]
 
 1. Go to the DA workspace for this employer's forked repo:
    `https://da.live/#/{org}/kp-{employer}/`
-2. Upload `nav.html` → `/fragments/nav/header`
+2. Upload fragment files to the fragments directory:
+   - `nav.html` → `/fragments/nav/header`
+   - `footer.html` → `/fragments/nav/footer`
 3. Upload each page HTML file to the root of the workspace:
    - `index.html` → `/index`
    - `plans.html` → `/plans`
@@ -127,39 +130,6 @@ Total sections: [N]
 4. Preview the site at:
    `https://main--kp-{employer}--{org}.aem.page/`
 5. Review the items flagged above before publishing
-
----
-
-## Fork Setup Requirement — Footer
-
-The footer does not need to be uploaded to DA. It is loaded at runtime from the
-central template site. However, this requires a one-time code change in the forked
-repo's `blocks/footer/footer.js`:
-
-```js
-// Change this line:
-const FOOTER_PATH = '/fragments/nav/footer';
-
-// To this:
-const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer';
-```
-
-This change must be made before the site goes live. It is a fork setup step —
-not part of the DA content upload.
-
-> **Localization note:** Secondary sites do not currently have non-English pages,
-> so this approach works as-is (English locale prefix is `''`, so the absolute URL
-> is used correctly). If Spanish or other language pages are added in the future,
-> `footer.js` will need to be updated again — the current implementation prepends
-> `locale.prefix` to the path, which breaks with absolute URLs. At that point,
-> replace the `loadFragment` call with:
-> ```js
-> const FOOTER_BASE = 'https://main--ak-kaiserpermanente--adobedrago.aem.page';
-> const fragment = await loadFragment(`${FOOTER_BASE}${locale.prefix}${FOOTER_PATH}`);
-> ```
-> This also requires the template site to have localized footer documents at
-> `/es/fragments/nav/footer`, `/de/fragments/nav/footer`, etc.
-```
 
 ---
 
