@@ -120,9 +120,10 @@ Plain headings, paragraphs, and links. No wrapping block div needed.
 </div>
 ```
 
-For a `footnotes` styled section:
+For a `footnotes` styled section — always include the "Footnotes:" label as the first paragraph:
 ```html
 <div>
+  <p>Footnotes:</p>
   <p><sup>1</sup> Footnote text exactly as written.</p>
   <p><sup>2</sup> Second footnote text.</p>
   <div class="section-metadata">
@@ -152,6 +153,9 @@ Every external image URL must be listed in the Step 5 migration summary for revi
 
 #### Hero — Landing (homepage)
 
+The hero block uses **two rows** — Row 1 for the background image, Row 2 for the text content.
+Each row is a `<div>` directly inside the block. Image and text must NOT be side-by-side in one row.
+
 ```html
 <div>
   <div class="hero landing">
@@ -163,6 +167,8 @@ Every external image URL must be listed in the Step 5 migration summary for revi
           <img loading="lazy" alt="[alt text]" src="[full-absolute-image-url]">
         </picture>
       </div>
+    </div>
+    <div>
       <div>
         <h1>[Employer-specific headline]</h1>
         <p>[Body text]</p>
@@ -181,6 +187,8 @@ Every external image URL must be listed in the Step 5 migration summary for revi
 
 #### Hero — Default (inner pages)
 
+Same 2-row structure: Row 1 = image, Row 2 = text content.
+
 ```html
 <div>
   <div class="hero">
@@ -192,6 +200,8 @@ Every external image URL must be listed in the Step 5 migration summary for revi
           <img loading="lazy" alt="[alt text]" src="[full-absolute-image-url]">
         </picture>
       </div>
+    </div>
+    <div>
       <div>
         <h2>[Page heading]</h2>
         <p>[Body text]</p>
@@ -205,6 +215,10 @@ Every external image URL must be listed in the Step 5 migration summary for revi
 
 #### Tabs
 
+> **CRITICAL:** The tab image MUST be wrapped in a `<p>` tag: `<p><picture>...</picture></p>`.
+> The tabs JS looks for `p > picture` to split the panel into text + image columns.
+> A bare `<picture>` without a `<p>` wrapper will NOT render correctly.
+
 ```html
 <div>
   <div class="tabs">
@@ -214,10 +228,10 @@ Every external image URL must be listed in the Step 5 migration summary for revi
         <h3>[Tab 1 heading]</h3>
         <p>[Tab 1 body]</p>
         <p><a href="[href]">[CTA text]</a></p>
-        <picture>
+        <p><picture>
           <source type="image/webp" srcset="[full-absolute-image-url]">
           <img loading="lazy" alt="[alt]" src="[full-absolute-image-url]">
-        </picture>
+        </picture></p>
       </div>
     </div>
     <div>
@@ -225,6 +239,10 @@ Every external image URL must be listed in the Step 5 migration summary for revi
       <div>
         <h3>[Tab 2 heading]</h3>
         <p>[Tab 2 body]</p>
+        <p><picture>
+          <source type="image/webp" srcset="[full-absolute-image-url]">
+          <img loading="lazy" alt="[alt]" src="[full-absolute-image-url]">
+        </picture></p>
       </div>
     </div>
     <!-- repeat for each tab -->
@@ -319,21 +337,31 @@ For `align-vertically` variant:
 
 #### Card — with image
 
+The card block always uses **two rows**. Each row contains a single `<div>` column.
+- Row 1: single column with the image
+- Row 2: single column with ALL text content (heading + body + CTA)
+
+> **CRITICAL:** Each row's content must be wrapped in a `<div>` column. If you put
+> `<h3>`, `<p>`, `<p>` directly inside a row, EDS interprets them as separate columns
+> and renders them side-by-side. Always wrap in one `<div>`.
+
 ```html
 <div>
   <div class="card">
     <div>
-      <picture>
-        <source type="image/webp" srcset="[full-absolute-image-url]">
-        <img loading="lazy" alt="[alt]" src="[full-absolute-image-url]">
-      </picture>
+      <div>
+        <picture>
+          <source type="image/webp" srcset="[full-absolute-image-url]">
+          <img loading="lazy" alt="[alt]" src="[full-absolute-image-url]">
+        </picture>
+      </div>
     </div>
     <div>
-      <h3>[Card heading]</h3>
-      <p>[Card body]</p>
-    </div>
-    <div>
-      <p><a href="[href]">[CTA text]</a></p>
+      <div>
+        <h3>[Card heading]</h3>
+        <p>[Card body]</p>
+        <p><a href="[href]">[CTA text]</a></p>
+      </div>
     </div>
   </div>
   <!-- repeat for each card in the row -->
@@ -342,19 +370,20 @@ For `align-vertically` variant:
 
 #### Card — text only (no image)
 
-Use when the source content has no image — heading, body text, lists, and links only.
+Same 2-row structure. Row 1 has an empty column placeholder. Row 2 has the text column.
 
 ```html
 <div>
   <div class="card">
     <div>
-      <h3>[Card heading]</h3>
-      <p>[Card body]</p>
-      <ul>
-        <li>[List item]</li>
-        <li>[List item]</li>
-      </ul>
-      <p><a href="[href]">[CTA text]</a></p>
+      <div></div>
+    </div>
+    <div>
+      <div>
+        <h3>[Card heading]</h3>
+        <p>[Card body]</p>
+        <p><a href="[href]">[CTA text]</a></p>
+      </div>
     </div>
   </div>
   <!-- repeat for each card in the row -->
@@ -569,6 +598,13 @@ Before producing the final HTML file, verify:
 - [ ] If legal/footnote text exists, it is the last section with `style: footnotes` in its section-metadata
 - [ ] No `<html>` or `<head>` tags present
 - [ ] No placeholder text — all content is real
+- [ ] **Tabs block:** Every `<picture>` inside a tab panel is wrapped in `<p><picture>...</picture></p>` — bare `<picture>` elements without a `<p>` wrapper will break the text/image column split
+- [ ] **Card block:** Each row's content is wrapped in a single `<div>` column — bare `<h3>`, `<p>`, `<a>` directly inside a row will render as multiple columns
+- [ ] **Hero block:** Image row and text row are separate `<div>` siblings — NOT two columns inside one row
+- [ ] **Nav fragment:** All `<picture>` elements include a `<source>` child — missing `<source>` causes a JS crash in `decoratePictures`
+- [ ] **Nav fragment:** Every nav link points to a page that exists (was verified as HTTP 200 in Step 1). Do not include dead links (404 pages) in the nav.
+- [ ] **Footnotes section:** Starts with `<p>Footnotes:</p>` before the numbered footnote paragraphs
+- [ ] **Card block:** If the source page has images for card items, those images must be included in the migrated card. Cross-check every card block against the source content manifest to ensure no images were dropped.
 
 ---
 
@@ -615,11 +651,13 @@ The nav has three sections — one `<div>` per section inside `<main>`.
     <div>
       <p>
         <picture>
+          <source type="image/webp" srcset="https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/media_129252eb0ed4a8d722c06c7b18a6640ff53eeb536.svg?format=webply&amp;optimize=medium">
           <img loading="lazy" alt="Kaiser Permanente" src="https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/media_129252eb0ed4a8d722c06c7b18a6640ff53eeb536.svg">
         </picture>
       </p>
       <p>
         <picture>
+          <source type="image/webp" srcset="[full-absolute-employer-logo-url]?format=webply&amp;optimize=medium">
           <img loading="lazy" alt="[Employer logo alt]" src="[full-absolute-employer-logo-url]">
         </picture>
       </p>

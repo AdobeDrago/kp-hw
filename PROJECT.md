@@ -254,15 +254,16 @@ Used for the "Why Kaiser Permanente" section on the homepage.
 | `center` | Centered text alignment |
 | `quiet` | No border, no shadow, no background — minimal flat card |
 
-**DA Authoring Format:**
+**DA Authoring Format (2 rows: image row + text row):**
 ```
 | Card |
 |------|
 | [image] |
-| [H3 heading] |
-| [body text] |
-| [CTA link] |
+| [H3 heading] [body text] [CTA link] |
 ```
+
+> Row 1 = image only. Row 2 = ALL text content (heading, body, CTA) together in one cell.
+> Do NOT split heading, body, and CTA into separate rows.
 
 **Note:** Author 3 `card` blocks in the same section to produce a 3-card row layout.
 
@@ -300,8 +301,8 @@ Used for the "Why Kaiser Permanente" section on the homepage.
 **Variants:**
 | Variant | When to use |
 |---|---|
-| `grid` | 2-column responsive grid layout (centered alignment) |
-| `list` | Vertical flex list with bold titled headings (top-aligned) |
+| `grid` | 2-column responsive grid layout — items render 2-across side-by-side (centered alignment). Use when source shows items in a multi-column grid. |
+| `list` | Vertical single-column list — items stack one per row (top-aligned). Use when source shows items in a single vertical column on desktop. |
 
 **DA Authoring Format (grid):**
 ```
@@ -505,8 +506,8 @@ When analyzing a source page section, apply these rules in order:
 | Two-column layout in a highlighted/featured section | `columns` | *(default)* | `pale-blue` |
 | 3 items: icon + short label + CTA link (quick actions) | `cards-icon` | *(none)* | *(none)* |
 | 3 feature cards each with image + heading + body + CTA | `card` × 3 | *(default)* | *(none)* |
-| Benefits/feature list with icons (grid layout) | `icons` | `grid` | *(none)* |
-| Benefits/feature list with icons + titled headings (vertical) | `icons` | `list` | *(none)* |
+| Benefits/feature list with icons — items displayed in a 2-column grid (2 items per row side-by-side, centered) | `icons` | `grid` | *(none)* |
+| Benefits/feature list with icons — items stacked vertically in a single column (1 item per row, top-aligned) | `icons` | `list` | *(none)* |
 | Expandable FAQ items or grouped document links | `accordion` | *(none)* | *(none)* |
 | Side-by-side plan tier comparison | `plan-compare` | *(none)* | `pale-blue` |
 | Pricing/rates data table | `table` | `striped` | *(none)* |
@@ -557,10 +558,15 @@ When generating HTML for DA upload, use this exact structure:
 <div class="hero landing">
   <div>
     <div><picture><source type="image/webp" srcset="[url]"><img loading="lazy" alt="[alt]" src="[url]"></picture></div>
+  </div>
+  <div>
     <div><h1>Heading</h1><p>Body text</p><p><strong><a href="/link">CTA text</a></strong></p></div>
   </div>
 </div>
 ```
+
+> **Row structure:** Row 1 = background image. Row 2 = text content overlay.
+> Image and text are separate rows (vertical), NOT columns in one row (horizontal).
 
 ### Rules
 - Every block is a `<div class="block-name variant">` — no other wrapper elements

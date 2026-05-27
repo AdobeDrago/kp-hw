@@ -119,11 +119,14 @@ When the right block isn't immediately obvious, apply these tie-breaker rules:
 | Ambiguity | Rule |
 |---|---|
 | `columns` vs `icons list` | Use `icons list` if icons/images are the primary visual element with short supporting labels. Use `columns` if text content is the primary element. |
+| `icons grid` vs `icons list` | Look at the **desktop layout** of the source page. If items are arranged 2-across in a grid → `icons grid`. If items are stacked vertically with one item per row → `icons list`. The content format (bold headings, body text) does NOT determine the variant — the **layout pattern** does. |
 | `accordion` vs `tabs` | Use `tabs` if items have equal visual weight and are displayed side-by-side. Use `accordion` if items are collapsible Q&A or expand-on-demand patterns. |
 | Heading sits between two sections | The heading belongs in the same section as the block it introduces. If no block follows, it is standalone default content. |
 | Section content matches no block | Map to default content. In the mapping plan, note: `default content — no block match` and describe the content pattern. Flag in Step 5 for review. |
 | Page has no hero section | Do not force a hero. Map the first section to whatever content is actually there. |
 | Page has no footnotes/legal text | Omit the footnotes section from the mapping plan entirely. |
+| Text paragraph + adjacent decorative image | Do NOT force into `columns align-vertically`. If the text (heading + body + CTA) can stand alone as default content, keep it as default content in its own section. Place the image inside the next section's block if it relates to that block's content (e.g. a map image inside the columns block about care coverage areas). |
+| `default content` vs `columns align-vertically` | Use `columns align-vertically` only when the source site clearly presents two equal-weight content areas side by side (e.g. steps list + phone app screenshot). If one side is purely decorative or the text dominates, use default content for the text and incorporate the image into the relevant block. |
 
 ---
 

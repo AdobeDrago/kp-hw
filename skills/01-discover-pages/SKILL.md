@@ -109,6 +109,12 @@ Examples:
 Using the Section 3 nav links from Step 1b, compile the full list of pages to migrate.
 Always include the homepage (the provided root URL) as page #1.
 
+**Validate each page exists:** Before including a page in the inventory, verify it loads
+successfully (HTTP 200). If a nav link points to a page that returns 404 or redirects
+to an error page, **exclude it from both the page inventory AND the nav manifest**.
+Do not include dead links in the generated nav — only include links to pages that
+actually exist and will be migrated.
+
 For each page, determine its type:
 - `homepage` — the root URL
 - `plans` — plan options, rates, benefits

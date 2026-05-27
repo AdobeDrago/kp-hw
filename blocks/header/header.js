@@ -3,7 +3,8 @@ import { loadFragment } from '../fragment/fragment.js';
 
 const { locale } = getConfig();
 
-const HEADER_PATH = '/fragments/nav/header';
+const isLocalContent = window.location.pathname.startsWith('/content/');
+const HEADER_PATH = isLocalContent ? '/content/fragments/nav/header' : '/fragments/nav/header';
 const isDesktop = window.matchMedia('(min-width: 900px)');
 
 // ── Dropdown toggle system (language picker) ──
