@@ -65,7 +65,6 @@ There is no employer subfolder — the workspace itself is the employer's site.
 | # | File | Destination (DA path) | Description |
 |---|------|-----------------------|-------------|
 | — | nav.html | /fragments/nav/header | Site navigation |
-| — | footer.html | /fragments/nav/footer | Site footer (sourced from template site) |
 | 1 | index.html | /index | Home page |
 | 2 | plans.html | /plans | Plans & Benefits |
 | 3 | getting-care.html | /getting-care | Getting Care |
@@ -119,9 +118,7 @@ Total sections: [N]
 
 1. Go to the DA workspace for this employer's forked repo:
    `https://da.live/#/{org}/kp-{employer}/`
-2. Upload fragment files to the fragments directory:
-   - `nav.html` → `/fragments/nav/header`
-   - `footer.html` → `/fragments/nav/footer`
+2. Upload `nav.html` → `/fragments/nav/header`
 3. Upload each page HTML file to the root of the workspace:
    - `index.html` → `/index`
    - `plans.html` → `/plans`
@@ -130,6 +127,20 @@ Total sections: [N]
 4. Preview the site at:
    `https://main--kp-{employer}--{org}.aem.page/`
 5. Review the items flagged above before publishing
+
+---
+
+## Fork Setup Requirement — Footer
+
+The footer does not need to be uploaded to DA. It is loaded at runtime directly
+from the template site via an absolute URL in the forked repo's `blocks/footer/footer.js`.
+
+Verify that the fork's `footer.js` has this line:
+```js
+const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer';
+```
+
+This is a one-time fork setup step — not part of the DA content upload.
 
 ---
 

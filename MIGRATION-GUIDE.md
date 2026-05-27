@@ -15,7 +15,17 @@ Complete these steps once per new employer site, before running EMA:
   - Example: `https://da.live/#/{org}/kp-google`
 - Set up the `.page` / `.live` preview and publish environments
 
-**2. Have the source URL ready**
+**2. Update the footer**
+
+In the forked repo's `blocks/footer/footer.js`, verify that `FOOTER_PATH` points to the template site:
+
+```js
+const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer';
+```
+
+This loads the shared footer from the template site at runtime. It is done once per fork.
+
+**3. Have the source URL ready**
 
 You need the root URL of the secondary site to migrate.
 
@@ -67,7 +77,6 @@ Files upload directly to the root of the DA workspace for the forked repo — th
 | File | DA upload path |
 |---|---|
 | `nav.html` | `/fragments/nav/header` |
-| `footer.html` | `/fragments/nav/footer` |
 | `index.html` | `/index` |
 | `plans.html` | `/plans` |
 | `getting-care.html` | `/getting-care` |
@@ -95,9 +104,7 @@ The summary includes:
 
 1. Go to your DA workspace: `https://da.live/#/{org}/kp-{employer}/`
    - Example: `https://da.live/#/adobedrago/kp-google`
-2. Upload fragment files:
-   - `nav.html` → `/fragments/nav/header`
-   - `footer.html` → `/fragments/nav/footer`
+2. Upload `nav.html` → `/fragments/nav/header`
 3. Upload each page file to the root of the workspace:
    - `index.html` → `/index`
    - `plans.html` → `/plans`

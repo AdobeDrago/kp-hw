@@ -612,26 +612,13 @@ Before producing the final HTML file, verify:
 
 ---
 
-### Step 4f — Generate the Footer File
+### Footer — Not Generated
 
-Each forked repo loads its footer from its own DA workspace at the relative path
-`/fragments/nav/footer`. The footer content is identical across all secondary sites
-and is sourced from the template site.
-
-Fetch the footer fragment from the template site:
-```
-https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer.plain.html
-```
-
-Output the fetched HTML as-is — it is already in DA-compatible format and does not
-need to be modified. It will be uploaded to the fork's DA workspace at:
-```
-/fragments/nav/footer
-```
-
-> **Why fetch instead of hardcode?** Fetching at migration time ensures the footer
-> reflects any updates made to the template site. The browser cannot do this fetch
-> (CORS restriction), but EMA can — it is a server-side request with no origin policy.
+The footer is identical across all secondary sites and is loaded at runtime directly
+from the template site. Each forked repo's `blocks/footer/footer.js` is configured
+with an absolute URL pointing to the template site's footer fragment — no
+`footer.html` needs to be uploaded to each fork's DA workspace, and EMA does not
+generate one.
 
 ---
 
@@ -735,18 +722,17 @@ Write each file as `{page-name}.plain.html`:
 | Support | `/workspace/current/content/support.plain.html` |
 | *(any other page)* | `/workspace/current/content/{slug}.plain.html` |
 
-#### Nav and footer files — MUST go to fragments path
+#### Nav file — MUST go to fragments path
 
-The nav and footer files **must** both be written to the fragments directory, NOT to the workspace root:
+The nav file **must** be written to the fragments directory, NOT to the workspace root:
 
 ```
 /workspace/current/content/fragments/nav/header.plain.html
-/workspace/current/content/fragments/nav/footer.plain.html
 ```
 
-> **IMPORTANT:** Never write `nav.plain.html` or `footer.plain.html` to the root content directory.
-> Both always live under `fragments/nav/`. Create the directory structure if it does not exist
-> (`mkdir -p` the fragments/nav path first).
+> **IMPORTANT:** Never write a `nav.plain.html` file to the root content directory.
+> The nav always lives at `fragments/nav/header.plain.html`. Create the directory
+> structure if it does not exist (`mkdir -p` the fragments/nav path first).
 
 #### HTML file format
 

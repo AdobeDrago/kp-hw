@@ -1,7 +1,7 @@
 import { getConfig, getMetadata } from '../../scripts/ak.js';
 import { loadFragment } from '../fragment/fragment.js';
 
-const FOOTER_PATH = '/fragments/nav/footer';
+const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer'; // All forked secondary sites load the shared footer from the template site
 
 function buildExternalIcon() {
   const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
