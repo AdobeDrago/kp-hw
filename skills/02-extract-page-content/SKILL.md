@@ -70,10 +70,10 @@ For each section record:
 | **Headings** | Every H1, H2, H3 with exact text |
 | **Body text** | Every paragraph, exactly as written |
 | **Links & CTAs** | Link text + href for every anchor |
-| **Images** | Full absolute image URL + alt text — always capture the complete URL (e.g. `https://choose.kaiserpermanente.org/content/dam/...`). If the src is relative, reconstruct it as absolute using the source site origin. If alt text is absent, record it as missing. Skip tracking pixels and 1×1 spacer images entirely. |
+| **Images** | Full absolute image URL + alt text — always capture the complete URL (e.g. `https://choose.kaiserpermanente.org/content/dam/...`). If the src is relative, reconstruct it as absolute using the source site origin. If alt text is absent, record it as missing. Skip tracking pixels and 1×1 spacer images entirely. **For card/feature sections:** if no images are found in the initial pass, perform a targeted re-scrape querying `.feature-card-container img`, `[class*="card"] img`, and parent containers of card heading elements. Card images are frequently injected by JS or loaded as CSS backgrounds and may be missed by a shallow DOM query. |
 | **Lists** | Every list item, ordered or unordered |
 | **Phone numbers / hours** | Exactly as displayed |
-| **Legal / footnote text** | Exactly as written — always include the "Footnotes:" label text if present on the source page. This label must be preserved in the output as a `<p>Footnotes:</p>` paragraph at the start of the footnotes section. |
+| **Legal / footnote text** | Check the bottom of the page for a footnotes section. A valid footnotes section contains **actual numbered footnote paragraphs** — text with superscript numbers (`<sup>1</sup>`, `<sup>2</sup>`, etc.) followed by disclaimer or legal content. To detect footnotes, look for: (1) `<sup>` elements containing numbers within paragraphs near the page bottom, or (2) paragraphs beginning with numbered patterns like "1. [text]" or "† [text]". If found, capture all footnote paragraphs exactly as written. If the "Footnotes:" label is present, include it. If no numbered footnote paragraphs exist — even if a bare "Footnotes:" label appears — record `footnotes: none` and do NOT generate a footnotes section for this page. The "Footnotes:" label alone is NOT sufficient evidence of footnotes. |
 
 ---
 

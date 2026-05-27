@@ -78,6 +78,17 @@ Record:
 - **Employer logo URL** — full absolute URL of the employer logo image
 - **Employer logo alt text** — the `alt` attribute value
 
+> **Logo verification:** After extracting the employer logo URL, verify the image
+> actually loads (check `naturalWidth > 0` or that the URL does not 404). Many
+> employer sites use a transparent placeholder from the master path
+> (`/content/dam/kp/secondsales/microsites/master/secondary-logo.png`) because
+> they have no custom employer logo. If the employer-specific path (e.g.
+> `/microsites/cityofbaltimore/secondary-logo.png`) returns 404 or has
+> `naturalWidth: 0`, fall back to the master placeholder URL:
+> `https://choose.kaiserpermanente.org/content/dam/kp/secondsales/microsites/master/secondary-logo.png`
+>
+> Flag in Step 5 if the employer-specific logo was not found.
+
 > The KP logo URL is fixed — always use the absolute URL from the live template:
 > `https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/media_129252eb0ed4a8d722c06c7b18a6640ff53eeb536.svg`
 >

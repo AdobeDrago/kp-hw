@@ -607,8 +607,9 @@ Before producing the final HTML file, verify:
 - [ ] **Hero block:** Image row and text row are separate `<div>` siblings — NOT two columns inside one row
 - [ ] **Nav fragment:** All `<picture>` elements include a `<source>` child — missing `<source>` causes a JS crash in `decoratePictures`
 - [ ] **Nav fragment:** Every nav link points to a page that exists (was verified as HTTP 200 in Step 1). Do not include dead links (404 pages) in the nav.
-- [ ] **Footnotes section:** Starts with `<p>Footnotes:</p>` before the numbered footnote paragraphs
+- [ ] **Footnotes section:** Only generate a footnotes section if the page has actual numbered footnote paragraphs (text with `<sup>1</sup>`, `<sup>2</sup>`, etc.). Detection rule: look for `<sup>` elements containing numbers within paragraphs at the page bottom. If found, include the "Footnotes:" label followed by the numbered paragraphs. If no numbered footnote content exists — regardless of whether a bare "Footnotes:" label is present on the source — do NOT generate a footnotes section.
 - [ ] **Card block:** If the source page has images for card items, those images must be included in the migrated card. Cross-check every card block against the source content manifest to ensure no images were dropped.
+- [ ] **Card block image re-scrape:** If any card block has an empty image row (`<div></div>` in Row 1), perform an additional scrape of the source page specifically targeting card container elements (`.feature-card-container img`, `[class*="card"] img`, parent containers of the card heading text). Card images are frequently loaded via JS or CSS background and may not appear in the initial content extraction. Never output a card with an empty Row 1 without first attempting this re-scrape.
 
 ---
 
