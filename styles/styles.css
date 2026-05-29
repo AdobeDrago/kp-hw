@@ -1016,3 +1016,9 @@ main .section.footnotes p:first-child {
   color: var(--color-navy);
   margin-bottom: var(--spacing-xs);
 }
+
+/* hide nav and footer in block preview mode */
+body.library-template header,
+body.library-template footer {
+  display: none;
+}
