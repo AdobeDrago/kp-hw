@@ -15,15 +15,11 @@ Complete these steps once per new employer site, before running EMA:
   - Example: `https://da.live/#/{org}/kp-google`
 - Set up the `.page` / `.live` preview and publish environments
 
-**2. Update the footer**
+**2. Author the footer in DA**
 
-In the forked repo's `blocks/footer/footer.js`, verify that `FOOTER_PATH` points to the template site:
-
-```js
-const FOOTER_PATH = 'https://main--ak-kaiserpermanente--adobedrago.aem.page/fragments/nav/footer';
-```
-
-This loads the shared footer from the template site at runtime. It is done once per fork.
+In the forked repo's DA workspace, create the footer document at `/fragments/nav/footer`.
+The footer is loaded from each fork's own DA — it is not shared from the template site.
+This is a one-time fork setup step, done before the site goes live.
 
 **3. Have the source URL ready**
 
@@ -61,7 +57,7 @@ For each page, EMA reads the HTML and captures every section in plain language �
 EMA assigns the correct AEM block and section style to every section on every page, using the block library defined in this repository. EMA references block screenshots to resolve ambiguous layouts.
 
 ### Step 4 — Generate HTML
-EMA produces one DA-ready HTML file per page, plus `nav.html` and `footer.html`. All content from the manifest is included — a partial migration is never acceptable.
+EMA produces one DA-ready HTML file per page, plus `nav.html`. All content from the manifest is included — a partial migration is never acceptable.
 
 ### Step 5 — Migration summary
 EMA produces a full report: pages migrated, blocks used, and a checklist of items to review before publishing.

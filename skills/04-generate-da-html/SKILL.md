@@ -613,13 +613,11 @@ Before producing the final HTML file, verify:
 
 ---
 
-### Footer — Not Generated
+### Footer — Authored in DA
 
-The footer is identical across all secondary sites and is loaded at runtime directly
-from the template site. Each forked repo's `blocks/footer/footer.js` is configured
-with an absolute URL pointing to the template site's footer fragment — no
-`footer.html` needs to be uploaded to each fork's DA workspace, and EMA does not
-generate one.
+Each forked repo loads its footer from its own DA workspace at the relative path
+`/fragments/nav/footer`. The footer must be authored directly in DA for each fork —
+EMA does not generate it. The business owner authors it in EMA as part of fork setup.
 
 ---
 
