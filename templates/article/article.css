@@ -1,0 +1,265 @@
+/* ==========================================================================
+   ARTICLE TEMPLATE
+   Matches KP production health article page styling.
+   Reference: https://healthy.kaiserpermanente.org/northern-california/health-wellness/healtharticle.mental-health-for-athletes
+   Scoped to body.article-template to avoid affecting other page types.
+
+   DOM structure assumed (EDS):
+     body.article-template
+       main
+         .section.tags.share          ← entire article body lives here
+           .default-content
+             h1                       ← article title
+             p                        ← byline ("by Author | Date")
+             p > picture              ← hero image
+             p, h2, ul, ol …          ← body content
+         .section.footnotes           ← footnotes / sources
+   ========================================================================== */
+
+/* --- Article text color --------------------------------------------------- */
+/* Production uses #0d1c3d (dark navy) — distinct from --color-navy (#003b71) */
+.article-template main {
+  --color-article-text: #0d1c3d;
+
+  color: var(--color-article-text);
+}
+
+.article-template main h1,
+.article-template main h2,
+.article-template main h3,
+.article-template main h4,
+.article-template main h5,
+.article-template main h6,
+.article-template main p,
+.article-template main li,
+.article-template main a:any-link {
+  color: var(--color-article-text);
+}
+
+.article-template main a:hover,
+.article-template main a:focus {
+  color: var(--color-link-hover);
+}
+
+/* --- Content column: 800px centered --------------------------------------- */
+/* Matches the production .articlesection width of 800px on a 1280px container */
+.article-template main .section .default-content {
+  max-width: 800px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  box-sizing: border-box;
+}
+
+@media (width >= 900px) {
+  .article-template main .section .default-content {
+    padding-inline: 24px;
+  }
+}
+
+/* First section (article body) gets top padding */
+.article-template main > .section:first-of-type {
+  padding-top: 32px;
+  padding-bottom: 40px;
+}
+
+/* --- Heading overrides ---------------------------------------------------- */
+/* H1: 36px / 1.33 lh — production: 36px Gotham 5r */
+.article-template h1 {
+  font-size: 36px;
+  font-family: var(--heading-font-family); /* Gotham 5r */
+  font-weight: 400;
+  line-height: 1.33;
+  color: var(--color-article-text);
+}
+
+/* H2: 28px Gotham 3r (light) — production uses lighter weight than default */
+.article-template h2 {
+  font-size: 28px;
+  font-family: var(--font-family-light); /* Gotham 3r */
+  font-weight: 300;
+  line-height: 1.43;
+  color: var(--color-article-text);
+}
+
+/* H3–H6 remain at --heading-font-family, just adjust color */
+.article-template h3 { font-size: 22px; }
+.article-template h4 { font-size: 18px; }
+
+/* --- Body text ------------------------------------------------------------ */
+/* Production line-height: 24px / 16px = 1.5 */
+.article-template main p,
+.article-template main li {
+  line-height: 1.5;
+}
+
+/* --- Byline --------------------------------------------------------------- */
+/* First <p> immediately after H1, containing no <picture>                   */
+/* Production: font-size 16px, color #677083 (--color-grey-text)             */
+.article-template main .default-content h1 + p:not(:has(picture)) {
+  font-size: var(--body-font-size-m); /* 16px */
+  color: var(--color-grey-text);      /* #677083 */
+  margin-top: 0.4em;
+  margin-bottom: 1em;
+}
+
+/* --- Hero image ----------------------------------------------------------- */
+/* First <p> containing a <picture> in the article body                      */
+/* Production: 800×188px rendered, natural 2560×600 (aspect-ratio ~4.27:1)  */
+/* Sits within the 800px column (not full-bleed)                             */
+.article-template main .default-content p:has(> picture) {
+  margin-inline: -24px; /* cancel column padding so image touches column edges */
+  margin-bottom: 1.5em;
+}
+
+.article-template main .default-content p > picture {
+  display: block;
+  width: 100%;
+}
+
+.article-template main .default-content p > picture > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2560 / 600;
+  object-fit: cover;
+}
+
+/* --- Tag pills ------------------------------------------------------------ */
+/* Injected by article.js at the end of the .section.tags.share content.     */
+/* Production chip: bg #f0f7fa, navy border/text #003b71, 30px radius.        */
+.article-template .pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs); /* 8px */
+  margin-top: var(--spacing-l);
+  padding: 0;
+}
+
+.article-template .pills-label {
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-right: var(--spacing-xs);
+}
+
+.article-template .pill:any-link {
+  display: inline-block;
+  background-color: var(--color-pale-blue);   /* #f0f7fa */
+  color: var(--color-navy);                    /* #003b71 */
+  border: 1px solid var(--color-navy);
+  border-radius: 30px;
+  padding: 8px 15px;
+  font-size: var(--body-font-size-m);          /* 16px */
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.article-template .pill:hover,
+.article-template .pill:focus {
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  text-decoration: none;
+}
+
+/* --- Social share --------------------------------------------------------- */
+/* Injected by article.js after the tag pills. Icons use the KP blue.        */
+.article-template .social-share {
+  margin-top: var(--spacing-m);
+}
+
+.article-template .social-share-header {
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-xs);
+}
+
+.article-template .social-share-list {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-s);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-template .social-share-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--color-blue); /* #0074ad */
+  transition: color 0.2s ease;
+}
+
+.article-template .social-share-link:hover,
+.article-template .social-share-link:focus {
+  color: var(--color-link-hover); /* #005a87 */
+}
+
+.article-template .social-share-link svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* --- Footnotes section ---------------------------------------------------- */
+/* Match production: no divider bar; body-sized navy text; bold inline        */
+/* "Footnotes" header; 12px superscripts; italic review/copyright line.       */
+.article-template main .section.footnotes {
+  margin-top: 0;
+}
+
+/* Drop the global 6px grey divider + its !important padding; keep the column
+   gutter so footnotes align with the article body. */
+.article-template main .section.footnotes > .default-content {
+  border-top: none;
+  padding: 0 24px !important;
+}
+
+.article-template main .section.footnotes p {
+  font-size: var(--body-font-size-m); /* 16px */
+  color: var(--color-article-text);   /* #0d1c3d */
+  line-height: 1.33;
+  margin: 28px 0;
+}
+
+/* "Footnotes" label is authored as <strong> at the start of the first line */
+.article-template main .section.footnotes p strong:first-child {
+  font-weight: 700;
+  color: var(--color-article-text);
+}
+
+.article-template main .section.footnotes sup {
+  font-size: 12px;
+}
+
+.article-template main .section.footnotes em {
+  font-style: italic;
+  color: var(--color-article-text);
+}
+
+.article-template main .section.footnotes a:any-link {
+  color: var(--color-blue); /* #0074ad */
+  text-decoration: underline;
+}
+
+/* --- Responsive: mobile --------------------------------------------------- */
+@media (width < 600px) {
+  .article-template h1 {
+    font-size: 28px;
+    line-height: 1.25;
+  }
+
+  .article-template h2 {
+    font-size: 22px;
+  }
+
+  .article-template main .section .default-content {
+    padding-inline: 16px;
+  }
+
+  .article-template main .default-content p:has(> picture) {
+    margin-inline: -16px;
+  }
+}
