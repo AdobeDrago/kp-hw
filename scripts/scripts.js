@@ -1,4 +1,4 @@
-import { loadArea, setConfig } from './ak.js';
+import { loadArea, setConfig, getConfig } from './ak.js';
 
 const hostnames = ['authorkit.dev'];
 
@@ -39,9 +39,28 @@ const decorateArea = ({ area = document }) => {
   });
 };
 
+/**
+ * ak.js loads a template's CSS but not its JS. This loads the matching JS
+ * module (templates/<template>/<template>.js) if the page declares a template
+ * and the module exists. Runs after loadArea() so the DOM is fully decorated.
+ */
+async function loadTemplateJS() {
+  const template = document.head.querySelector('meta[name="template"]')?.content;
+  if (!template) return;
+  const name = template.replaceAll(' ', '-').toLowerCase();
+  const { codeBase } = getConfig();
+  try {
+    const mod = await import(`${codeBase}/templates/${name}/${name}.js`);
+    if (typeof mod.default === 'function') await mod.default();
+  } catch {
+    /* template has no JS module — nothing to do */
+  }
+}
+
 export async function loadPage() {
   setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
   await loadArea();
+  await loadTemplateJS();
 }
 // UE: pre-process DOM before ak.js
 if (window.location.hostname.includes('ue.da.live')) {

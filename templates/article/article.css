@@ -124,6 +124,85 @@
   object-fit: cover;
 }
 
+/* --- Tag pills ------------------------------------------------------------ */
+/* Injected by article.js at the end of the .section.tags.share content.     */
+/* Production chip: bg #f0f7fa, navy border/text #003b71, 30px radius.        */
+.article-template .pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs); /* 8px */
+  margin-top: var(--spacing-l);
+  padding: 0;
+}
+
+.article-template .pills-label {
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-right: var(--spacing-xs);
+}
+
+.article-template .pill:any-link {
+  display: inline-block;
+  background-color: var(--color-pale-blue);   /* #f0f7fa */
+  color: var(--color-navy);                    /* #003b71 */
+  border: 1px solid var(--color-navy);
+  border-radius: 30px;
+  padding: 8px 15px;
+  font-size: var(--body-font-size-m);          /* 16px */
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.article-template .pill:hover,
+.article-template .pill:focus {
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  text-decoration: none;
+}
+
+/* --- Social share --------------------------------------------------------- */
+/* Injected by article.js after the tag pills. Icons use the KP blue.        */
+.article-template .social-share {
+  margin-top: var(--spacing-m);
+}
+
+.article-template .social-share-header {
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-xs);
+}
+
+.article-template .social-share-list {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-s);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-template .social-share-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--color-blue); /* #0074ad */
+  transition: color 0.2s ease;
+}
+
+.article-template .social-share-link:hover,
+.article-template .social-share-link:focus {
+  color: var(--color-link-hover); /* #005a87 */
+}
+
+.article-template .social-share-link svg {
+  width: 24px;
+  height: 24px;
+}
+
 /* --- Footnotes section ---------------------------------------------------- */
 .article-template main .section.footnotes {
   margin-top: var(--spacing-l);
