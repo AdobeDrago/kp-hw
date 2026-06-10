@@ -23,7 +23,25 @@ const config = {
     // and missing background images just 404 gracefully. Stories inject their own
     // <link> to /sb/<pattern>/foundation.css (see ensurePatternStyles in the stories).
     { from: '../stories', to: '/sb' },
+    // EDS global styles + fonts (repo-root styles/), served at /styles so styles.css
+    // @font-face url(/styles/fonts/...) + the generated ds-tokens.css resolve inside
+    // the EDS-block harness stories (stories/_eds/). `from` is relative to this config dir.
+    { from: '../../../styles', to: '/styles' },
   ],
+  // The EDS-block harness (stories/_eds/) globs blocks/*/*.js; some blocks import the
+  // EDS scripts.js, which uses top-level await. Bump the target so TLA is allowed
+  // (valid ESM — the default es2020 target rejects it).
+  async viteFinal(cfg) {
+    cfg.build = cfg.build || {};
+    cfg.build.target = 'esnext';
+    cfg.esbuild = { ...(cfg.esbuild || {}), target: 'esnext' };
+    cfg.optimizeDeps = cfg.optimizeDeps || {};
+    cfg.optimizeDeps.esbuildOptions = {
+      ...(cfg.optimizeDeps.esbuildOptions || {}),
+      target: 'esnext',
+    };
+    return cfg;
+  },
 };
 
 export default config;

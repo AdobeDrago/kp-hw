@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KP EDS — Project docs</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f8f9;
+      --border: #dde3e8;
+      --text: #1b2733;
+      --muted: #5f6b78;
+      --brand: #0078b3;
+      --code-bg: #f2f5f7;
+      --tip-bg: #e6f2f7;
+      --tip-border: #0078b3;
+      --warn-bg: #fbf3e6;
+      --warn-border: #c2870a;
+      --radius: 10px;
+      --maxw: 860px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e1620; --surface: #16212e; --border: #28384a; --text: #e6edf3;
+        --muted: #9fb0c0; --brand: #5fb8e8; --code-bg: #16212e;
+        --tip-bg: #10283a; --tip-border: #5fb8e8; --warn-bg: #2c2410; --warn-border: #d9a93a;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .skip { position: absolute; left: -999px; top: 0; background: var(--brand); color: #fff; padding: 8px 14px; border-radius: 0 0 8px 0; }
+    .skip:focus { left: 0; z-index: 10; }
+    header.page {
+      border-bottom: 1px solid var(--border); padding: 28px 24px;
+    }
+    header.page .inner { max-width: var(--maxw); margin: 0 auto; }
+    header.page h1 { margin: 0 0 4px; font-size: 26px; }
+    header.page p { margin: 0; color: var(--muted); }
+    .layout { max-width: var(--maxw); margin: 0 auto; padding: 0 24px 80px; }
+    nav.toc {
+      margin: 24px 0; padding: 16px 18px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    nav.toc h2 { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+    nav.toc ul { margin: 0; padding-left: 18px; }
+    nav.toc a { color: var(--brand); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    section { margin-top: 40px; scroll-margin-top: 16px; }
+    h2 { font-size: 21px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 0 0 16px; }
+    h3 { font-size: 17px; margin: 28px 0 8px; }
+    p, li { color: var(--text); }
+    .lead { color: var(--muted); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; background: var(--code-bg); padding: 1px 5px; border-radius: 5px; }
+    .codeblock { position: relative; margin: 12px 0; }
+    pre {
+      margin: 0; background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px; overflow-x: auto;
+    }
+    pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.55; }
+    .copy {
+      position: absolute; top: 8px; right: 8px; font: 12px/1 inherit; cursor: pointer;
+      background: var(--bg); color: var(--muted); border: 1px solid var(--border);
+      border-radius: 6px; padding: 5px 9px;
+    }
+    .copy:hover { color: var(--text); border-color: var(--brand); }
+    ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 16px 0; }
+    ol.steps > li {
+      counter-increment: step; position: relative; padding: 14px 16px 14px 52px;
+      border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; background: var(--surface);
+    }
+    ol.steps > li::before {
+      content: counter(step); position: absolute; left: 14px; top: 14px;
+      width: 24px; height: 24px; border-radius: 50%; background: var(--brand); color: #fff;
+      display: grid; place-items: center; font-size: 13px; font-weight: 600;
+    }
+    ol.steps > li strong { display: block; margin-bottom: 2px; }
+    .callout { border-left: 4px solid; border-radius: 0 var(--radius) var(--radius) 0; padding: 12px 16px; margin: 16px 0; }
+    .callout.tip { background: var(--tip-bg); border-color: var(--tip-border); }
+    .callout.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+    .callout p { margin: 0; }
+    .callout strong { letter-spacing: 0.02em; }
+    .pipeline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
+    .pipeline span.node { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 14px; }
+    .pipeline span.arrow { color: var(--muted); }
+    footer.page { max-width: var(--maxw); margin: 40px auto 0; padding: 16px 24px; color: var(--muted); border-top: 1px solid var(--border); font-size: 14px; }
+    a { color: var(--brand); }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="page">
+    <div class="inner">
+      <h1>KP EDS — Project documentation</h1>
+      <p>How the KP vessel design system drives building and styling Edge Delivery blocks.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="On this page">
+      <h2>On this page</h2>
+      <ul>
+        <li><a href="#storybook">Storybook</a>
+          <ul>
+            <li><a href="#sb-what">What it is</a></li>
+            <li><a href="#sb-run">Running it</a></li>
+            <li><a href="#sb-recipe">Storybook &rarr; block recipe</a></li>
+            <li><a href="#sb-loop">Fast feedback loop</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+
+    <main id="main">
+      <section id="storybook" aria-labelledby="storybook-h">
+        <h2 id="storybook-h">Storybook</h2>
+        <p class="lead">
+          Storybook hosts the KP &ldquo;vessel&rdquo; design-system reference stories and an
+          EDS-block harness. It is the design source of truth that drives how blocks are built
+          and styled: each block is built to reproduce its reference story, and a visual-parity
+          diff keeps the two from drifting.
+        </p>
+
+        <div class="pipeline" role="img" aria-label="Pipeline: reference story to shared renderer to block init and CSS slice to parity diff">
+          <span class="node">Reference story</span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+          <span class="node">Shared renderer</span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+          <span class="node">Block init + CSS slice</span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+          <span class="node">Parity diff</span>
+        </div>
+
+        <h3 id="sb-what">What it is</h3>
+        <p>
+          Reference stories live under <code>stories/&lt;pattern&gt;/</code> (cleaned vessel
+          patterns). The EDS-block harness lives under <code>stories/_eds/</code> and renders the
+          <em>real</em> block from authored content via its own <code>init()</code>, so a block
+          can be reviewed and pixel-compared side by side with its reference.
+        </p>
+
+        <h3 id="sb-run">Running it</h3>
+        <div class="codeblock">
+          <button class="copy" type="button">Copy</button>
+<pre><code>npm run storybook          # dev server at http://localhost:6006
+npm run build-storybook    # production build (also a compile check)
+
+npm run tokens:ds          # regenerate the --ds-* token layer from the foundation
+npm run parity             # visual-parity gate (needs Storybook running)</code></pre>
+        </div>
+
+        <h3 id="sb-recipe">Storybook &rarr; block recipe</h3>
+        <p>The repeatable steps, as proven on <code>card</code> and <code>notification</code>.</p>
+        <div class="callout tip">
+          <p><strong>Prereq</strong> — the pattern&rsquo;s reference story exists under
+          <code>stories/&lt;pattern&gt;/</code> with its <code>foundation.css</code> vendored, and
+          <code>npm run tokens:ds</code> has been run.</p>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <strong>Shared renderer</strong>
+            Create <code>blocks/&lt;name&gt;/&lt;name&gt;-dom.js</code>: a pure function that takes
+            content slots and returns the vessel DOM element (<code>.ds-&lt;name&gt;</code>). Put any
+            behavior (e.g. dismiss) here. Take resolved asset URLs as parameters &mdash; don&rsquo;t
+            hardcode paths.
+          </li>
+          <li>
+            <strong>Point the reference story at it</strong>
+            In <code>stories/&lt;pattern&gt;/&lt;Name&gt;.stories.js</code>, import the renderer; keep
+            <code>ensurePatternStyles</code> and asset resolution; pass the slots. Story and block now
+            share one renderer and cannot drift.
+          </li>
+          <li>
+            <strong>Block <code>init(el)</code></strong>
+            In <code>blocks/&lt;name&gt;/&lt;name&gt;.js</code>, read the variant from the block class,
+            parse the authored rows into the renderer&rsquo;s args, then
+            <code>el.replaceChildren(render(args))</code>. Resolve block-owned assets with
+            <code>new URL('./icons/x.svg', import.meta.url)</code> (works in both Vite and EDS).
+          </li>
+          <li>
+            <strong>Ship assets</strong>
+            Copy any icons/images the component needs into <code>blocks/&lt;name&gt;/</code>.
+          </li>
+          <li>
+            <strong>Generate the CSS slice</strong>
+            <div class="codeblock">
+              <button class="copy" type="button">Copy</button>
+<pre><code>node scripts/slice-block-css.mjs \
+  --src stories/&lt;pattern&gt;/foundation.css \
+  --match .ds-&lt;name&gt;[,.primitive] --root .&lt;name&gt; \
+  --out blocks/&lt;name&gt;/&lt;name&gt;.css</code></pre>
+            </div>
+            <code>--match</code> can list several roots (e.g. <code>.ds-card,.button</code>) when the
+            component leans on a shared primitive.
+          </li>
+          <li>
+            <strong>EDS harness stories</strong>
+            Add <code>stories/_eds/&lt;Name&gt;.eds.stories.js</code>: one story per reference variant,
+            authored as a table that yields the same content, with the same wrapping width /
+            <code>section</code> framing as the reference. Use
+            <code>edsBlock({ name, rows, variants, section })</code>.
+          </li>
+          <li>
+            <strong>Add parity pairs</strong>
+            Extend <code>PAIRS</code> in <code>scripts/visual-parity.mjs</code> (selector =
+            <code>.ds-&lt;name&gt;</code>).
+          </li>
+          <li>
+            <strong>Verify</strong>
+            Run <code>npm run storybook</code>, then <code>npm run parity</code>; iterate the slice/CSS
+            until the pairs pass. Lint with <code>npx eslint</code> and <code>npx stylelint</code>.
+          </li>
+        </ol>
+
+        <h3 id="sb-loop">Fast feedback loop</h3>
+        <p>For steps 5&ndash;8: regenerate the slice &rarr; reload the EDS story &rarr;
+          <code>npm run parity</code> &rarr; open the diff image at
+          <code>test/visual/__output__/&lt;pair&gt;/diff.png</code> to see exactly what differs, adjust,
+          and repeat.</p>
+
+        <div class="callout warn">
+          <p><strong>Gotcha</strong> &mdash; after editing story files, the dev server&rsquo;s
+          <code>_eds</code> index sometimes goes stale and a story 404s. Restart with
+          <code>rm -rf node_modules/.cache/storybook</code> then <code>npm run storybook</code>.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="page">
+      See <code>STORYBOOK.md</code> in the repo root for the full architecture, decisions, and status.
+    </footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const code = btn.parentElement.querySelector('code').innerText;
+        try {
+          await navigator.clipboard.writeText(code);
+          const prev = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = prev; }, 1200);
+        } catch (e) {
+          btn.textContent = 'Copy failed';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

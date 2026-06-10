@@ -10,13 +10,34 @@ NOT part of the EDS runtime and is not wired into the root `package.json`.
 cd tools/storybook
 npm install        # first time only
 npm start          # http://localhost:6006   (alias: npm run storybook)
-npm run build      # static build -> tools/storybook/storybook-static
+npm run build      # static build -> tools/storybook/dist  (committed; served by EDS)
 ```
 
 - Global setup: [`.storybook/`](../.storybook) — see Phase 0 in issue #4.
 - Pilot patterns: [`notifications/`](./notifications), [`card/`](./card) — issue #5.
 - Optional: `npm run design-files:extract` unzips the vessel exports from the repo-root
   `design-files/` into `design-files/.extracted/` for authoring new stories.
+
+## Viewing it without a Node server (static build / DA app)
+
+`npm run build` emits a fully static site to `tools/storybook/dist/` (committed). All asset
+references are **relative**, so it works served from any subpath — no Node server, just
+static files. EDS serves the repo, so once on a branch it's reachable at:
+
+```
+https://<branch>--kp-hw--AdobeDrago.aem.live/tools/storybook/dist/index.html
+```
+
+**Register it as a DA fullscreen app** — add a row to the `apps` sheet in the site config at
+`https://da.live/config#/AdobeDrago/kp-hw/`:
+
+| title | description | image | path | ref |
+|-------|-------------|-------|------|-----|
+| Storybook | KP design-system component library | (optional icon URL) | /tools/storybook/dist/index.html | main |
+
+It then appears as a card at `https://da.live/apps#/AdobeDrago/kp-hw/` and opens inside DA in
+an iframe. Re-run `npm run build` and commit `dist/` whenever stories change. (For local DA
+app dev, DA iframes `http://localhost:3000` when `ref=local` — run `npm start -- -p 3000`.)
 
 ## How the foundation/CSS layering works
 

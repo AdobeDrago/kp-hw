@@ -5,6 +5,9 @@ import { recommended, source, test } from '@adobe/eslint-config-helix';
 export default defineConfig([
   globalIgnores([
     '**/deps',
+    // Storybook static build output (committed for DA hosting) — minified bundles.
+    'tools/storybook/dist',
+    'tools/storybook/storybook-static',
   ]),
   {
     languageOptions: {
