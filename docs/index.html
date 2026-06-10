@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KP Health Articles — Import Process & Reference</title>
+<title>KP Health & Wellness POC — AEM MS → EDS Migration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
@@ -463,8 +463,8 @@
     kp-hw
   </a>
   <div class="topnav-divider"></div>
-  <span class="topnav-title">AEM Edge Delivery Services — Health Articles Import</span>
-  <span class="topnav-badge">Process Notes</span>
+  <span class="topnav-title">Health &amp; Wellness POC — AEM MS → EDS Migration</span>
+  <span class="topnav-badge">POC</span>
 </nav>
 
 <!-- LAYOUT -->
@@ -549,9 +549,9 @@
 
       <!-- PAGE HERO -->
       <div class="page-hero" id="overview">
-        <div class="page-hero-eyebrow">KP Health &amp; Wellness POC · Scenario 1</div>
-        <h1>Health Articles — Import Process &amp; Reference</h1>
-        <p class="page-hero-sub">How the Kaiser Permanente Northern California health &amp; wellness articles were brought into this Edge Delivery Services project: the article template, the page-metadata-driven tag/share UI, and the query index that powers article listings. This work is the article-rendering foundation for <strong>Scenario 1 — Health &amp; Wellness Landing Page</strong>. Captures the work done on <strong>9 June 2026</strong>.</p>
+        <div class="page-hero-eyebrow">Kaiser Permanente · Proof of Concept</div>
+        <h1>Health &amp; Wellness — AEM MS → EDS Migration POC</h1>
+        <p class="page-hero-sub">A proof of concept validating Kaiser Permanente's migration from <strong>AEM Managed Services</strong> to <strong>Edge Delivery Services</strong>, and confirming EDS can power <strong>dynamic, backend-driven experiences</strong> — not just static content. Four reference scenarios from the KP Health &amp; Wellness site drive the work. This guide tracks the architecture, engineering approach, and progress to date.</p>
       </div>
 
       <!-- PROJECT OVERVIEW -->
@@ -563,24 +563,55 @@
           Project overview
         </h2>
         <div class="section-rule"></div>
-        <p>This project recreates Kaiser Permanente's Northern California <strong>health &amp; wellness articles</strong> as Edge Delivery Services pages. It is built on the <em>Author Kit</em> boilerplate, where the runtime loads through <code class="code-inline">scripts/ak.js</code> and <code class="code-inline">scripts/scripts.js</code> rather than the classic <code class="code-inline">aem.js</code> path.</p>
-        <p>The 9 June work delivered a reusable <strong>article template</strong> (CSS + JS) that matches the look of a production KP health article, plus a <strong>query index</strong> so those articles can be listed and filtered.</p>
+        <p>This is a <strong>proof of concept</strong> validating Kaiser Permanente's migration from <strong>AEM Managed Services (AEM MS)</strong> to <strong>Edge Delivery Services (EDS)</strong>, and proving out EDS support for dynamic, backend-driven experiences. Four reference scenarios from the production KP Health &amp; Wellness site anchor the effort, backed by a shared design system and engineering foundation.</p>
+
+        <h3>Purpose</h3>
+        <ul class="req-list">
+          <li>Validate migration from <strong>AEM Managed Services</strong> to <strong>Edge Delivery Services</strong>.</li>
+          <li>Validate support for <strong>dynamic, backend-driven experiences</strong>.</li>
+        </ul>
+
+        <h3>Architecture requirements</h3>
+        <ul class="req-list">
+          <li><strong>One Repo Per Project</strong> architecture.</li>
+          <li>A referenceable, <strong>immutable Global Library</strong> — shared blocks, CSS, and design patterns aligned to the <strong>KP Design System</strong>.</li>
+          <li>Project repository contains blocks, pages, services, configuration, and tests.</li>
+        </ul>
+
+        <h3>Core engineering requirements</h3>
+        <ul class="req-list">
+          <li>Use the EDS <strong>block-based development model</strong> only.</li>
+          <li>Integrate backend services: <strong>Content Hub</strong>, <strong>Lucid Search</strong>, <strong>AEM Servlet APIs</strong>.</li>
+          <li>Support <strong>region and language</strong> switching.</li>
+          <li>Implement a modular <strong>service layer</strong> with error handling for all APIs.</li>
+        </ul>
+
+        <h3>The four scenarios</h3>
+        <table class="spec-table">
+          <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
+            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Drug Encyclopedia</a></td><td>Lucid Search · content selectors · AEM servlet images</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+            <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic results · content selectors</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+          </tbody>
+        </table>
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>Where this fits in the POC.</strong> This is part of <strong>Scenario 1 — Health &amp; Wellness Landing Page</strong> (reference: <code class="code-inline">/northern-california/health-wellness</code>). The <code class="code-inline">healtharticles</code> index targets exactly that path, and the article template renders the individual articles the landing page links to. Still outstanding for Scenario 1: the <strong>Content Hub API</strong> call to fetch content fragments and the <strong>dynamic related-articles</strong> rendering via content selectors.</span>
+          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Backend integration (Content Hub, Lucid Search, AEM servlets) is still to come.</span>
         </div>
 
         <table class="spec-table" style="margin-top:16px;">
           <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
           <tbody>
-            <tr><td>POC scenario</td><td>Scenario 1 — Health &amp; Wellness Landing Page</td></tr>
-            <tr><td>GitHub repo</td><td><code class="code-inline">AdobeDrago/kp-hw</code></td></tr>
-            <tr><td>Primary branch</td><td><code class="code-inline">main</code></td></tr>
-            <tr><td>Boilerplate</td><td>Author Kit (<code class="code-inline">ak.js</code> + <code class="code-inline">scripts.js</code>)</td></tr>
-            <tr><td>Template added</td><td><code class="code-inline">templates/article/</code> (article.css + article.js)</td></tr>
-            <tr><td>Content source</td><td>healthy.kaiserpermanente.org — Northern California</td></tr>
-            <tr><td>Query index</td><td><code class="code-inline">healtharticles</code> (helix-query.yaml)</td></tr>
+            <tr><td>Effort</td><td>AEM Managed Services → Edge Delivery Services migration POC</td></tr>
+            <tr><td>GitHub repo</td><td><code class="code-inline">AdobeDrago/kp-hw</code> · branch <code class="code-inline">main</code></td></tr>
+            <tr><td>Architecture</td><td>One Repo Per Project + immutable Global Library</td></tr>
+            <tr><td>Dev model</td><td>EDS block-based only (Author Kit runtime: <code class="code-inline">ak.js</code> + <code class="code-inline">scripts.js</code>)</td></tr>
+            <tr><td>Backend services</td><td>Content Hub · Lucid Search · AEM Servlet APIs</td></tr>
+            <tr><td>Design system</td><td>KP "vessel" via Storybook → EDS blocks</td></tr>
+            <tr><td>Reference site</td><td>healthy.kaiserpermanente.org</td></tr>
           </tbody>
         </table>
       </section>
