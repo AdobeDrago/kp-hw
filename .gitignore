@@ -3,13 +3,9 @@ coverage/
 logs/
 node_modules/
 
-# Storybook
-storybook-static/
-
-# Design-system vessel exports (large, not committed). The vendored foundation
-# under .storybook/foundation/ IS committed; the raw zips and extracts are not.
-design-files/*.zip
-design-files/.extracted/
+# Local env / secrets (never commit)
+.env
+.env.*
 
 helix-importer-ui
 .DS_Store
@@ -19,3 +15,18 @@ helix-importer-ui
 .claude/*
 !.claude/commands/
 !.claude/commands/**
+
+import/
+import-work/
+northern-california/
+
+# Storybook
+storybook-static/
+
+# Design-system vessel exports (large, not committed). The vendored foundation
+# under .storybook/foundation/ IS committed; the raw zips and extracts are not.
+design-files/*.zip
+design-files/.extracted/
+
+# visual parity diff output
+test/visual/__output__/
