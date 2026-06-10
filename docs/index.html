@@ -605,7 +605,7 @@
           </a>
         </div>
 
-        <h3>Production reference pages</h3>
+        <h3>Live pages — production (AEM Managed Services, migration source)</h3>
         <div class="url-grid">
           <a class="url-card" href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener">
             <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 1 — Landing page</div>
@@ -626,9 +626,53 @@
             <div class="url-card-desc">Reference for article.js (tag pills + social share row)</div>
           </a>
         </div>
+        <h3>Project environments — EDS (the pages we're building, migration target)</h3>
+        <div class="url-grid">
+          <a class="url-card" href="https://main--kp-hw--adobedrago.aem.page/" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-blue"></span>Preview</div>
+            <div class="url-card-title">EDS preview</div>
+            <div class="url-card-url">main--kp-hw--adobedrago.aem.page</div>
+            <div class="url-card-desc">Renders DA content against the main branch code</div>
+          </a>
+          <a class="url-card" href="https://main--kp-hw--adobedrago.aem.live/" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-green"></span>Live</div>
+            <div class="url-card-title">EDS live</div>
+            <div class="url-card-url">main--kp-hw--adobedrago.aem.live</div>
+            <div class="url-card-desc">Published EDS content (CDN)</div>
+          </a>
+        </div>
+
+        <h3>Migration map · live → building</h3>
+        <p>Each POC scenario migrates a production AEM MS page to its EDS equivalent. The EDS target paths mirror the production URLs; most are not authored yet (404 until built).</p>
+        <table class="spec-table">
+          <thead><tr><th>Scenario</th><th>Live (production)</th><th>Building (EDS preview)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>1 · Landing</td>
+              <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></td>
+            </tr>
+            <tr>
+              <td>2 · Class Directory</td>
+              <td><a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-planned">planned</span></td>
+            </tr>
+            <tr>
+              <td>3 · Drug Encyclopedia</td>
+              <td><a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a> <span class="nav-status ns-planned">planned</span></td>
+            </tr>
+            <tr>
+              <td>4 · Diabetes</td>
+              <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-planned">planned</span></td>
+            </tr>
+          </tbody>
+        </table>
+
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span>The query index targets the path <code class="code-inline">/northern-california/health-wellness/**</code> — the same URL shape as production. Article documents themselves are authored in DA, not committed to this repo.</span>
+          <span>The query index targets the path <code class="code-inline">/northern-california/health-wellness/**</code> — the same URL shape as production. Article documents themselves are authored in DA, not committed to this repo. The EDS URL pattern is <code class="code-inline">{branch}--kp-hw--adobedrago.aem.page</code> (preview) / <code class="code-inline">.aem.live</code> (published).</span>
         </div>
       </section>
 
@@ -643,6 +687,8 @@
         </h2>
         <div class="section-rule"></div>
         <p>Progress against the four Scenario 1 requirements from the POC document. The 9 June work covered the EDS article rendering and the article index; the backend-driven pieces (Content Hub, content selectors) are still to do.</p>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></p>
         <ul class="checklist">
           <li class="check-item">
             <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
@@ -879,7 +925,8 @@
           <span class="status-badge sb-planned">Planned</span>
         </h2>
         <div class="section-rule"></div>
-        <p>Reference page: <a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a></p>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a></p>
         <p>Requirements (not yet started):</p>
         <ul class="req-list">
           <li>Integrate <strong>Lucid Search API</strong> for search functionality.</li>
@@ -898,7 +945,8 @@
           <span class="status-badge sb-planned">Planned</span>
         </h2>
         <div class="section-rule"></div>
-        <p>Reference page: <a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a></p>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia</a></p>
         <p>Requirements (not yet started):</p>
         <ul class="req-list">
           <li>Use <strong>Lucid Search</strong> for queries.</li>
@@ -918,7 +966,8 @@
           <span class="status-badge sb-planned">Planned</span>
         </h2>
         <div class="section-rule"></div>
-        <p>Reference page: <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/diabetes</a></p>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes</a></p>
         <p>Requirements (not yet started):</p>
         <ul class="req-list">
           <li>Trigger <strong>Lucid Search API</strong> for diabetes articles.</li>
