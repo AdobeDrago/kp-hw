@@ -528,6 +528,13 @@
       </a>
     </div>
     <div class="sidebar-section">
+      <div class="sidebar-label">Design system <span class="nav-status ns-progress">In progress</span></div>
+      <a class="sidebar-link" href="#storybook">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zm8.4 1.3l-.1 1.6a.2.2 0 00.32.17l.55-.42.47.36a.2.2 0 00.32-.17l-.13-2.03h.8v11.4H4.4V2.3h6.5z"/></svg>
+        Storybook → EDS
+      </a>
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-label">Reference</div>
       <a class="sidebar-link" href="#dev-notes">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
@@ -918,6 +925,135 @@
           <li>Render results dynamically.</li>
           <li>Use content selectors for article rendering.</li>
         </ul>
+      </section>
+
+      <!-- STORYBOOK DESIGN SYSTEM -->
+      <section class="doc-section" id="storybook">
+        <h2>
+          <span class="section-icon icon-navy">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zm8.4 1.3l-.1 1.6a.2.2 0 00.32.17l.55-.42.47.36a.2.2 0 00.32-.17l-.13-2.03h.8v11.4H4.4V2.3h6.5z"/></svg>
+          </span>
+          Storybook Design System
+          <span class="status-badge sb-progress">In progress</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, using <strong>Storybook as the design source of truth</strong> (replacing the Figma flow). The reference-story side is built; the implementation side (story → shipping block) is in progress.</p>
+
+        <h3>The big idea — two contracts</h3>
+        <p>There are two contracts in play, and the whole effort reconciles them:</p>
+        <ul class="req-list">
+          <li><strong>Storybook components</strong> are driven by <strong>args/props</strong>.</li>
+          <li><strong>EDS blocks</strong> are driven by <strong>authored content</strong> (a table of rows/cells that <code class="code-inline">init(el)</code> decorates into DOM).</li>
+        </ul>
+        <p>One design (a vessel pattern) produces one block. Storybook is the contract; the block is the implementation; a visual <strong>parity diff</strong> is the enforcement — so the story and the shipping block can never silently drift apart.</p>
+
+        <h3>End-to-end pipeline</h3>
+        <div class="code-block"><span class="cmt"># DESIGN CONTRACT (built)</span>
+KP vessel design system  ──►  Storybook reference story
+(compiled Sass exports)        render(args) + foundation.css
+                                        │
+<span class="cmt"># THE EDS BLOCK — one source of truth (Phase 4)</span>
+  shared renderer   ·  init(el): authored table → args → DOM
+  CSS slice + tokens ·  UE content model from argTypes
+                                        │
+<span class="cmt"># VERIFICATION</span>
+  visual parity diff  ◄── block vs reference story
+                                        │
+<span class="cmt"># AUTHORING + RUNTIME</span>
+  author in UE  ──►  EDS decorates  ──►  published page</div>
+        <div class="notice info">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span><strong>No drift, by construction.</strong> The story's <code class="code-inline">render()</code> moves <em>into</em> the block; both the story and <code class="code-inline">init()</code> import it. A DS update → re-run <code class="code-inline">tokens:ds</code>, re-slice CSS, update the story → the parity diff shows exactly what moved.</span>
+        </div>
+
+        <h3>Locked decisions</h3>
+        <table class="spec-table">
+          <thead><tr><th>Decision</th><th>Choice</th></tr></thead>
+          <tbody>
+            <tr><td>Story framework</td><td>Vanilla HTML/CSS (<code class="code-inline">@storybook/html-vite</code>) — maps closely to EDS DOM</td></tr>
+            <tr><td>Tokens</td><td>Namespaced <code class="code-inline">--ds-*</code> <code class="code-inline">:root</code> layer derived from the compiled CSS catalog</td></tr>
+            <tr><td>Token namespace</td><td><code class="code-inline">--ds-*</code>, separate from the existing generic <code class="code-inline">--color-*</code> palette (never touch it)</td></tr>
+            <tr><td>DOM source</td><td>Block owns the renderer; the story imports it</td></tr>
+            <tr><td>Existing blocks</td><td>Extend/replace, don't duplicate (vessel <code class="code-inline">card</code> evolves <code class="code-inline">blocks/card</code>)</td></tr>
+            <tr><td>CSS scoping</td><td>Per block — strip the <code class="code-inline">.ds-foundation</code> wrapper and rescope to the block root</td></tr>
+          </tbody>
+        </table>
+
+        <h3>What's built vs. planned</h3>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Token extractor — <code class="code-inline">npm run tokens:ds</code></div>
+              <div class="check-note">Parses <code class="code-inline">foundation.css</code> → <code class="code-inline">styles/ds-tokens.css</code>: 49 colors (with paired <code class="code-inline">--ds-on-*</code>) + a 5-step type scale.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">EDS-block harness — <code class="code-inline">stories/_eds/eds-harness.js</code></div>
+              <div class="check-note"><code class="code-inline">edsBlock({ name, rows, variants })</code> mounts any real block from an authored table, in the EDS cascade, beside its reference story.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">CSS-slice / rescope tool — <code class="code-inline">scripts/slice-block-css.mjs</code></div>
+              <div class="check-note">Brace-aware parser keeps one component's rules, strips the theme wrapper, tokenizes color literals. Card: 14.5k lines → 291 rules.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Card pilot (#12) — wired end-to-end, verified visually</div>
+              <div class="check-note"><code class="code-inline">card-dom.js</code> shared renderer · <code class="code-inline">card.js</code> <code class="code-inline">init()</code> · generated <code class="code-inline">card.css</code> slice. Matches the reference story; closing tasks remain.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Playwright visual-parity diff (CI gate)</div>
+              <div class="check-note">Screenshot diff per variant; fails CI on divergence. Manual comparison done; automation pending.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Shared-primitive hoisting · asset pipeline · scale-out</div>
+              <div class="check-note">Hoist shared rules (typography, <code class="code-inline">.button</code>, icon font) to global <code class="code-inline">styles/</code>; migrate icon fonts/SVGs; remaining patterns (#13).</div>
+            </div>
+          </li>
+        </ul>
+
+        <h3>Run it</h3>
+        <div class="code-block"><span class="cmt"># Storybook dev server (reference + EDS-block harness stories)</span>
+<span class="kw">npm</span> run storybook            <span class="cmt"># http://localhost:6006</span>
+
+<span class="cmt"># (Re)generate the --ds-* token layer from the vessel foundation</span>
+<span class="kw">npm</span> run tokens:ds            <span class="cmt"># writes styles/ds-tokens.css</span>
+
+<span class="cmt"># Slice one component's CSS out of a pattern foundation</span>
+<span class="kw">node</span> scripts/slice-block-css.mjs \
+  --src stories/card/foundation.css --match .ds-card --root .card --out &lt;file.css&gt;</div>
+
+        <div class="notice warning">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"/></svg>
+          <span><strong>Risks to keep in mind:</strong> EDS pages have no <code class="code-inline">.ds-foundation</code> wrapper, so slices must be rescoped per block. The type scale is base-only (responsive bump not yet captured). Each pattern's <code class="code-inline">foundation.css</code> is ~800 KB — never ship full foundations to EDS. Icon-font/SVG assets still need an EDS migration path. Existing <code class="code-inline">header</code>/<code class="code-inline">hero</code>/<code class="code-inline">footer</code> use Lit — refactor vs. keep is a per-block call.</span>
+        </div>
+
+        <h3>Tracking</h3>
+        <div class="url-grid">
+          <a class="url-card" href="https://github.com/AdobeDrago/kp-hw/issues/7" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Epic #7</div>
+            <div class="url-card-title">Storybook for vessel DS → EDS block seeds</div>
+            <div class="url-card-desc">Reference-story half — #4 setup · #5 pilot · #6 scale-out</div>
+          </a>
+          <a class="url-card" href="https://github.com/AdobeDrago/kp-hw/issues/10" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-blue"></span>Epic #10</div>
+            <div class="url-card-title">Reference stories → shipping EDS blocks</div>
+            <div class="url-card-desc">Implementation half — #11 infra · #12 pilot blocks · #13 scale-out</div>
+          </a>
+        </div>
       </section>
 
       <!-- DEVELOPER NOTES -->
