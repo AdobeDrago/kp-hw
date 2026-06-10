@@ -1,0 +1,1024 @@
+@font-face {
+  font-family: 'Gotham 3r';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-3r.woff") format("woff");
+}
+
+@font-face {
+  font-family: 'Gotham 4r';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-4r.woff") format("woff");
+}
+
+@font-face {
+  font-family: 'Gotham 5r';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-5r.woff") format("woff");
+}
+
+@font-face {
+  font-family: 'Gotham 7r';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/styles/fonts/gotham-7r.woff") format("woff");
+}
+
+@font-face {
+  font-family: gotham-fallback;
+  size-adjust: 100%;
+  src: local('Arial');
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Roboto;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/styles/fonts/roboto-condensed-bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: Montserrat;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/styles/fonts/montserrat.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF,
+    U+0131,
+    U+0152-0153,
+    U+02BB-02BC,
+    U+02C6,
+    U+02DA,
+    U+02DC,
+    U+0304,
+    U+0308,
+    U+0329,
+    U+2000-206F,
+    U+20AC,
+    U+2122,
+    U+2191,
+    U+2193,
+    U+2212,
+    U+2215,
+    U+FEFF,
+    U+FFFD;
+}
+
+@font-face {
+  font-family: Montserrat;
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/styles/fonts/montserrat-italic.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF,
+    U+0131,
+    U+0152-0153,
+    U+02BB-02BC,
+    U+02C6,
+    U+02DA,
+    U+02DC,
+    U+0304,
+    U+0308,
+    U+0329,
+    U+2000-206F,
+    U+20AC,
+    U+2122,
+    U+2191,
+    U+2193,
+    U+2212,
+    U+2215,
+    U+FEFF,
+    U+FFFD;
+}
+
+:root {
+  /* grid */
+  --grid-container-width: 83.4%;
+  --grid-column-width: calc(var(--grid-container-width) / 12);
+  --grid-gutter-width: 8.3%;
+
+  /* spacing */
+  --spacing-xxl: 48px;
+  --spacing-xl: 32px;
+  --spacing-l: 24px;
+  --spacing-m: 12px;
+  --spacing-s: 8px;
+  --spacing-xs: 4px;
+
+  /* color schemes */
+  color-scheme: light dark;
+
+  /* color tokens */
+  --color-gray-100: #f1f1f1;
+  --color-gray-200: #d3d3d3;
+  --color-gray-300: #b5b5b5;
+  --color-gray-400: #999;
+  --color-gray-500: #7d7d7d;
+  --color-gray-600: #636363;
+  --color-gray-700: #494949;
+  --color-gray-800: #313131;
+  --color-gray-900: #1b1b1b;
+  --color-green-100: #e1f5e3;
+  --color-green-200: #a3e1a8;
+  --color-green-300: #60cb6a;
+  --color-green-400: #24b032;
+  --color-green-500: #1e9029;
+  --color-green-600: #187220;
+  --color-green-700: #115418;
+  --color-green-800: #0c3910;
+  --color-green-900: #072009;
+  --color-teal-100: #e4f3f5;
+  --color-teal-200: #acdbdf;
+  --color-teal-300: #71c1c9;
+  --color-teal-400: #36a7b3;
+  --color-teal-500: #108a96;
+  --color-teal-600: #0d6d77;
+  --color-teal-700: #0a5158;
+  --color-teal-800: #06363b;
+  --color-teal-900: #041e21;
+  --color-blue-100: #eaf2ff;
+  --color-blue-200: #b9d4ff;
+  --color-blue-300: #88b6ff;
+  --color-blue-400: #5898ff;
+  --color-blue-500: #2176ff;
+  --color-blue-600: #0058e4;
+  --color-blue-700: #0041a9;
+  --color-blue-800: #002c74;
+  --color-blue-900: #001942;
+  --color-purple-100: #f4edfb;
+  --color-purple-200: #dfcbf2;
+  --color-purple-300: #c9a7ea;
+  --color-purple-400: #b385e1;
+  --color-purple-500: #9d60d8;
+  --color-purple-600: #843ccb;
+  --color-purple-700: #622c98;
+  --color-purple-800: #421e66;
+  --color-purple-900: #251139;
+  --color-magenta-100: #ffebf9;
+  --color-magenta-200: #ffc0ec;
+  --color-magenta-300: #ff8fde;
+  --color-magenta-400: #ff53cc;
+  --color-magenta-500: #eb00a5;
+  --color-magenta-600: #bd0084;
+  --color-magenta-700: #8e0064;
+  --color-magenta-800: #630045;
+  --color-magenta-900: #3b002a;
+  --color-red-100: #ffecea;
+  --color-red-200: #ffc4be;
+  --color-red-300: #ff9990;
+  --color-red-400: #ff6759;
+  --color-red-500: #f81400;
+  --color-red-600: #c71000;
+  --color-red-700: #950c00;
+  --color-red-800: #670800;
+  --color-red-900: #3c0500;
+  --color-orange-100: #ffeddc;
+  --color-orange-200: #ffc895;
+  --color-orange-300: #ff9e43;
+  --color-orange-400: #f37500;
+  --color-orange-500: #c76000;
+  --color-orange-600: #9e4c00;
+  --color-orange-700: #753800;
+  --color-orange-800: #4f2600;
+  --color-orange-900: #2d1500;
+  --color-yellow-100: #fff48e;
+  --color-yellow-200: #ebd400;
+  --color-yellow-300: #cab600;
+  --color-yellow-400: #ab9a00;
+  --color-yellow-500: #8c7e00;
+  --color-yellow-600: #6e6400;
+  --color-yellow-700: #514a00;
+  --color-yellow-800: #373100;
+  --color-yellow-900: #1e1b00;
+
+  /* named colors */
+  --color-light-base: 255 255 255;
+  --color-dark-base: 0 0 0;
+  --color-light: rgb(255 255 255);
+  --color-dark: rgb(0 0 0);
+  --color-text: light-dark(var(--color-dark), var(--color-light));
+  --color-link: light-dark(var(--color-gray-900), var(--color-gray-100));
+  --color-brand: var(--color-purple-500);
+  --color-accent: light-dark(var(--color-magenta-600), var(--color-magenta-500));
+  --color-background: light-dark(var(--color-light), var(--color-dark));
+  --color-shaded: light-dark(#f9f9f9, #111);
+
+  /* fonts */
+  --font-family: montserrat, "Trebuchet MS", sans-serif;
+
+  /* headings */
+  --heading-font-size-xxl: 32.44px;
+  --heading-font-size-xl: 28.83px;
+  --heading-font-size-l: 25.63px;
+  --heading-font-size-m: 22.78px;
+  --heading-font-size-s: 20.25px;
+  --heading-font-size-xs: 18px;
+  --heading-line-height: 1.15;
+
+  /* body */
+  --body-font-size-xxxl: 25px;
+  --body-font-size-xxl: 22px;
+  --body-font-size-xl: 20px;
+  --body-font-size-l: 18px;
+  --body-font-size-m: 16px;
+  --body-font-size-s: 14px;
+  --body-font-size-xs: 12px;
+  --body-line-height: 1.6;
+
+  /* misc */
+  --header-height: 60px;  /* mobile: logo bar only */
+  --breadcrumb-height: 24px;
+
+  /* KP brand colors */
+  --color-navy: #003b71;
+  --color-blue: #0074ad;
+  --color-blue-accent: #0074ad;
+  --color-pale-blue: #f0f7fa;
+  --color-light-blue: #e6f2f7;
+  --color-white: #fff;
+  --color-grey-text: #677083;
+  --color-grey-light: #f8f8f8;
+
+  /* KP semantic overrides */
+  color-scheme: light;
+  --color-text: #000;
+  --color-link: var(--color-blue-accent);
+  --color-link-hover: #005a87;
+  --color-background: var(--color-white);
+  --color-shaded: var(--color-pale-blue);
+
+  /* KP fonts */
+  --font-family: 'Gotham 4r', gotham-fallback, sans-serif;
+  --heading-font-family: 'Gotham 5r', gotham-fallback, sans-serif;
+  --font-family-light: 'Gotham 3r', gotham-fallback, sans-serif;
+  --font-family-bold: 'Gotham 7r', gotham-fallback, sans-serif;
+
+  /* KP heading sizes */
+  --heading-font-size-xxl: 32px;
+  --heading-font-size-xl: 32px;
+  --heading-font-size-l: 24px;
+  --heading-font-size-m: 20px;
+  --heading-font-size-s: 18px;
+  --heading-font-size-xs: 16px;
+  --heading-line-height: 1.25;
+
+  /* KP spacing */
+  --spacing-xxl: 80px;
+  --spacing-xl: 60px;
+  --spacing-l: 40px;
+  --spacing-m: 24px;
+  --spacing-s: 16px;
+  --spacing-xs: 8px;
+
+  /* KP layout */
+  --content-max-width: 1440px;
+  --section-padding: 40px 0;
+
+  /* KP buttons */
+  --button-border-radius: 24px;
+  --button-padding: 12px 24px;
+  --button-font-size: 16px;
+  --button-transition: background-color 0.2s ease, border-color 0.2s ease;
+  --color-button-primary: var(--color-blue);
+
+  /* KP nav */
+  --nav-height: 64px;
+  --breadcrumbs-height: 34px;
+}
+
+.light-scheme {
+  color-scheme: light;
+}
+
+.dark-scheme {
+  color-scheme: dark;
+}
+
+html {
+  scroll-padding-top: calc(var(--header-height) + 1rem);
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: var(--body-font-size-m);
+  line-height: var(--body-line-height);
+  -webkit-font-smoothing: antialiased;
+
+  &.session {
+    /* only allow font loading if a session */
+    font-family: var(--font-family);
+  }
+
+  &.has-breadcrumb {
+    margin: calc(var(--header-height) + var(--breadcrumb-height)) 0 0;
+  }
+
+  &.no-header {
+    --header-height: 0;
+
+    margin: 0;
+  }
+}
+
+header {
+  /* Reserve the header's space from the very first paint to prevent CLS */
+  display: block;
+  min-height: var(--header-height);
+}
+
+a {
+  color: var(--color-link);
+
+  &.btn {
+    display: inline-block;
+    line-height: 1.375;
+    font-weight: 500;
+    font-size: var(--button-font-size);
+    text-decoration: none;
+    border: 2px solid transparent;
+    border-radius: var(--button-border-radius);
+    padding: var(--button-padding);
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: var(--button-transition);
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    &.btn-outline {
+      background: transparent;
+    }
+  }
+
+  &.btn-accent {
+    color: #fff;
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+
+    &.btn-outline {
+      color: var(--color-accent);
+    }
+  }
+
+  &.btn-primary {
+    color: var(--color-white);
+    background-color: var(--color-button-primary);
+    border-color: var(--color-button-primary);
+
+    &:hover,
+    &:focus {
+      background-color: var(--color-navy);
+      border-color: var(--color-navy);
+      color: var(--color-white);
+    }
+
+    &.btn-outline {
+      color: var(--color-button-primary);
+      background: transparent;
+    }
+  }
+
+  &.btn-secondary {
+    color: var(--color-navy);
+    background-color: var(--color-pale-blue);
+    border: 2px solid var(--color-blue-accent);
+
+    &:hover,
+    &:focus {
+      background-color: var(--color-button-primary);
+      border-color: var(--color-button-primary);
+      color: var(--color-white);
+    }
+
+    &.btn-outline {
+      color: var(--color-navy);
+      background: transparent;
+    }
+  }
+
+  &.btn-negative {
+    color: #fff;
+    background-color: var(--color-red-600);
+    border: 2px solid var(--color-red-600);
+
+    &.btn-outline {
+      color: var(--color-red-600);
+    }
+  }
+}
+
+a:any-link {
+  word-break: break-word;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--color-link-hover);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* KP button system */
+a.button:any-link,
+button.button {
+  box-sizing: border-box;
+  display: inline-block;
+  max-width: 100%;
+  margin: 12px 0;
+  border: 1px solid var(--color-blue-accent);
+  border-radius: var(--button-border-radius);
+  padding: var(--button-padding);
+  font-family: var(--heading-font-family);
+  font-style: normal;
+  font-weight: 500;
+  font-size: var(--button-font-size);
+  line-height: 1.375;
+  text-align: center;
+  text-decoration: none;
+  background-color: var(--color-blue-accent);
+  color: var(--color-white);
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: var(--button-transition);
+}
+
+a.button:hover,
+a.button:focus,
+button.button:hover,
+button.button:focus {
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+a.button:focus-visible,
+button.button:focus-visible {
+  outline: 2px solid var(--color-navy);
+  outline-offset: 2px;
+}
+
+a.button.secondary,
+button.button.secondary {
+  background-color: var(--color-pale-blue);
+  border: 2px solid var(--color-blue-accent);
+  color: var(--color-navy);
+}
+
+a.button.secondary:hover,
+a.button.secondary:focus,
+button.button.secondary:hover,
+button.button.secondary:focus,
+.btn.secondary:hover,
+.btn.secondary:focus  {
+  background-color: var(--color-button-primary);
+  border-color: var(--color-button-primary);
+  color: var(--color-white) !important;
+  text-decoration: underline;
+}
+
+a.button.primary,
+button.button.primary {
+  background-color: var(--color-button-primary);
+  border-color: var(--color-button-primary);
+  color: var(--color-white);
+}
+
+a.button.primary:hover,
+a.button.primary:focus,
+button.button.primary:hover,
+button.button.primary:focus,
+.btn.primary:hover,
+.btn.primary:focus {
+  background-color: var(--color-navy);
+  border-color: var(--color-navy);
+  color: var(--color-white);
+}
+
+a.button:not(.primary, .secondary):any-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--color-link);
+  font-size: inherit;
+  font-weight: inherit;
+  white-space: normal;
+  text-decoration: underline;
+}
+
+a.button:not(.primary, .secondary):hover,
+a.button:not(.primary, .secondary):focus {
+  background-color: transparent;
+  color: var(--color-link-hover);
+  border-color: transparent;
+}
+
+/* ==========================================================================
+   SECTIONS — Base layout and spacing
+   ========================================================================== */
+
+.section {
+  display: block;
+
+  /* Internal layout tokens — overridable by section metadata classes */
+  --bottom-spacing: 1.5rem;
+  --section-container-width: var(--grid-container-width);
+
+  > div {
+    max-width: var(--content-max-width);
+    margin: 0 auto;
+  }
+
+  > .default-content {
+    padding: 0 24px;
+    box-sizing: border-box;
+    margin-top: 1rem;
+    margin-bottom: var(--bottom-spacing);
+
+    > *:first-child { margin-top: 0; }
+    > *:last-child  { margin-bottom: 0; }
+  }
+}
+
+main > .section {
+  margin: 0;
+  padding: var(--section-padding);
+
+  &:first-of-type {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+main {
+  ul,
+  ol {
+    padding-inline-start: 24px;
+
+    /* Reduce nested lists even further */
+    ul,
+    ol {
+      padding-inline-start: 12px;
+    }
+  }
+}
+
+button {
+  cursor: pointer;
+}
+
+li {
+  margin-bottom: 0.4em;
+}
+
+p,
+dl,
+ol,
+ul,
+pre,
+blockquote {
+  margin-top: 0.8em;
+  margin-bottom: 0.25em;
+}
+
+code,
+pre {
+  font-size: var(--body-font-size-s);
+}
+
+pre {
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--color-grey-light);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #dde3e8;
+  margin: var(--spacing-l) 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--heading-font-family);
+  font-weight: 500;
+  line-height: var(--heading-line-height);
+  letter-spacing: -0.02em;
+  margin-top: 0.8em;
+  margin-bottom: 0.25em;
+  color: var(--color-text);
+}
+
+h1 { font-size: var(--heading-font-size-xxl); }
+h2 { font-size: var(--heading-font-size-xl); }
+h3 { font-size: var(--heading-font-size-l); }
+h4 { font-size: var(--heading-font-size-m); }
+h5 { font-size: var(--heading-font-size-s); }
+h6 { font-size: var(--heading-font-size-xs); }
+
+strong {
+  font-weight: 600;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+  width: auto;
+  height: auto;
+}
+
+/* EDS artifact: empty doc lines produce <p><img src=""></p> — hide them */
+p:has(> img:only-child[src=""]),
+p:has(> img:only-child[src="about:error"]) {
+  display: none;
+}
+
+svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* @media (width >= 600px) {} */
+
+/* @media (width >= 900px) {} */
+
+/* @media (width >= 1200px) {} */
+
+@media (width >= 1440px) {
+  :root {
+    --grid-container-width: 1200px;
+  }
+}
+
+main > div,
+.has-template,
+div[data-status] {
+  display: none;
+}
+
+aem-sidekick {
+  opacity: 0;
+
+  &[open="true"].is-ready {
+    opacity: 1;
+  }
+}
+
+@media (width >= 900px) {
+  :root {
+    --heading-font-size-xxl: 40px;
+    --header-height: 168px; /* desktop: utility + logo + nav bars */
+  }
+
+  .section > .default-content {
+    padding: 0;
+  }
+}
+
+main .section .block-content {
+  padding: 0 1rem;
+}
+
+/* ==========================================================================
+   SECTION METADATA
+   ============================================================================
+   Section metadata is authored as a two-column table at the bottom of a
+   content section in the document. The server-side pre-renderer reads each
+   row and applies it to the wrapping <div class="section"> element using
+   two different conventions depending on the key:
+
+     "style" key  → values added as CSS classes
+     all other keys → added as data-attributes (data-{key}="{value}")
+
+   Example table in a document:
+     | style      | center    |   → class="center"          (.section.center)
+     | style      | pale-blue |   → class="pale-blue"       (.section.pale-blue)
+     | spacing    | xl        |   → data-spacing="xl"       ([data-spacing="xl"])
+     | grid       | 3         |   → data-grid="3"           ([data-grid="3"])
+     | gap        | m         |   → data-gap="m"            ([data-gap="m"])
+     | container  | 4         |   → data-container="4"      ([data-container="4"])
+     | layout     | bento     |   → data-layout="bento"     ([data-layout="bento"])
+     | background | /img.png  |   → data-background=…  + class="has-background"
+
+   To add a new variant: pick a key, define the selector below, and document
+   it in the comment for the relevant group.
+   ========================================================================== */
+
+/* --- Spacing ---------------------------------------------------------------
+   Key: spacing  |  Values: xs · s · m · l · xl · xxl
+   Overrides the default section padding symmetrically (top + bottom).
+   --------------------------------------------------------------------------- */
+main > .section[data-spacing="xs"]  { padding: calc(var(--spacing-xs) * 2)  0; }
+main > .section[data-spacing="s"]   { padding: calc(var(--spacing-s) * 2)   0; }
+main > .section[data-spacing="m"]   { padding: calc(var(--spacing-m) * 2)   0; }
+main > .section[data-spacing="l"]   { padding: calc(var(--spacing-l) * 2)   0; }
+main > .section[data-spacing="xl"]  { padding: calc(var(--spacing-xl) * 2)  0; }
+main > .section[data-spacing="xxl"] { padding: calc(var(--spacing-xxl) * 2) 0; }
+
+/* --- Grid ------------------------------------------------------------------
+   Key: grid  |  Values: 2 · 3 · 4 · 5 · 6
+   Sets the number of columns for block-content children. Pair with gap.
+   Columns collapse on mobile and expand at breakpoints (see below).
+   --------------------------------------------------------------------------- */
+.section[data-grid="2"] { --grid-size: 2; }
+.section[data-grid="3"] { --grid-size: 3; }
+.section[data-grid="4"] { --grid-size: 4; }
+.section[data-grid="5"] { --grid-size: 5; }
+.section[data-grid="6"] { --grid-size: 6; }
+
+.section[data-grid] .block-content {
+  display: grid;
+  gap: var(--gap-spacing);
+}
+
+/* --- Gap -------------------------------------------------------------------
+   Key: gap  |  Values: xs · s · m · l · xl · xxl
+   Sets the gap between grid items. Typically paired with the grid key.
+   --------------------------------------------------------------------------- */
+.section[data-gap="xs"]  { --gap-spacing: var(--spacing-xs); }
+.section[data-gap="s"]   { --gap-spacing: var(--spacing-s); }
+.section[data-gap="m"]   { --gap-spacing: var(--spacing-m); }
+.section[data-gap="l"]   { --gap-spacing: var(--spacing-l); }
+.section[data-gap="xl"]  { --gap-spacing: var(--spacing-xl); }
+.section[data-gap="xxl"] { --gap-spacing: var(--spacing-xxl); }
+
+/* --- Container Width -------------------------------------------------------
+   Key: container  |  Values: 2 · 4 · 6
+   Constrains block and default content to a narrower max-width.
+   Uses the 12-column grid token: 2 = ~4 cols; 4 = ~8 cols; 6 = full grid.
+   --------------------------------------------------------------------------- */
+.section[data-container] .default-content,
+.section[data-container] .block-content {
+  max-width: var(--section-container-width);
+  margin-inline: auto;
+}
+
+.section[data-container="2"] { --section-container-width: calc(var(--grid-column-width) * 4); }
+.section[data-container="4"] { --section-container-width: calc(var(--grid-column-width) * 8); }
+.section[data-container="6"] { --section-container-width: var(--grid-container-width); }
+
+/* --- Text Alignment --------------------------------------------------------
+   Key: style  |  Value: center
+   Centers all text within default-content wrappers.
+   (Applied via the "style" key, so it becomes a class.)
+   --------------------------------------------------------------------------- */
+.section.center .default-content {
+  text-align: center;
+}
+
+/* --- Background Image ------------------------------------------------------
+   Key: background  |  Value: <image path>
+   Full-bleed background image rendered behind all section content.
+   The pre-renderer injects the image as <picture class="section-background">
+   and adds class "has-background" to the section element.
+   --------------------------------------------------------------------------- */
+.section.has-background {
+  position: relative;
+}
+
+.section.has-background .default-content,
+.section.has-background .block-content {
+  position: relative;
+}
+
+.section picture.section-background {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.section .section-background img {
+  object-fit: cover;
+  height: 100%;
+  width: 100%;
+}
+
+/* --- Layout Presets --------------------------------------------------------
+   Key: layout  |  Values: bento
+   Pre-defined structural arrangements for specific content patterns.
+   --------------------------------------------------------------------------- */
+
+/* layout: bento — 3-column asymmetric named-area grid, supports up to 5 blocks */
+.section[data-layout="bento"] .block-content {
+  display: grid;
+  gap: var(--gap-spacing);
+  grid-template-columns: 1fr;
+}
+
+/* ---- Grid Responsive Breakpoints ------------------------------------------
+   These rules expand section grids at progressive viewport widths.
+   --------------------------------------------------------------------------- */
+
+/* 2-column grids activate at 600px+ */
+@media (width >= 600px) {
+  .section[data-grid="2"] .block-content {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 1fr);
+  }
+}
+
+@media (width >= 900px) {
+  /* 4- and 6-column grids show half their columns at tablet */
+  .section[data-grid="4"] .block-content,
+  .section[data-grid="6"] .block-content {
+    display: grid;
+    grid-template-columns: repeat(calc(var(--grid-size) / 2), 1fr);
+  }
+
+  /* Container width adjustments at tablet */
+  .section[data-container="4"] {
+    --section-container-width: calc(var(--grid-column-width) * 4);
+  }
+
+  .section[data-container="6"] {
+    --section-container-width: calc(var(--grid-column-width) * 6);
+  }
+
+  /* peek-background: image peeks visually below the section bottom edge */
+  /* Note: "peek-background" is a style value, so it becomes a class */
+  .section.peek-background .section-background img {
+    object-position: 0 40%;
+  }
+
+  .section.peek-background .default-content {
+    margin-bottom: calc(var(--spacing-xxl) * 12);
+  }
+
+  /* Bento expands to a named 3-column layout at 900px+ */
+  .section[data-layout="bento"] .block-content {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      "one   one   two"
+      "one   one   three"
+      "four  five  five";
+
+    > * {
+      container-type: inline-size;
+    }
+
+    > *:nth-child(1) { grid-area: one; }
+    > *:nth-child(2) { grid-area: two; }
+    > *:nth-child(3) { grid-area: three; }
+    > *:nth-child(4) { grid-area: four; }
+    > *:nth-child(5) { grid-area: five; }
+    > *:nth-child(6) { grid-area: six; }
+  }
+}
+
+/* All grids expand to the full declared column count at 1200px+ */
+@media (width >= 1200px) {
+  .section[data-grid] .block-content {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-size), 1fr);
+  }
+}
+
+/* ==========================================================================
+   SECTION THEME VARIANTS
+   ============================================================================
+   KP-specific background and visual theme classes applied via section metadata.
+   Key: style  |  Values listed below.
+   ========================================================================== */
+
+/* style: pale-blue — light teal wash background */
+main .section.pale-blue {
+  background-color: var(--color-pale-blue);
+}
+
+/* style: light / highlight — soft grey background */
+main .section.light,
+main .section.highlight {
+  background-color: var(--color-grey-light);
+}
+
+/* style: dark-blue — ensures links remain legible on dark backgrounds */
+main .section.dark-blue a:any-link {
+  text-decoration: underline;
+}
+
+/* style: full-width — breaks out of the content max-width container */
+main .section.full-width {
+  width: 100%;
+  max-width: none;
+}
+
+main .section.full-width > div {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+/* style: table-grid — renders multiple table blocks side by side */
+main > .section.table-grid > .block-content {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--spacing-l);
+  row-gap: var(--spacing-l);
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+@media (width < 900px) {
+  main > .section.table-grid > .block-content {
+    padding: 0 1rem;
+  }
+}
+
+/* style: footnotes — small-print annotations below a horizontal border */
+main .section.footnotes {
+  margin: 0 1rem;
+}
+
+main .section.footnotes > div.default-content {
+  border-top: 6px solid #c4cdd6;
+  padding: 1rem 0 !important;
+}
+
+@media (width >= 900px) {
+  main .section.footnotes > div {
+    padding: 0;
+  }
+}
+
+main .section.footnotes p {
+  font-size: var(--body-font-size-s);
+  color: var(--color-grey-text);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+main .section.footnotes p:first-child {
+  font-weight: 700;
+  color: var(--color-navy);
+  margin-bottom: var(--spacing-xs);
+}
+
+/* hide nav and footer in block preview mode */
+body.library-template header,
+body.library-template footer {
+  display: none;
+}

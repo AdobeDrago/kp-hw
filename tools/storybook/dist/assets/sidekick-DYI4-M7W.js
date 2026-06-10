@@ -1,0 +1,1 @@
+import i from"./scheduler-KN8DwSo_.js";import e from"./quick-edit-IXR-n1Lh.js";import"./env-BKQF8X8X.js";import"./preload-helper-Ct5FWWRu.js";import"./scripts-BO21DkSa.js";import"./ak-C2Mp4uAe.js";async function a(t){t.addEventListener("custom:scheduler",i),t.addEventListener("custom:quick-edit",e),t.classList.add("is-ready")}export{a as default};
