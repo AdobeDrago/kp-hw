@@ -58,8 +58,13 @@ on the **current lineage only**, as a seed for AEM Edge Delivery blocks.
 
 ## Phase 2 status (issue #6)
 
-**Done (8 patterns):** Notifications, Card, Breadcrumbs, Card Group, Search Results, Hero,
-**Content Toggle**, **Show More Less** + Foundations/Breakpoints.
+**Done (9 patterns):** Notifications, Card, Breadcrumbs, Card Group, Search Results, Hero,
+Content Toggle, Show More Less, **Footer** + Foundations/Breakpoints.
+
+> Footer note: kp-footer uses the older `kp-theme-ds2` + `main.css` architecture (no
+> `foundation-v` line). Its ~360-line markup is imported verbatim via Vite `?raw` from
+> `footer.html` (asset paths pre-rewritten) rather than re-authored. Loading its 771KB
+> `main.css` globally is the clearest example of the CSS-dedup debt below.
 
 > Note: when you add a brand-new `stories/<pattern>/` directory, the running dev server's
 > story indexer sometimes misses it (no error, just absent from the sidebar). Restart
@@ -77,6 +82,7 @@ says "use the following Sass variables"). A real `:root { --kp-* }` token layer 
 | Bucket | Patterns | Notes |
 |---|---|---|
 | Clean CSS, `foundation-v` | ~~card-group, search-results, hero~~ ✅ done | Recipe applied directly |
+| Mostly CSS (older arch) | ~~kp-footer~~ ✅ done | `kp-theme-ds2`/main.css; markup via `?raw` |
 | Mostly CSS + small JS | ~~content-toggle, show-more-less~~ ✅ done | Vanilla toggle/expand re-implemented |
 | JS-heavy (vanilla re-impl) | dropdown-menu, modal, autocomplete-search, form, header | Real behavior to port; higher effort |
 | Blocked / awkward | social-share (icon assets missing from export), icon-links (JS-rendered + external CSS), skip-link (older `kp-theme-ds2`/`main.css` line, no `foundation-v`) | Need source assets or an architecture decision |
