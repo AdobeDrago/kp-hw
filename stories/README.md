@@ -58,9 +58,13 @@ on the **current lineage only**, as a seed for AEM Edge Delivery blocks.
 
 ## Phase 2 status (issue #6)
 
-**Done (12 patterns):** Notifications, Card, Breadcrumbs, Card Group, Search Results, Hero,
-Content Toggle, Show More Less, Footer, Modal, Dropdown Menu, **Autocomplete Search**
-+ Foundations/Breakpoints.
+**Done (13 patterns):** Notifications, Card, Breadcrumbs, Card Group, Search Results, Hero,
+Content Toggle, Show More Less, Footer, Modal, Dropdown Menu, Autocomplete Search,
+**Form** + Foundations/Breakpoints.
+
+> Form note: covers the core reusable fields (text input incl. helper/error/disabled,
+> select, textarea). Specialized sub-types — password show/strength meter and selectable
+> tiles (icon/image/avatar) — are deferred.
 
 > Footer note: kp-footer uses the older `kp-theme-ds2` + `main.css` architecture (no
 > `foundation-v` line). Its ~360-line markup is imported verbatim via Vite `?raw` from
@@ -85,7 +89,7 @@ says "use the following Sass variables"). A real `:root { --kp-* }` token layer 
 | Clean CSS, `foundation-v` | ~~card-group, search-results, hero~~ ✅ done | Recipe applied directly |
 | Mostly CSS (older arch) | ~~kp-footer~~ ✅ done | `kp-theme-ds2`/main.css; markup via `?raw` |
 | Mostly CSS + small JS | ~~content-toggle, show-more-less~~ ✅ done | Vanilla toggle/expand re-implemented |
-| JS-heavy (vanilla re-impl) | ~~modal, dropdown-menu, autocomplete-search~~ ✅ done · form, header | Real behavior to port; higher effort |
+| JS-heavy (vanilla re-impl) | ~~modal, dropdown-menu, autocomplete-search, form~~ ✅ done · header | Real behavior to port; higher effort |
 | Blocked / awkward | social-share (icon assets missing from export), icon-links (JS-rendered + external CSS), skip-link (older `kp-theme-ds2`/`main.css` line, no `foundation-v`) | Need source assets or an architecture decision |
 
 \* hero variants are `card-overlay`/`text-overlay` vN — confirm the foundation line.
