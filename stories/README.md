@@ -58,7 +58,7 @@ on the **current lineage only**, as a seed for AEM Edge Delivery blocks.
 
 ## Phase 2 status (issue #6)
 
-**Done:** Notifications, Card, **Breadcrumbs** (foundation-v4) + **Foundations/Breakpoints**.
+**Done:** Notifications, Card, Breadcrumbs, **Card Group**, **Search Results**, **Hero** + Foundations/Breakpoints. (7 patterns + foundations.)
 
 **Tokens finding:** the only clean token data in the offline export is `theme.json`
 (DS2 breakpoints — now a Foundations story). **Colors/spacing/typography are NOT
@@ -71,8 +71,8 @@ says "use the following Sass variables"). A real `:root { --kp-* }` token layer 
 
 | Bucket | Patterns | Notes |
 |---|---|---|
-| Clean CSS, `foundation-v` | card-group, search-results, hero* | Recipe applies directly (next batch) |
-| Mostly CSS + small JS | content-toggle, show-more-less | Re-impl a small toggle/expand handler |
+| Clean CSS, `foundation-v` | ~~card-group, search-results, hero~~ ✅ done | Recipe applied directly |
+| Mostly CSS + small JS | content-toggle, show-more-less | Re-impl a small toggle/expand handler (next) |
 | JS-heavy (vanilla re-impl) | dropdown-menu, modal, autocomplete-search, form, header | Real behavior to port; higher effort |
 | Blocked / awkward | social-share (icon assets missing from export), icon-links (JS-rendered + external CSS), skip-link (older `kp-theme-ds2`/`main.css` line, no `foundation-v`) | Need source assets or an architecture decision |
 
