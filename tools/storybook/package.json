@@ -1,0 +1,20 @@
+{
+  "name": "kp-storybook",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Storybook for the KP vessel design-system patterns (dev tooling; not part of the EDS runtime).",
+  "scripts": {
+    "start": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006",
+    "build": "storybook build",
+    "design-files:extract": "bash scripts/extract-design-files.sh"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^8.6.18",
+    "@storybook/addon-essentials": "^8.6.18",
+    "@storybook/html": "^8.6.18",
+    "@storybook/html-vite": "^8.6.18",
+    "storybook": "^8.6.18"
+  }
+}

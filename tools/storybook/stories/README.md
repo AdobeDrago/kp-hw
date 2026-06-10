@@ -3,9 +3,20 @@
 Storybook renders the KP design-system "vessel" exports as **native fragment stories**,
 on the **current lineage only**, as a seed for AEM Edge Delivery blocks.
 
-- Run: `npm run storybook` (http://localhost:6006)
+This is a **self-contained tool** under `tools/storybook/` with its own dependencies — it is
+NOT part of the EDS runtime and is not wired into the root `package.json`.
+
+```bash
+cd tools/storybook
+npm install        # first time only
+npm start          # http://localhost:6006   (alias: npm run storybook)
+npm run build      # static build -> tools/storybook/storybook-static
+```
+
 - Global setup: [`.storybook/`](../.storybook) — see Phase 0 in issue #4.
 - Pilot patterns: [`notifications/`](./notifications), [`card/`](./card) — issue #5.
+- Optional: `npm run design-files:extract` unzips the vessel exports from the repo-root
+  `design-files/` into `design-files/.extracted/` for authoring new stories.
 
 ## How the foundation/CSS layering works
 

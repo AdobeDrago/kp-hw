@@ -10,7 +10,9 @@
 #
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# The vessel zips live at the repository root (design-files/), regardless of where this
+# self-contained tool lives. Resolve the repo root via git.
+ROOT="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel)"
 SRC="$ROOT/design-files"
 OUT="$SRC/.extracted"
 
