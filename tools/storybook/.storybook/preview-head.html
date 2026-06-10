@@ -1,4 +1,6 @@
 <!-- Load the KP design-system foundation globally into every story's preview
-     iframe. Served as a static file (see staticDirs in main.js), so the CSS's
-     own url(assets/...) references resolve relative to /foundation/. -->
-<link rel="stylesheet" href="/foundation/foundation.css" />
+     iframe. Served as a static file (see staticDirs in main.js). The href is
+     RELATIVE (no leading slash) so it resolves against the iframe URL — which
+     works both in dev (served at /) and when the static build is hosted under a
+     subpath like /tools/storybook/ (e.g. inside DA). -->
+<link rel="stylesheet" href="foundation/foundation.css" />

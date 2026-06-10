@@ -1,0 +1,57 @@
+import{e as l,a as o}from"./pattern-utils-DhwZIP84.js";const c=`<header class="ds-header" data-ds-theme="vessel" data-ds-variant="compact" data-ds-version="2">
+    <div class="ds-header__layout">
+      <div class="ds-header__top-bar">
+        <div class="ds-header__branding">
+          <a class="ds-header__logo" href="/" data-analytics-type="image" data-analytics-click="kp-logo">
+            <img class="ds-header__logo-img ds-header__logo-img--mobile"
+              src="sb/header/assets/images/kp-logo-signature-stacked.svg" width="150" height="40" alt="Kaiser Permanente Home" />
+            <img class="ds-header__logo-img ds-header__logo-img--desktop" src="sb/header/assets/images/kp-logo-374x42.svg"
+              width="374" height="42" alt="Kaiser Permanente Home" />
+          </a>
+        </div>
+        <button class="ds-header__menu-button" aria-labelledby="menu-btn-text-id"
+          data-analytics-location="mobile-menu-button">
+          <img class="ds-header__menu-button-icon ds-header__menu-button-icon--open" src="sb/header/assets/icons/ds2/menu.svg"
+            alt="" width="24" height="24">
+          <img class="ds-header__menu-button-icon ds-header__menu-button-icon--close"
+            src="sb/header/assets/icons/ds2/close-small.svg" alt="" width="24" height="24">
+          <span class="ds-header__menu-button-text" id="menu-btn-text-id">Menu</span>
+        </button>
+      </div>
+      <nav class="ds-header__primary-nav">
+        <span class="screenreader-only device-only">Beginning of navigation menu</span>
+        <!-- primary navigation -->
+        <ul class="ds-header__primary-nav-list">
+          <li class="ds-header__primary-nav-list-item">
+            <a href="#" class="ds-header__primary-nav-list-link">Standard Link</a>
+          </li>
+          <li class="ds-header__primary-nav-list-item">
+            <div class="ds-dropdown" data-menu-type="language" data-select-label="selected" data-ds-theme="vessel"
+              data-ds-variant="basic" data-ds-version="2">
+              <div class="ds-dropdown__drop-menu">
+                <label class="ds-dropdown__label">
+                  <span class="ds-dropdown__label-text">Language</span>
+                </label>
+                <button class="ds-dropdown__trigger-button">
+                  <span class="ds-dropdown__trigger-text"></span>
+                  <img class="ds-dropdown__chevron" src="sb/header/assets/icons/ds2/chevrondown.svg" alt="" width="24"
+                    height="24">
+                </button>
+                <ul class="ds-dropdown__menu-list"></ul>
+              </div>
+            </div>
+          </li>
+          <li class="ds-header__primary-nav-list-item ds-header__primary-nav-list-item--large">
+            <a href="#" class="ds-header__primary-nav-list-link">Large Link</a>
+          </li>
+          <li class="ds-header__primary-nav-list-item ds-header__primary-nav-list-item--large">
+            <a href="#" class="ds-header__primary-nav-list-link">Large Link</a>
+          </li>
+        </ul>
+        <!-- /primary navigation -->
+        <span class="screenreader-only device-only">End of navigation menu</span>
+        <span class="ds-header__primary-nav-end"></span>
+      </nav>
+    </div>
+  </header>
+`,_="header";function m(){l(_);const e=o(c),t=e.classList.contains("ds-header")?e:e.querySelector(".ds-header"),a=e.querySelector(".ds-header__menu-button");return a==null||a.addEventListener("click",()=>{const i=t.classList.toggle("ds-header--menu-open");a.setAttribute("aria-expanded",String(i))}),e}const p={title:"Components/Header",render:()=>m(),parameters:{layout:"fullscreen",controls:{disable:!0}}},s={};var n,d,r;s.parameters={...s.parameters,docs:{...(n=s.parameters)==null?void 0:n.docs,source:{originalSource:"{}",...(r=(d=s.parameters)==null?void 0:d.docs)==null?void 0:r.source}}};const g=["Compact"];export{s as Compact,g as __namedExportsOrder,p as default};

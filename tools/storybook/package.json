@@ -7,7 +7,7 @@
   "scripts": {
     "start": "storybook dev -p 6006",
     "storybook": "storybook dev -p 6006",
-    "build": "storybook build",
+    "build": "storybook build -o dist",
     "design-files:extract": "bash scripts/extract-design-files.sh"
   },
   "devDependencies": {
