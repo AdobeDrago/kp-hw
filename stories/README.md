@@ -58,9 +58,15 @@ on the **current lineage only**, as a seed for AEM Edge Delivery blocks.
 
 ## Phase 2 status (issue #6)
 
-**Done (14 patterns):** Notifications, Card, Breadcrumbs, Card Group, Search Results, Hero,
-Content Toggle, Show More Less, Footer, Modal, Dropdown Menu, Autocomplete Search, Form,
-**Header** + Foundations/Breakpoints.
+**Done (15 of 17 patterns):** Notifications, Card, Breadcrumbs, Card Group, Search Results,
+Hero, Content Toggle, Show More Less, Footer, Modal, Dropdown Menu, Autocomplete Search,
+Form, Header, **Skip Link** + Foundations/Breakpoints.
+
+**Not built (blocked — required source isn't in the zip export):**
+- **social-share** — the social icon SVGs are absent (the pattern folder ships no `assets/`).
+- **icon-links** — content is JS-rendered and depends on an external `fed.kp.org` stylesheet.
+
+These can be completed only if the source icons / data + CSS are provided.
 
 > Header note: covers the compact foundation variant (branding/logo + primary nav + mobile
 > menu toggle), imported via `?raw`. Other variants — auth / non-auth / task-flow / maui —
@@ -94,7 +100,8 @@ says "use the following Sass variables"). A real `:root { --kp-* }` token layer 
 | Mostly CSS (older arch) | ~~kp-footer~~ ✅ done | `kp-theme-ds2`/main.css; markup via `?raw` |
 | Mostly CSS + small JS | ~~content-toggle, show-more-less~~ ✅ done | Vanilla toggle/expand re-implemented |
 | JS-heavy (vanilla re-impl) | ~~modal, dropdown-menu, autocomplete-search, form, header~~ ✅ done | Real behavior ported to vanilla JS |
-| Blocked / awkward | social-share (icon assets missing from export), icon-links (JS-rendered + external CSS), skip-link (older `kp-theme-ds2`/`main.css` line, no `foundation-v`) | Need source assets or an architecture decision |
+| Older arch (built) | ~~skip-link~~ ✅ done | pure-CSS `:focus` reveal; loads its own `main.css` |
+| Blocked (source not in export) | social-share (icon assets missing), icon-links (JS-rendered + external CSS) | Need the source icons / data + CSS to complete |
 
 \* hero variants are `card-overlay`/`text-overlay` vN — confirm the foundation line.
 
