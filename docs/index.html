@@ -457,9 +457,9 @@
 
       <!-- PAGE HERO -->
       <div class="page-hero" id="overview">
-        <div class="page-hero-eyebrow">AEM Edge Delivery Services</div>
+        <div class="page-hero-eyebrow">KP Health &amp; Wellness POC · Scenario 1</div>
         <h1>Health Articles — Import Process &amp; Reference</h1>
-        <p class="page-hero-sub">How the Kaiser Permanente Northern California health &amp; wellness articles were brought into this Edge Delivery Services project: the article template, the page-metadata-driven tag/share UI, and the query index that powers article listings. Captures the work done on <strong>9 June 2026</strong>.</p>
+        <p class="page-hero-sub">How the Kaiser Permanente Northern California health &amp; wellness articles were brought into this Edge Delivery Services project: the article template, the page-metadata-driven tag/share UI, and the query index that powers article listings. This work is the article-rendering foundation for <strong>Scenario 1 — Health &amp; Wellness Landing Page</strong>. Captures the work done on <strong>9 June 2026</strong>.</p>
       </div>
 
       <!-- PROJECT OVERVIEW -->
@@ -474,9 +474,15 @@
         <p>This project recreates Kaiser Permanente's Northern California <strong>health &amp; wellness articles</strong> as Edge Delivery Services pages. It is built on the <em>Author Kit</em> boilerplate, where the runtime loads through <code class="code-inline">scripts/ak.js</code> and <code class="code-inline">scripts/scripts.js</code> rather than the classic <code class="code-inline">aem.js</code> path.</p>
         <p>The 9 June work delivered a reusable <strong>article template</strong> (CSS + JS) that matches the look of a production KP health article, plus a <strong>query index</strong> so those articles can be listed and filtered.</p>
 
+        <div class="notice info">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span><strong>Where this fits in the POC.</strong> This is part of <strong>Scenario 1 — Health &amp; Wellness Landing Page</strong> (reference: <code class="code-inline">/northern-california/health-wellness</code>). The <code class="code-inline">healtharticles</code> index targets exactly that path, and the article template renders the individual articles the landing page links to. Still outstanding for Scenario 1: the <strong>Content Hub API</strong> call to fetch content fragments and the <strong>dynamic related-articles</strong> rendering via content selectors.</span>
+        </div>
+
         <table class="spec-table" style="margin-top:16px;">
           <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
           <tbody>
+            <tr><td>POC scenario</td><td>Scenario 1 — Health &amp; Wellness Landing Page</td></tr>
             <tr><td>GitHub repo</td><td><code class="code-inline">AdobeDrago/kp-hw</code></td></tr>
             <tr><td>Primary branch</td><td><code class="code-inline">main</code></td></tr>
             <tr><td>Boilerplate</td><td>Author Kit (<code class="code-inline">ak.js</code> + <code class="code-inline">scripts.js</code>)</td></tr>
@@ -509,6 +515,12 @@
 
         <h3>Production reference pages</h3>
         <div class="url-grid">
+          <a class="url-card" href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 1 — Landing page</div>
+            <div class="url-card-title">Health &amp; Wellness landing page</div>
+            <div class="url-card-url">…/northern-california/health-wellness</div>
+            <div class="url-card-desc">The Scenario 1 reference page — articles below live under this path</div>
+          </a>
           <a class="url-card" href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/healtharticle.mental-health-for-athletes" target="_blank" rel="noopener">
             <div class="url-card-label"><span class="dot dot-blue"></span>KP Production</div>
             <div class="url-card-title">Mental health for athletes</div>
