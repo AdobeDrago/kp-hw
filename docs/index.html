@@ -507,7 +507,7 @@
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Scenario 2 · Class Directory <span class="nav-status ns-planned">Planned</span></div>
+      <div class="sidebar-label">Scenario 2 · Class Directory <span class="nav-status ns-progress">In progress</span></div>
       <a class="sidebar-link" href="#scenario-2">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1 1 0 00-.115-.099zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/></svg>
         Health Class Directory
@@ -591,7 +591,7 @@
           <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th></tr></thead>
           <tbody>
             <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
-            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
             <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Drug Encyclopedia</a></td><td>Lucid Search · content selectors · AEM servlet images</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
             <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic results · content selectors</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
           </tbody>
@@ -599,7 +599,7 @@
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Backend integration (Content Hub, Lucid Search, AEM servlets) is still to come.</span>
+          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> is now in progress — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks are complete, driving the KP Lucid Search end to end through a CORS-proxy (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Remaining backend integration (Content Hub, AEM-backed detail pages, AEM servlets) is still to come.</span>
         </div>
 
         <table class="spec-table" style="margin-top:16px;">
@@ -686,7 +686,7 @@
             <tr>
               <td>2 · Class Directory</td>
               <td><a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a></td>
-              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-planned">planned</span></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-progress">building</span></td>
             </tr>
             <tr>
               <td>3 · Drug Encyclopedia</td>
@@ -947,22 +947,57 @@
       </section>
 
       <!-- SCENARIO 2 -->
-      <section class="doc-section scenario-stub" id="scenario-2">
+      <section class="doc-section" id="scenario-2">
         <h2>
           <span class="section-icon icon-purple">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1 1 0 00-.115-.099zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/></svg>
           </span>
           Scenario 2 — Health Class Directory
-          <span class="status-badge sb-planned">Planned</span>
+          <span class="status-badge sb-progress">In progress</span>
         </h2>
         <div class="section-rule"></div>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a></p>
-        <p>Requirements (not yet started):</p>
-        <ul class="req-list">
-          <li>Integrate <strong>Lucid Search API</strong> for search functionality.</li>
-          <li>Render results dynamically.</li>
-          <li>Click loads the corresponding AEM-backed content page.</li>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a> <span class="nav-status ns-progress">building</span></p>
+        <p>Progress against the three Scenario 2 requirements. The front end is built — two new blocks drive the KP Lucid Search end to end (search → dynamic, filterable results). The AEM-backed detail page on click is still to come.</p>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Integrate the Lucid Search API for search</div>
+              <div class="check-note">KP's Lucid Search API blocks browser calls with CORS, so requests route through a public <code class="code-inline">kp-search</code> Adobe App Builder action (the <code class="code-inline">fetch-nocors</code> proxy) that calls KP server-side and returns the data with CORS headers.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Render results dynamically</div>
+              <div class="check-note">The <code class="code-inline">classes-results</code> block renders programs grouped by title with their locations and a result count, faceted sidebar filters (Facility / Format / Language / no-fee) sourced from the response <code class="code-inline">binning-set</code>, and "View more programs" pagination.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Click loads the corresponding AEM-backed content page</div>
+              <div class="check-note">"More program details" currently links to KP's live detail pages — the EDS-backed detail page is still to build.</div>
+            </div>
+          </li>
+        </ul>
+        <h3>Blocks delivered</h3>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title"><code class="code-inline">classes-search</code> — search entry</div>
+              <div class="check-note">ZIP / "Use my location" geolocation, a topic dropdown populated dynamically from Lucid Search, and a validation error state. Redirects to the results page with <code class="code-inline">user_zip</code> / <code class="code-inline">distance_label</code> / <code class="code-inline">health_topic</code> query params.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title"><code class="code-inline">classes-results</code> — results + filters</div>
+              <div class="check-note">Reads the URL params, runs Lucid Search through the proxy, and renders the dynamic listing, faceted filters, and pagination. Re-searching (Location / Distance / Topic) updates the URL in place with no page reload.</div>
+            </div>
+          </li>
         </ul>
       </section>
 
