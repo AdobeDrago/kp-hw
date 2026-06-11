@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Getting Started — KP Health &amp; Wellness Import</title>
+
+  <!-- Adobe Spectrum Web Components (design system, loaded from a CDN) -->
+  <script type="module">
+    import 'https://esm.run/@spectrum-web-components/theme/sp-theme.js';
+    import 'https://esm.run/@spectrum-web-components/theme/src/themes.js';
+    import 'https://esm.run/@spectrum-web-components/card/sp-card.js';
+    import 'https://esm.run/@spectrum-web-components/button/sp-button.js';
+    import 'https://esm.run/@spectrum-web-components/divider/sp-divider.js';
+    import 'https://esm.run/@spectrum-web-components/badge/sp-badge.js';
+  </script>
+
+  <style>
+    :root {
+      --kp-bg: #f5f5f5;
+      --kp-surface: #ffffff;
+      --kp-border: #e1e1e1;
+      --kp-text: #222222;
+      --kp-muted: #5c5c5c;
+      --kp-accent: #2680eb;
+      --kp-code-bg: #f0f0f0;
+    }
+    body {
+      margin: 0;
+      background: var(--kp-bg);
+      color: var(--kp-text);
+      font-family: "Adobe Clean", "Source Sans 3", -apple-system, system-ui, sans-serif;
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+    header.hero { margin-bottom: 8px; }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+    .subtitle {
+      color: var(--kp-muted);
+      margin: 0 0 20px;
+      font-size: 16px;
+    }
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 36px 0 12px;
+    }
+    p { margin: 0 0 12px; }
+
+    ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+    ol.steps > li {
+      counter-increment: step;
+      position: relative;
+      background: var(--kp-surface);
+      border: 1px solid var(--kp-border);
+      border-radius: 8px;
+      padding: 18px 20px 18px 64px;
+      margin-bottom: 14px;
+    }
+    ol.steps > li::before {
+      content: counter(step);
+      position: absolute;
+      left: 16px;
+      top: 18px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--kp-accent);
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    ol.steps h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+    ol.steps p { margin: 0 0 6px; color: var(--kp-text); }
+
+    code {
+      background: var(--kp-code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "Source Code Pro", ui-monospace, monospace;
+      font-size: 0.9em;
+    }
+    pre {
+      background: #1f1f1f;
+      color: #f0f0f0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: "Source Code Pro", ui-monospace, monospace;
+      font-size: 13px;
+      margin: 8px 0 0;
+    }
+    pre code { background: none; padding: 0; color: inherit; }
+
+    .callout {
+      border-left: 4px solid var(--kp-accent);
+      background: #eef5ff;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+    }
+    .callout.warn { border-left-color: #d7373f; background: #fff0f0; }
+
+    table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 14px; }
+    th, td { border: 1px solid var(--kp-border); padding: 8px 10px; text-align: left; }
+    th { background: var(--kp-code-bg); }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    footer { margin-top: 40px; color: var(--kp-muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <sp-theme system="spectrum" color="light" scale="medium">
+    <div class="wrap">
+
+      <header class="hero">
+        <h1>Getting Started</h1>
+        <p class="subtitle">Importing KP health articles into AEM Edge Delivery Services</p>
+        <div class="badges">
+          <sp-badge variant="positive">482 / 486 imported</sp-badge>
+          <sp-badge variant="informative">Edge Delivery Services</sp-badge>
+          <sp-badge variant="neutral">Adobe Spectrum</sp-badge>
+        </div>
+      </header>
+
+      <p>
+        This guide walks through importing a health-article page from
+        <strong>healthy.kaiserpermanente.org</strong> into this Edge Delivery
+        Services project. Articles are <strong>100% default content</strong> — no
+        blocks needed. Follow the steps in order.
+      </p>
+
+      <h2>Before you start</h2>
+      <p>
+        Get a DA token from a logged-in <a href="https://da.live" target="_blank" rel="noopener">da.live</a>
+        session and add it to <code>.env</code> as <code>DA_IMS_TOKEN=…</code>.
+      </p>
+      <div class="callout warn">
+        <strong>Heads up:</strong> the token is short-lived (~24h). Refresh it
+        before any re-run or your uploads will fail with auth errors.
+      </div>
+
+      <h2>The golden rule: two HTML formats</h2>
+      <p>The #1 cause of broken imports is uploading the wrong format to DA.</p>
+      <table>
+        <thead>
+          <tr><th></th><th>Rendered <code>.plain.html</code></th><th>DA authoring source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Used for</td><td>local preview / <code>aem.page</code></td><td>upload to <code>admin.da.live</code></td></tr>
+          <tr><td>A block is…</td><td><code>&lt;div class="block-name"&gt;</code></td><td>a <code>&lt;table&gt;</code> naming the block</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        Always convert rendered → table format before uploading.
+        <code>upload-verify.js</code> does this automatically (and read-back verifies).
+      </div>
+
+      <h2>Steps</h2>
+      <ol class="steps">
+        <li>
+          <h3>Run the import</h3>
+          <p>Use the page-import skill (one page at a time):</p>
+          <pre><code>/edge-delivery-services:page-import \
+  https://healthy.kaiserpermanente.org/northern-california/health-wellness/healtharticle.{slug}</code></pre>
+        </li>
+        <li>
+          <h3>Generate the <code>.plain.html</code></h3>
+          <p>Two content sections + a metadata section. Section 1 = article
+          (<code>style: tags,share</code>), Section 2 = footnotes
+          (<code>style: footnotes</code>), Section 3 = metadata block
+          (<code>template: article</code>, then tags/title/description).</p>
+          <p>Use the original KP CDN URL for the hero image. Don't use the
+          <code>hero</code> block — the image sits inline.</p>
+        </li>
+        <li>
+          <h3>Exclude the chrome</h3>
+          <p>Skip the <code>&lt;header&gt;</code> nav, Back/Print controls, the
+          share widget, the <code>&lt;footer&gt;</code>, and cookie banners.</p>
+        </li>
+        <li>
+          <h3>Write both output paths</h3>
+          <p>Local: <code>…/healtharticle-{slug}.plain.html</code> · DA:
+          <code>…/healtharticle-{slug}.html</code>. Slug transform: replace the
+          <code>.</code> separator with <code>-</code> and lowercase.</p>
+        </li>
+        <li>
+          <h3>Convert, upload, verify</h3>
+          <pre><code>node import/upload-verify.js</code></pre>
+          <p>Converts blocks to DA tables, uploads via raw <code>PUT</code>, reads
+          each file back, and retries up to 4×. Never use a multipart
+          <code>POST</code> — DA flattens it.</p>
+        </li>
+        <li>
+          <h3>Preview &amp; confirm</h3>
+          <pre><code>curl -X POST -H "Authorization: Bearer $DA_IMS_TOKEN" \
+  "https://admin.hlx.page/preview/AdobeDrago/kp-hw/main/northern-california/health-wellness/healtharticle-{slug}"</code></pre>
+          <p>A correct round-trip renders <code>&lt;div class="tags share"&gt;</code>
+          and <code>&lt;div class="footnotes"&gt;</code>, with title/description in
+          <code>&lt;head&gt;</code>.</p>
+        </li>
+      </ol>
+
+      <h2>Opening a pull request</h2>
+      <p>Every PR description <strong>must</strong> include a testing URL:</p>
+      <pre><code>URL for testing:
+
+- https://&lt;branch&gt;--kp-hw--AdobeDrago.aem.page/…</code></pre>
+      <div class="callout warn">
+        <code>aem.page</code> hostnames can't contain <code>/</code>, so a branch
+        named <code>claude/foo</code> needs a slash-free mirror branch (e.g.
+        <code>foo</code>) to produce a working preview URL.
+      </div>
+
+      <div class="actions">
+        <sp-button variant="accent" href="./index.html">Open full docs</sp-button>
+        <sp-button variant="secondary" treatment="outline"
+          href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/"
+          target="_blank" rel="noopener">View live site</sp-button>
+      </div>
+
+      <sp-divider size="s" style="margin:32px 0 12px;"></sp-divider>
+      <footer>
+        Full reference: <code>CLAUDE.md</code> and <code>import/CLAUDE.md</code> in the repo root.
+      </footer>
+
+    </div>
+  </sp-theme>
+</body>
+</html>
