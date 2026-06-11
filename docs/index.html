@@ -1017,33 +1017,61 @@
           <span class="status-badge sb-progress">In progress</span>
         </h2>
         <div class="section-rule"></div>
-        <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, using <strong>Storybook as the design source of truth</strong>. The reference-story side is built; the implementation side (story → shipping block) is in progress.</p>
+        <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, with <strong>Storybook as the design source of truth</strong>. This is the high-level workflow and recommended architecture; the detailed decisions, tooling, and status follow below.</p>
 
-        <h3>The big idea — two contracts</h3>
-        <p>There are two contracts in play, and the whole effort reconciles them:</p>
+        <h3>Recommended architecture</h3>
+        <p>Two contracts have to be reconciled: Storybook components are driven by <strong>args/props</strong>, while EDS blocks are driven by <strong>authored content</strong> (a table that <code class="code-inline">init(el)</code> decorates into DOM). The architecture threads them so <strong>one design pattern produces exactly one block</strong> — and the story and the shipping block can't silently drift apart.</p>
+        <div class="arch-diagram">
+          <div class="arch-row">
+            <div class="arch-node" style="background:#e6eef7;color:var(--kp-navy);min-width:240px;">Global Library (immutable)<br><span style="font-weight:400;font-size:11px;">vessel DS · Storybook reference stories · <code class="code-inline">--ds-*</code> tokens</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#fff8d6;color:#5a3e00;min-width:260px;">Project repo · one block per pattern<br><span style="font-weight:400;font-size:11px;">shared renderer · <code class="code-inline">init()</code> · sliced CSS · UE model</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#f3edfb;color:#5b2d99;">visual parity diff — CI gate</div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#eaf6f1;color:#1a6b50;">Published EDS page — matches the design system</div>
+          </div>
+        </div>
         <ul class="req-list">
-          <li><strong>Storybook components</strong> are driven by <strong>args/props</strong>.</li>
-          <li><strong>EDS blocks</strong> are driven by <strong>authored content</strong> (a table of rows/cells that <code class="code-inline">init(el)</code> decorates into DOM).</li>
+          <li><strong>One Repo Per Project</strong>, consuming a referenceable, <strong>immutable Global Library</strong> (shared blocks, CSS, tokens).</li>
+          <li><strong>The block owns the renderer; the story imports it</strong> — a single source of truth for DOM, shipped with EDS.</li>
+          <li>Design tokens extracted to a namespaced <code class="code-inline">--ds-*</code> layer; component CSS <strong>sliced</strong> from the foundation and rescoped per block.</li>
+          <li>The Universal Editor content model is generated from the story's <code class="code-inline">argTypes</code>.</li>
+          <li>A <strong>visual parity diff</strong> compares the real block to its reference story and gates CI.</li>
         </ul>
-        <p>One design (a vessel pattern) produces one block. Storybook is the contract; the block is the implementation; a visual <strong>parity diff</strong> is the enforcement — so the story and the shipping block can never silently drift apart.</p>
 
-        <h3>End-to-end pipeline</h3>
-        <div class="code-block"><span class="cmt"># DESIGN CONTRACT (built)</span>
-KP vessel design system  ──►  Storybook reference story
-(compiled Sass exports)        render(args) + foundation.css
-                                        │
-<span class="cmt"># THE EDS BLOCK — one source of truth (Phase 4)</span>
-  shared renderer   ·  init(el): authored table → args → DOM
-  CSS slice + tokens ·  UE content model from argTypes
-                                        │
-<span class="cmt"># VERIFICATION</span>
-  visual parity diff  ◄── block vs reference story
-                                        │
-<span class="cmt"># AUTHORING + RUNTIME</span>
-  author in UE  ──►  EDS decorates  ──►  published page</div>
+        <h3>Workflow</h3>
+        <ol class="steps">
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Capture the design as a reference story</div>
+            <p>A vessel pattern becomes a vanilla HTML/CSS Storybook story — <code class="code-inline">render(args)</code> emits the canonical markup and <code class="code-inline">argTypes</code> are the authoring knobs. This is what designers review.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Derive tokens &amp; slice CSS</div>
+            <p>Run <code class="code-inline">npm run tokens:ds</code> for the <code class="code-inline">--ds-*</code> layer, and the slice tool to extract just this component's rules (wrapper stripped, colors tokenized).</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Build the block from the story</div>
+            <p>Move <code class="code-inline">render()</code> into the block as a <strong>shared renderer</strong>; <code class="code-inline">init(el)</code> turns the authored table into the same args; add the sliced CSS and generate the UE model from <code class="code-inline">argTypes</code>.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Verify parity</div>
+            <p>The EDS-block harness renders the real block (table → <code class="code-inline">init()</code> → DOM) beside its reference story; a screenshot diff fails CI on divergence.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Author &amp; publish</div>
+            <p>An author drops the block into a page in UE / DA and fills the fields; EDS decorates and the published page matches the design system because it runs the same renderer and extracted styling.</p>
+          </div></li>
+        </ol>
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>No drift, by construction.</strong> The story's <code class="code-inline">render()</code> moves <em>into</em> the block; both the story and <code class="code-inline">init()</code> import it. A DS update → re-run <code class="code-inline">tokens:ds</code>, re-slice CSS, update the story → the parity diff shows exactly what moved.</span>
+          <span><strong>No drift, by construction.</strong> Story and block share one renderer and one token source. A DS update → re-run <code class="code-inline">tokens:ds</code>, re-slice CSS, update the story → the parity diff shows exactly what moved.</span>
         </div>
 
         <h3>Locked decisions</h3>
