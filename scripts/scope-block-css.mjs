@@ -154,6 +154,10 @@ function transform(nodes, indent) {
 
 const css = readFileSync(resolve(SRC), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const header = `/* stylelint-disable */\n/* Scoped under ${ROOT} by scripts/scope-block-css.mjs from ${relative(process.cwd(), resolve(SRC))} */\n`;
-writeFileSync(resolve(OUT), `${header}${transform(parse(css), '')}\n`);
+// Optional hand-authored overrides appended after the scoped CSS (so they survive
+// regeneration and win by being last). Used for EDS-integration fixes.
+const APPEND = arg('append');
+const overrides = APPEND ? `\n\n/* --- appended overrides: ${relative(process.cwd(), resolve(APPEND))} --- */\n${readFileSync(resolve(APPEND), 'utf8')}` : '';
+writeFileSync(resolve(OUT), `${header}${transform(parse(css), '')}\n${overrides}`);
 // eslint-disable-next-line no-console -- CLI build script
 console.log(`Wrote ${relative(process.cwd(), resolve(OUT))} (scoped under ${ROOT}).`);
