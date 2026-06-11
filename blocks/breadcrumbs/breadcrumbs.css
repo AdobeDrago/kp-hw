@@ -1,0 +1,207 @@
+/* stylelint-disable */
+/*
+ * Sliced from tools/storybook/stories/breadcrumbs/foundation.css by scripts/slice-block-css.mjs
+ * match: .ds-breadcrumbs  root: .breadcrumbs
+ * Theme wrapper stripped (data-ds-theme/version, :not(--unstyled), .ds-foundation) (kept: data-ds-variant).
+ * Color literals mapped to --ds-* tokens where available.
+ * Not included: @font-face/@keyframes and shared primitives.
+ */
+.breadcrumbs {
+  color: #0D1C3D;
+  font-family: "Gotham 4r", Verdana;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i],
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].-book,
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].\--book,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).-book,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).\--book {
+  font-family: "Gotham 4r";
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].-light,
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].\--light,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).-light,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).\--light {
+  font-family: "Gotham 3r";
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].-medium,
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].\--medium,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).-medium,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).\--medium {
+  font-family: "Gotham 5r";
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].-bold,
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].\--bold,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).-bold,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).\--bold {
+  font-family: "Gotham 5r";
+}
+
+@media screen and (max-width: 767px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i],
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) {
+    margin-left: 0.75rem;
+    margin-right: 0;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] a:hover,
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] a.button:hover,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) a:hover,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) a.button:hover {
+  color: var(--ds-color-midnight);
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] a:hover .ds-breadcrumbs__chevron-back,
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] a.button:hover .ds-breadcrumbs__chevron-back,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) a:hover .ds-breadcrumbs__chevron-back,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) a.button:hover .ds-breadcrumbs__chevron-back {
+  color: var(--ds-color-midnight);
+}
+
+@media print {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .device-only,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .device-only {
+    display: none;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li {
+  float: left;
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li a,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li a {
+  position: relative;
+}
+
+@media screen and (max-width: 767px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li a,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li a {
+    display: none;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li img,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li img {
+  vertical-align: middle;
+}
+
+@media screen and (max-width: 767px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:nth-last-child(2) a,
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:only-child a,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:nth-last-child(2) a,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:only-child a {
+    display: inline-flex;
+    position: relative;
+    padding-left: 0.25rem;
+    font-family: "Gotham 4r";
+    vertical-align: top;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:nth-last-child(2) .ds-breadcrumbs__chevron-forward,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:nth-last-child(2) .ds-breadcrumbs__chevron-forward {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:nth-last-child(2) .ds-breadcrumbs__chevron-back,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:nth-last-child(2) .ds-breadcrumbs__chevron-back {
+    display: none;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:last-child:not(:only-child),
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:last-child:not(:only-child) {
+  color: #0D1C3D;
+  font-family: "Gotham 5r";
+}
+
+@media screen and (max-width: 767px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:last-child:not(:only-child),
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:last-child:not(:only-child) {
+    display: none;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:last-child:not(:only-child) a,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:last-child:not(:only-child) a {
+  color: #0074AD;
+  font-family: "Gotham 5r";
+  text-decoration: none;
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li:last-child:not(:only-child) a:hover,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li:last-child:not(:only-child) a:hover {
+  background-color: transparent;
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__list li div,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__list li div {
+  margin-top: 1px;
+}
+
+@media screen and (max-width: 767px) {
+  .breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__chevron-back,
+  .breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__chevron-back {
+    position: absolute;
+    color: #0D1C3D;
+    font-size: px-to-rem(12px);
+    bottom: -1px;
+    top: 3px;
+    left: -16px;
+    letter-spacing: -3px;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i] .ds-breadcrumbs__chevron-forward,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])) .ds-breadcrumbs__chevron-forward {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+  color: #0D1C3D;
+  letter-spacing: -7px;
+  position: relative;
+  bottom: 1px;
+  font-size: px-to-rem(12px);
+}
+
+.breadcrumbs .sg-spacing .ds-breadcrumbs[data-ds-variant=basic i],
+.breadcrumbs .sg-spacing :where(.ds-breadcrumbs:not([data-ds-variant])) {
+  margin-bottom: 28px;
+}
+
+@media screen and (min-width: 768px) {
+  .breadcrumbs .sg-spacing .ds-breadcrumbs[data-ds-variant=basic i],
+  .breadcrumbs .sg-spacing :where(.ds-breadcrumbs:not([data-ds-variant])) {
+    margin-bottom: 40px;
+  }
+}
+
+.breadcrumbs .ds-breadcrumbs[data-ds-variant=basic i].pl-breadcrumbs-version:before,
+.breadcrumbs :where(.ds-breadcrumbs:not([data-ds-variant])).pl-breadcrumbs-version:before {
+  content: "3.7.1";
+}
