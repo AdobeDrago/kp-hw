@@ -72,10 +72,12 @@ function buildBreadcrumb() {
   wrap.className = 'breadcrumbs';
   wrap.append(renderBreadcrumbs(items));
 
-  // Insert at the top of the first section, not as a bare child of <main>: EDS hides
-  // undecorated `main > div` (display:none), so a direct main child would be invisible.
-  const firstSection = main.querySelector(':scope > div');
-  (firstSection || main).prepend(wrap);
+  // Insert at the top of the article's content column so it aligns with the body
+  // (and isn't hidden — EDS hides bare `main > div` with display:none).
+  const target = main.querySelector('.section .default-content')
+    || main.querySelector(':scope > div')
+    || main;
+  target.prepend(wrap);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -218,6 +220,11 @@ function buildShare() {
 /* -------------------------------------------------------------------------- */
 
 export default function decorateArticle() {
+  // article.css is scoped under body.article-template. ak.js adds that class for
+  // metadata-declared templates; when we assign the template by URL (see scripts.js),
+  // it isn't set — so ensure it here. Idempotent.
+  document.body.classList.add('article-template');
+
   // Breadcrumb is always added (auto-generated from the URL path).
   buildBreadcrumb();
 
