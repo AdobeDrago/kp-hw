@@ -92,8 +92,10 @@ function wireDropdowns(root) {
   const triggers = [...root.querySelectorAll('.drop-menu-dropdown')];
   if (!triggers.length) return;
   root.querySelectorAll('.drop-menu-pattern').forEach((p) => {
-    // The vendor JS adds this modifier; it gates the show/hide CSS, so add it here.
-    p.classList.add('--default-option');
+    // The vendor JS adds the modifier matching data-menu-type (e.g. --region-dark,
+    // --language). It carries the field label styling, dark theme, white chevron,
+    // and the show/hide rules — without it the dropdown is unstyled.
+    if (p.dataset.menuType) p.classList.add(`--${p.dataset.menuType}`);
     populatePlaceholder(p);
   });
 
