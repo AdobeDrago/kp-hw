@@ -29,9 +29,10 @@ const notif = (v) => ({ name: `notification-${v}`, selector: '.ds-notification',
 const PAIRS = [
   card('basic'), card('large'), card('thumbnail'),
   notif('informational'), notif('alert'), notif('error'), notif('success'), notif('dismissible'),
-  // Header bar is visually faithful; a minor language-dropdown width/spacing delta
-  // shifts two right-aligned items, so it carries a slightly looser tolerance.
-  { name: 'header-default', selector: '.ds-header', eds: 'eds-blocks-header--default', ref: 'components-header--default', maxDiff: 0.06 },
+  // KP header block (auth-toggle) vs the kp-header reference — same markup + CSS,
+  // so this is a tight sanity check that the block injects the right variant.
+  { name: 'header-nonauth', selector: '.kp-header', eds: 'eds-blocks-header--non-authenticated', ref: 'components-kp-header--non-authenticated' },
+  { name: 'header-auth', selector: '.kp-header', eds: 'eds-blocks-header--authenticated', ref: 'components-kp-header--authenticated' },
 ];
 
 async function shoot(page, id, selector) {

@@ -1,118 +1,73 @@
-import { getConfig, getMetadata } from '../../scripts/ak.js';
-import { loadFragment } from '../fragment/fragment.js';
-import { renderHeader } from './header-dom.js';
+import { NON_AUTH, AUTH } from './kp-markup.js';
 
-// Vessel header (.ds-header). Built from the nav fragment via the shared renderer
-// (blocks/header/header-dom.js), styled by the sliced vessel CSS.
+// KP production header (.kp-header) with a localStorage-driven auth toggle:
+//   localStorage.auth === '1'  → authenticated header + /fragments/nav/header-authenticated
+//   otherwise                  → non-authenticated header + /fragments/nav/header
 //
-// NOTE — this adopts the simpler vessel design. Compared with the previous KP
-// header it intentionally does NOT carry: the utility/brand bar of external links,
-// multi-level nav dropdowns, breadcrumbs, or the mobile accordion. Those are vessel
-// design gaps to extend the renderer for if/when needed. The nav-fragment mapping
-// below (top-level links + language widget) is best-effort and should be validated
-// against the real /fragments/nav/header content.
+// The kp-header SHELL (utility bar, search, logo, mega-menu chrome) comes from the
+// vendored markup (kp-markup.js); the PRIMARY NAV is author-editable — it's poured in
+// from the nav fragment at runtime, so editing the fragment in DA changes the menu.
+// (Utility/account links + search are still from the shell — a follow-up to also map
+// those from the fragment.)
+//
+// Self-contained: the block ships its own CSS (header.css) and assets
+// (blocks/header/assets, referenced block-relative), so the live site needs nothing
+// from outside the block.
+//
+// Toggle from the console:  localStorage.setItem('auth', '1'); location.reload();
 
-const { locale } = getConfig();
-const isLocalContent = window.location.pathname.startsWith('/content/');
-const HEADER_PATH = isLocalContent ? '/content/fragments/nav/header' : '/fragments/nav/header';
-const isDesktop = window.matchMedia('(min-width: 900px)');
-const LANGUAGE_WIDGET = '/tools/widgets/language';
-
-// Assets ship with the block; new URL(import.meta.url) resolves in Vite and EDS.
-const ASSET = {
-  logoMobile: new URL('./assets/images/kp-logo-signature-stacked.svg', import.meta.url).href,
-  logoDesktop: new URL('./assets/images/kp-logo-374x42.svg', import.meta.url).href,
-  menu: new URL('./assets/icons/ds2/menu.svg', import.meta.url).href,
-  close: new URL('./assets/icons/ds2/close-small.svg', import.meta.url).href,
-  chevron: new URL('./assets/icons/ds2/chevrondown.svg', import.meta.url).href,
+const NAV_PATH = {
+  auth: '/fragments/nav/header-authenticated',
+  nonAuth: '/fragments/nav/header',
 };
+const PRIMARY_NAV = '.kp-header-global-menu__primary-links-list';
+const MENU_ITEM = 'kp-header-global-menu__menu-item';
+const MENU_LINK = 'kp-header-global-menu__menu-item__link';
 
-// Map the nav fragment to vessel header items: top-level links become nav links;
-// a language widget becomes the language dropdown (inserted after the first link).
-function itemsFromFragment(fragment) {
-  const items = [];
-  let hasLanguage = false;
-  const list = fragment.querySelector('ul');
-  if (list) {
-    list.querySelectorAll(':scope > li').forEach((li) => {
-      const a = li.querySelector(':scope > a');
-      if (!a) return;
-      const href = a.getAttribute('href') || '#';
-      if (href.includes(LANGUAGE_WIDGET)) {
-        hasLanguage = true;
-        return;
-      }
-      items.push({ kind: 'link', label: a.textContent.trim(), href });
-    });
+export function isAuthenticated() {
+  try {
+    return localStorage.getItem('auth') === '1';
+  } catch {
+    return false;
   }
-  if (hasLanguage || fragment.querySelector(`a[href*="${LANGUAGE_WIDGET}"]`)) {
-    items.splice(Math.min(1, items.length), 0, { kind: 'language', label: 'Language', value: '' });
+}
+
+function elFromHTML(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html.trim();
+  return tpl.content.firstElementChild;
+}
+
+// The fragment's primary nav is its last <ul> (first <ul> is the utility row).
+function primaryNavItems(fragment) {
+  const lists = [...fragment.querySelectorAll('ul')];
+  const primary = lists[lists.length - 1];
+  if (!primary) return '';
+  return [...primary.querySelectorAll(':scope > li > a')]
+    .map((a) => `<li class="${MENU_ITEM}"><a href="${a.getAttribute('href') || '#'}" class="${MENU_LINK}">${a.textContent.trim()}</a></li>`)
+    .join('');
+}
+
+// Replace the shell's primary nav with the fragment's links (author-editable).
+async function applyFragmentNav(authed, root) {
+  try {
+    const [{ loadFragment }, { getConfig }] = await Promise.all([
+      import('../fragment/fragment.js'),
+      import('../../scripts/ak.js'),
+    ]);
+    const prefix = getConfig()?.locale?.prefix || '';
+    const fragment = await loadFragment(`${prefix}${authed ? NAV_PATH.auth : NAV_PATH.nonAuth}`);
+    const list = fragment && root.querySelector(PRIMARY_NAV);
+    const items = fragment && primaryNavItems(fragment);
+    if (list && items) list.innerHTML = items;
+  } catch {
+    /* fragment unavailable (e.g. Storybook isolation) — keep the shell's default nav */
   }
-  return items;
 }
 
-function wireMenuButton(header) {
-  const btn = header.querySelector('.ds-header__menu-button');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    const open = header.classList.toggle('is-mobile-open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    document.body.style.overflowY = open && !isDesktop.matches ? 'hidden' : '';
-  });
-}
-
-function wireLanguageDropdown(header) {
-  const dropdown = header.querySelector('.ds-dropdown[data-menu-type="language"]');
-  if (!dropdown) return;
-  const trigger = dropdown.querySelector('.ds-dropdown__trigger-button');
-  const menuList = dropdown.querySelector('.ds-dropdown__menu-list');
-  let loaded = false;
-
-  const closeOnOutside = (e) => {
-    if (!e.target.closest('.ds-dropdown')) {
-      dropdown.classList.remove('is-open');
-      document.removeEventListener('click', closeOnOutside);
-    }
-  };
-
-  trigger.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    const open = dropdown.classList.toggle('is-open');
-    if (!open) {
-      document.removeEventListener('click', closeOnOutside);
-      return;
-    }
-    document.addEventListener('click', closeOnOutside);
-    if (!loaded) {
-      loaded = true;
-      try {
-        const frag = await loadFragment(`${locale.prefix}${HEADER_PATH}/languages`);
-        if (frag) menuList.append(frag);
-      } catch {
-        loaded = false;
-      }
-    }
-  });
-}
-
-export default async function init(el) {
-  const navPath = getMetadata('header') || HEADER_PATH;
-  const fragment = await loadFragment(`${locale.prefix}${navPath}`);
-
-  const items = fragment ? itemsFromFragment(fragment) : [];
-  const home = fragment?.querySelector('a[href]')?.getAttribute('href') || '/';
-
-  const header = renderHeader({
-    home,
-    menuLabel: 'Menu',
-    items,
-    logos: { mobile: ASSET.logoMobile, desktop: ASSET.logoDesktop },
-    icons: { menu: ASSET.menu, close: ASSET.close, chevron: ASSET.chevron },
-  });
-
-  wireMenuButton(header);
-  wireLanguageDropdown(header);
-
-  el.textContent = '';
-  el.append(header);
+export default function init(el) {
+  const authed = isAuthenticated();
+  const header = elFromHTML(authed ? AUTH : NON_AUTH);
+  el.replaceChildren(header);
+  applyFragmentNav(authed, header);
 }
