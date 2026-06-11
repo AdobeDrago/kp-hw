@@ -39513,3 +39513,10 @@ body.kp-header-disable-scroll {
   padding: 11px 24px;
   border-radius: 24px;
 }
+
+/* Mobile: the rows container is content-box, so its horizontal padding pushes it
+   wider than the viewport — the top-right menu goes off-screen and the page scrolls
+   horizontally. Keep the padding inside its width. */
+.header.header .kp-header__rows-container {
+  box-sizing: border-box;
+}
