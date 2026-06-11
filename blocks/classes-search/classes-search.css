@@ -1,0 +1,201 @@
+.classes-search {
+  /* KP palette (hardcoded so the block renders correctly regardless of the
+     page's global token values) */
+  --cs-blue: #0074ad;
+  --cs-blue-dark: #005a87;
+  --cs-navy: #003b71;
+  --cs-bg: #e9f3f7;
+  --cs-border: #c9d2dd;
+  --cs-text: #1a1a1a;
+  --cs-radius: 6px;
+  --cs-control-h: 54px;
+  --cs-label-h: 22px;
+
+  font-family: var(--font-family, 'Gotham 4r', 'Trebuchet MS', sans-serif);
+  color: var(--cs-text);
+}
+
+/* hidden must win over the display rules below (spinner/clear use flex) */
+.classes-search [hidden] { display: none !important; }
+
+/* Layout: row on desktop, column on mobile, controls bottom-aligned */
+.classes-search .cs-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.classes-search .cs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.classes-search .cs-location { flex: 1 1 340px; }
+.classes-search .cs-topic { flex: 1 1 280px; }
+
+/* Label zone — identical height in every field so controls align */
+.classes-search .cs-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--cs-label-h);
+}
+
+.classes-search .cs-label {
+  margin: 0;
+  font-family: var(--heading-font-family, 'Gotham 5r', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cs-navy);
+  line-height: 1;
+}
+
+/* "Use my location" link-button */
+.classes-search .cs-use-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--cs-blue);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.classes-search .cs-use-location:hover { color: var(--cs-blue-dark); }
+.classes-search .cs-use-location svg { flex: 0 0 auto; }
+
+/* Input + select share a control look */
+.classes-search .cs-input,
+.classes-search .cs-select {
+  width: 100%;
+  height: var(--cs-control-h);
+  margin: 0;
+  padding: 0 16px;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius);
+  background: #fff;
+  color: var(--cs-text);
+  font: inherit;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.classes-search .cs-input::placeholder { color: #6b7280; }
+
+/* Focus: KP blue border + subtle ring */
+.classes-search .cs-input:focus,
+.classes-search .cs-select:focus,
+.classes-search .cs-select:focus-visible {
+  outline: none;
+  border-color: var(--cs-blue);
+  box-shadow: 0 0 0 2px rgb(0 116 173 / 25%);
+}
+
+/* Location input with clear button inside */
+.classes-search .cs-input-wrap { position: relative; }
+.classes-search .cs-input-wrap .cs-input { padding-right: 46px; }
+
+.classes-search .cs-clear {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--cs-navy);
+  line-height: 0;
+}
+
+.classes-search .cs-clear:hover { color: var(--cs-blue); }
+
+/* Topic select: custom chevron, native dropdown list */
+.classes-search .cs-topic-control { position: relative; }
+
+.classes-search .cs-select {
+  appearance: none;
+  padding-right: 46px;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%230074ad' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+
+.classes-search .cs-select:disabled {
+  color: #6b7280;
+  cursor: default;
+  background-color: #fff;
+}
+
+/* Spinner shown in place of the select while topics load */
+.classes-search .cs-spinner {
+  height: var(--cs-control-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.classes-search .cs-spinner::after {
+  content: "";
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgb(0 116 173 / 25%);
+  border-top-color: var(--cs-blue);
+  border-radius: 50%;
+  animation: cs-spin 0.7s linear infinite;
+}
+
+@keyframes cs-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .classes-search .cs-spinner::after { animation-duration: 1.6s; }
+}
+
+/* Submit: solid KP blue pill (hardened against global button styles) */
+.classes-search .cs-submit {
+  flex: 0 0 auto;
+  height: var(--cs-control-h);
+  margin: 0;
+  padding: 0 36px;
+  border: 0;
+  border-radius: calc(var(--cs-control-h) / 2);
+  background-color: var(--cs-blue);
+  color: #fff;
+  font-family: var(--heading-font-family, 'Gotham 5r', sans-serif);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: var(--cs-control-h);
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.classes-search .cs-submit:hover { background-color: var(--cs-blue-dark); }
+.classes-search .cs-submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(0 116 173 / 35%);
+}
+
+/* Mobile: stack into a column, full-width controls */
+@media (width <= 768px) {
+  .classes-search { padding: 16px; }
+
+  .classes-search .cs-form { flex-direction: column; align-items: stretch; }
+  .classes-search .cs-location,
+  .classes-search .cs-topic { flex: 1 1 auto; width: 100%; }
+  .classes-search .cs-submit { width: 100%; }
+}
