@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KP Health & Wellness Pilot — AEM MS → EDS Migration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* KP brand */
+    --kp-navy: #003b71;
+    --kp-blue: #0074ad;
+    --kp-blue-hover: #005a87;
+    --kp-text: #0d1c3d;
+    --kp-grey-text: #677083;
+    --kp-pale-blue: #f0f7fa;
+    --accent: var(--kp-blue);
+
+    --gray-50: #ffffff;
+    --gray-75: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #eaeaea;
+    --gray-300: #e1e1e1;
+    --gray-400: #cacaca;
+    --gray-500: #b3b3b3;
+    --gray-600: #8e8e8e;
+    --gray-700: #6e6e6e;
+    --gray-800: #4b4b4b;
+    --gray-900: #2c2c2c;
+
+    --font: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --mono: 'Source Code Pro', 'Fira Mono', 'Courier New', monospace;
+    --sidebar-width: 248px;
+    --content-max: 860px;
+    --header-h: 56px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--gray-900);
+    background: var(--gray-50);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    z-index: 100;
+    box-shadow: 0 1px 0 var(--gray-200);
+  }
+  .topnav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    color: var(--kp-navy);
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+  .topnav-logo .mark {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--kp-blue);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .topnav-divider { width: 1px; height: 20px; background: var(--gray-300); }
+  .topnav-title {
+    color: var(--gray-800);
+    font-size: 14px;
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  .topnav-badge {
+    margin-left: auto;
+    background: var(--kp-pale-blue);
+    color: var(--kp-blue);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; margin-top: var(--header-h); min-height: calc(100vh - var(--header-h)); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+    border-right: 1px solid var(--gray-200);
+    background: var(--gray-75);
+    padding: 24px 0 40px;
+  }
+  .sidebar-section { margin-bottom: 8px; }
+  .sidebar-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-600);
+    padding: 8px 20px 4px;
+  }
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 20px;
+    font-size: 13px;
+    color: var(--gray-800);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+  }
+  .sidebar-link:hover { background: var(--gray-200); color: var(--gray-900); }
+  .sidebar-link.active {
+    background: var(--kp-pale-blue);
+    color: var(--kp-blue);
+    border-left-color: var(--kp-blue);
+    font-weight: 700;
+  }
+  .sidebar-link .icon { width: 16px; height: 16px; opacity: 0.6; flex-shrink: 0; }
+  .sidebar-link.active .icon { opacity: 1; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; min-width: 0; padding: 48px 56px 80px; }
+  .main-inner { max-width: var(--content-max); }
+
+  /* ── PAGE HERO ── */
+  .page-hero {
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--gray-200);
+    margin-bottom: 48px;
+  }
+  .page-hero-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--kp-blue);
+    margin-bottom: 8px;
+  }
+  .page-hero h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--kp-navy);
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .page-hero-sub { font-size: 16px; color: var(--gray-700); max-width: 640px; line-height: 1.5; }
+
+  /* ── SECTIONS ── */
+  .doc-section { margin-bottom: 56px; scroll-margin-top: calc(var(--header-h) + 24px); }
+  .doc-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--kp-navy);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-rule { height: 1px; background: var(--gray-200); margin: 12px 0 24px; }
+  .doc-section h3 { font-size: 14px; font-weight: 700; color: var(--gray-900); margin: 24px 0 8px; }
+  .doc-section p { font-size: 14px; color: var(--gray-800); margin-bottom: 12px; line-height: 1.65; }
+
+  /* ── SECTION ICON BADGE ── */
+  .section-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .icon-blue   { background: #e9f1fc; color: var(--kp-blue); }
+  .icon-navy   { background: #e6eef7; color: var(--kp-navy); }
+  .icon-green  { background: #eaf6f1; color: #268e6c; }
+  .icon-purple { background: #f3edfb; color: #7240ab; }
+  .icon-seafoam{ background: #e6f4f4; color: #16878c; }
+  .icon-orange { background: #fff4e5; color: #da7b11; }
+
+  /* ── URL CARDS ── */
+  .url-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .url-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .url-card:hover { border-color: var(--kp-blue); box-shadow: 0 0 0 1px var(--kp-blue); }
+  .url-card-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .url-card-label .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-blue   { background: var(--kp-blue); }
+  .dot-navy   { background: var(--kp-navy); }
+  .dot-green  { background: #268e6c; }
+  .dot-purple { background: #7240ab; }
+  .url-card-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .url-card-url { font-size: 12px; font-family: var(--mono); color: var(--kp-blue); word-break: break-all; }
+  .url-card-desc { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+
+  /* ── STEPS ── */
+  .steps { counter-reset: step; list-style: none; display: flex; flex-direction: column; gap: 0; position: relative; }
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: 15px; top: 30px; bottom: 30px;
+    width: 1px;
+    background: var(--gray-300);
+  }
+  .step { display: flex; gap: 16px; padding-bottom: 24px; position: relative; }
+  .step:last-child { padding-bottom: 0; }
+  .step-num {
+    counter-increment: step;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--kp-blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .step-num::after { content: counter(step); }
+  .step-body { padding-top: 5px; flex: 1; }
+  .step-title { font-size: 14px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .step-body p { font-size: 13px; color: var(--gray-700); margin-bottom: 8px; }
+  .step-commit {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    color: var(--gray-700);
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--gray-900);
+    color: #d4d4d4;
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 8px 0 4px;
+    white-space: pre;
+  }
+  .code-block .cmt  { color: #6a9955; }
+  .code-block .str  { color: #ce9178; }
+  .code-block .kw   { color: #569cd6; }
+  .code-block .var  { color: #9cdcfe; }
+  .code-inline {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    color: var(--gray-900);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* ── NOTICES ── */
+  .notice {
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    line-height: 1.5;
+  }
+  .notice-icon { flex-shrink: 0; margin-top: 1px; }
+  .notice.info     { background: #e9f1fc; color: #0d51b5; border-left: 3px solid var(--kp-blue); }
+  .notice.tip      { background: #eaf6f1; color: #1a6b50; border-left: 3px solid #268e6c; }
+  .notice.warning  { background: #fff4e5; color: #8a4b08; border-left: 3px solid #da7b11; }
+  .notice.question { background: #f3edfb; color: #5b2d99; border-left: 3px solid #7240ab; }
+
+  /* ── SKILLS GRID ── */
+  .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .skill-card { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px 16px; }
+  .skill-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .skill-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .tag-js  { background: #fff8d6; color: #8a5e00; }
+  .tag-css { background: #e9f1fc; color: #0d51b5; }
+  .tag-cfg { background: #eaf6f1; color: #1a6b50; }
+  .skill-card-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .skill-card-desc { font-size: 12px; color: var(--gray-600); line-height: 1.5; }
+
+  /* ── PIPELINE DIAGRAM ── */
+  .arch-diagram { border: 1px solid var(--gray-200); border-radius: 8px; padding: 24px; background: var(--gray-75); margin: 16px 0; }
+  .arch-row { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .arch-node { padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; text-align: center; min-width: 110px; }
+  .arch-arrow { font-size: 18px; color: var(--gray-400); }
+
+  /* ── TABLE ── */
+  .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+  .spec-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--gray-600);
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--gray-200);
+    background: var(--gray-75);
+  }
+  .spec-table td { padding: 9px 12px; border-bottom: 1px solid var(--gray-200); color: var(--gray-800); vertical-align: top; }
+  .spec-table tr:last-child td { border-bottom: none; }
+  .spec-table td:first-child { font-weight: 700; color: var(--gray-900); }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    border-top: 1px solid var(--gray-200);
+    margin-top: 40px;
+    padding-top: 20px;
+    font-size: 12px;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ── SIDEBAR STATUS PILL ── */
+  .sidebar-label { display: flex; align-items: center; gap: 6px; }
+  .nav-status {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+  }
+  .ns-progress { background: #fff4e5; color: #8a4b08; }
+  .ns-planned  { background: var(--gray-200); color: var(--gray-600); }
+
+  /* ── SCENARIO STATUS BADGE (in section headers) ── */
+  .status-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+  }
+  .sb-progress { background: #fff4e5; color: #8a4b08; }
+  .sb-planned  { background: var(--gray-100); color: var(--gray-600); }
+  .doc-section h2 { width: 100%; }
+
+  /* ── PROGRESS CHECKLIST ── */
+  .checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; margin: 4px 0; }
+  .check-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    background: var(--gray-50);
+  }
+  .check-mark {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .check-mark svg { width: 12px; height: 12px; }
+  .cm-done    { background: #eaf6f1; color: #268e6c; }
+  .cm-partial { background: #fff4e5; color: #da7b11; }
+  .cm-todo    { background: var(--gray-100); color: var(--gray-500); }
+  .check-body { flex: 1; }
+  .check-title { font-weight: 700; font-size: 13px; color: var(--gray-900); }
+  .check-note  { font-size: 12px; color: var(--gray-600); line-height: 1.5; }
+
+  /* ── SCENARIO STUB ── */
+  .scenario-stub p { color: var(--gray-700); }
+  .req-list { margin: 8px 0 0 18px; font-size: 13px; color: var(--gray-700); }
+  .req-list li { margin-bottom: 4px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 24px 20px 60px; }
+    .page-hero h1 { font-size: 24px; }
+    .url-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a class="topnav-logo" href="#overview">
+    <span class="mark">KP</span>
+    kp-hw
+  </a>
+  <div class="topnav-divider"></div>
+  <span class="topnav-title">Health &amp; Wellness Pilot — AEM MS → EDS Migration</span>
+  <span class="topnav-badge">Pilot</span>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" aria-label="Page navigation">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pilot</div>
+      <a class="sidebar-link active" href="#overview">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>
+        Overview
+      </a>
+      <a class="sidebar-link" href="#references">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"/></svg>
+        Key references
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Scenario 1 · Landing Page <span class="nav-status ns-progress">In progress</span></div>
+      <a class="sidebar-link" href="#s1-progress">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg>
+        Progress
+      </a>
+      <a class="sidebar-link" href="#process">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M0 3.75C0 2.784.784 2 1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0114.25 14H1.75A1.75 1.75 0 010 12.25v-8.5zm1.75-.25a.25.25 0 00-.25.25v.5h13v-.5a.25.25 0 00-.25-.25H1.75zM1.5 5.5v6.75c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V5.5h-13z"/></svg>
+        Import process
+      </a>
+      <a class="sidebar-link" href="#template">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3.5A1.5 1.5 0 012.5 2h2A1.5 1.5 0 016 3.5v2A1.5 1.5 0 014.5 7h-2A1.5 1.5 0 011 5.5v-2zm5.5 0A1.5 1.5 0 018 2h2a1.5 1.5 0 011.5 1.5v2A1.5 1.5 0 0110 7H8A1.5 1.5 0 016.5 5.5v-2zm-5.5 5A1.5 1.5 0 012.5 7h2A1.5 1.5 0 016 8.5v2A1.5 1.5 0 014.5 12h-2A1.5 1.5 0 011 10.5v-2zm5.5 0A1.5 1.5 0 018 7h2a1.5 1.5 0 011.5 1.5v2A1.5 1.5 0 0110 12H8A1.5 1.5 0 016.5 10.5v-2z"/></svg>
+        Article template
+      </a>
+      <a class="sidebar-link" href="#query-index">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3.5C2 2.12 4.69 1 8 1s6 1.12 6 2.5v9C14 13.88 11.31 15 8 15s-6-1.12-6-2.5v-9zM8 2.5C5.1 2.5 3.5 3.46 3.5 3.5S5.1 4.5 8 4.5s4.5-.96 4.5-1S10.9 2.5 8 2.5z"/></svg>
+        Query index
+      </a>
+      <a class="sidebar-link" href="#open-questions">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zM6.05 6.05a1.95 1.95 0 113.31 1.4c-.42.42-.86.86-.86 1.55a.5.5 0 01-1 0c0-1.1.66-1.76 1.15-2.25a.95.95 0 10-1.6-.7.5.5 0 01-1 0zM8 11.5A.75.75 0 108 13a.75.75 0 000-1.5z"/></svg>
+        Open questions
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Scenario 2 · Class Directory <span class="nav-status ns-planned">Planned</span></div>
+      <a class="sidebar-link" href="#scenario-2">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1 1 0 00-.115-.099zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/></svg>
+        Health Class Directory
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Scenario 3 · Drug Encyclopedia <span class="nav-status ns-planned">Planned</span></div>
+      <a class="sidebar-link" href="#scenario-3">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
+        Drug Encyclopedia
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Scenario 4 · Diabetes <span class="nav-status ns-planned">Planned</span></div>
+      <a class="sidebar-link" href="#scenario-4">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-1.5 2.5-4 4.5-4 7a4 4 0 008 0c0-2.5-2.5-4.5-4-7z"/></svg>
+        Diabetes Landing Page
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Design system <span class="nav-status ns-progress">In progress</span></div>
+      <a class="sidebar-link" href="#storybook">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zm8.4 1.3l-.1 1.6a.2.2 0 00.32.17l.55-.42.47.36a.2.2 0 00.32-.17l-.13-2.03h.8v11.4H4.4V2.3h6.5z"/></svg>
+        Storybook → EDS
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Reference</div>
+      <a class="sidebar-link" href="#dev-notes">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+        Developer notes
+      </a>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="main-inner">
+
+      <!-- PAGE HERO -->
+      <div class="page-hero" id="overview">
+        <div class="page-hero-eyebrow">Kaiser Permanente · Pilot</div>
+        <h1>Health &amp; Wellness Pilot</h1>
+        <p class="page-hero-sub">A pilot validating Kaiser Permanente's migration from <strong>AEM Managed Services</strong> to <strong>Edge Delivery Services</strong>, and confirming EDS can power <strong>dynamic, backend-driven experiences</strong> — not just static content. Four reference scenarios from the KP Health &amp; Wellness site drive the work. This guide tracks the architecture, engineering approach, and progress to date.</p>
+      </div>
+
+      <!-- PROJECT OVERVIEW -->
+      <section class="doc-section">
+        <h2>
+          <span class="section-icon icon-navy">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3.5A1.5 1.5 0 012.5 2h2A1.5 1.5 0 016 3.5v2A1.5 1.5 0 014.5 7h-2A1.5 1.5 0 011 5.5v-2zm5.5 0A1.5 1.5 0 018 2h2a1.5 1.5 0 011.5 1.5v2A1.5 1.5 0 0110 7H8A1.5 1.5 0 016.5 5.5v-2zm-5.5 5A1.5 1.5 0 012.5 7h2A1.5 1.5 0 016 8.5v2A1.5 1.5 0 014.5 12h-2A1.5 1.5 0 011 10.5v-2zm5.5 0A1.5 1.5 0 018 7h2a1.5 1.5 0 011.5 1.5v2A1.5 1.5 0 0110 12H8A1.5 1.5 0 016.5 10.5v-2z"/></svg>
+          </span>
+          Project overview
+        </h2>
+        <div class="section-rule"></div>
+        <p>This is a <strong>pilot</strong> validating Kaiser Permanente's migration from <strong>AEM Managed Services (AEM MS)</strong> to <strong>Edge Delivery Services (EDS)</strong>, and proving out EDS support for dynamic, backend-driven experiences. Four reference scenarios from the production KP Health &amp; Wellness site anchor the effort, backed by a shared design system and engineering foundation.</p>
+
+        <h3>Purpose</h3>
+        <ul class="req-list">
+          <li>Validate migration from <strong>AEM Managed Services</strong> to <strong>Edge Delivery Services</strong>.</li>
+          <li>Validate support for <strong>dynamic, backend-driven experiences</strong>.</li>
+        </ul>
+
+        <h3>Architecture requirements</h3>
+        <ul class="req-list">
+          <li><strong>One Repo Per Project</strong> architecture.</li>
+          <li>A referenceable, <strong>immutable Global Library</strong> — shared blocks, CSS, and design patterns aligned to the <strong>KP Design System</strong>.</li>
+          <li>Project repository contains blocks, pages, services, configuration, and tests.</li>
+        </ul>
+
+        <h3>Core engineering requirements</h3>
+        <ul class="req-list">
+          <li>Use the EDS <strong>block-based development model</strong> only.</li>
+          <li>Integrate backend services: <strong>Content Hub</strong>, <strong>Lucid Search</strong>, <strong>AEM Servlet APIs</strong>.</li>
+          <li>Support <strong>region and language</strong> switching.</li>
+          <li>Implement a modular <strong>service layer</strong> with error handling for all APIs.</li>
+        </ul>
+
+        <h3>The four scenarios</h3>
+        <table class="spec-table">
+          <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
+            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Drug Encyclopedia</a></td><td>Lucid Search · content selectors · AEM servlet images</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+            <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic results · content selectors</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+          </tbody>
+        </table>
+
+        <div class="notice info">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Backend integration (Content Hub, Lucid Search, AEM servlets) is still to come.</span>
+        </div>
+
+        <table class="spec-table" style="margin-top:16px;">
+          <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Effort</td><td>AEM Managed Services → Edge Delivery Services migration pilot</td></tr>
+            <tr><td>GitHub repo</td><td><code class="code-inline">AdobeDrago/kp-hw</code> · branch <code class="code-inline">main</code></td></tr>
+            <tr><td>Architecture</td><td>One Repo Per Project + immutable Global Library</td></tr>
+            <tr><td>Dev model</td><td>EDS block-based only (Author Kit runtime: <code class="code-inline">ak.js</code> + <code class="code-inline">scripts.js</code>)</td></tr>
+            <tr><td>Backend services</td><td>Content Hub · Lucid Search · AEM Servlet APIs</td></tr>
+            <tr><td>Design system</td><td>KP "vessel" via Storybook → EDS blocks</td></tr>
+            <tr><td>Reference site</td><td>healthy.kaiserpermanente.org</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- KEY REFERENCES -->
+      <section class="doc-section" id="references">
+        <h2>
+          <span class="section-icon icon-seafoam">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"/></svg>
+          </span>
+          Key references
+        </h2>
+        <div class="section-rule"></div>
+
+        <h3>Repository</h3>
+        <div class="url-grid">
+          <a class="url-card" href="https://github.com/AdobeDrago/kp-hw" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>GitHub</div>
+            <div class="url-card-title">kp-hw repository</div>
+            <div class="url-card-url">github.com/AdobeDrago/kp-hw</div>
+            <div class="url-card-desc">Code, branches, and PR queue</div>
+          </a>
+        </div>
+
+        <h3>Live pages — production (AEM Managed Services, migration source)</h3>
+        <div class="url-grid">
+          <a class="url-card" href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 1 — Landing page</div>
+            <div class="url-card-title">Health &amp; Wellness landing page</div>
+            <div class="url-card-url">…/northern-california/health-wellness</div>
+            <div class="url-card-desc">The Scenario 1 reference page — articles below live under this path</div>
+          </a>
+          <a class="url-card" href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/healtharticle.mental-health-for-athletes" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-blue"></span>KP Production</div>
+            <div class="url-card-title">Mental health for athletes</div>
+            <div class="url-card-url">…/health-wellness/healtharticle.mental-health-for-athletes</div>
+            <div class="url-card-desc">Styling reference for article.css (column width, type scale, footnotes)</div>
+          </a>
+          <a class="url-card" href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/healtharticle.9-fun-filled-ways-get-outside-work-sweat" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-blue"></span>KP Production</div>
+            <div class="url-card-title">9 fun-filled ways to get outside</div>
+            <div class="url-card-url">…/health-wellness/healtharticle.9-fun-filled-ways-…</div>
+            <div class="url-card-desc">Reference for article.js (tag pills + social share row)</div>
+          </a>
+        </div>
+        <h3>Project environments — EDS (the pages we're building, migration target)</h3>
+        <div class="url-grid">
+          <a class="url-card" href="https://main--kp-hw--adobedrago.aem.page/" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-blue"></span>Preview</div>
+            <div class="url-card-title">EDS preview</div>
+            <div class="url-card-url">main--kp-hw--adobedrago.aem.page</div>
+            <div class="url-card-desc">Renders DA content against the main branch code</div>
+          </a>
+          <a class="url-card" href="https://main--kp-hw--adobedrago.aem.live/" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-green"></span>Live</div>
+            <div class="url-card-title">EDS live</div>
+            <div class="url-card-url">main--kp-hw--adobedrago.aem.live</div>
+            <div class="url-card-desc">Published EDS content (CDN)</div>
+          </a>
+        </div>
+
+        <h3>Migration map · live → building</h3>
+        <p>Each pilot scenario migrates a production AEM MS page to its EDS equivalent. The EDS target paths mirror the production URLs; most are not authored yet (404 until built).</p>
+        <table class="spec-table">
+          <thead><tr><th>Scenario</th><th>Live (production)</th><th>Building (EDS preview)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>1 · Landing</td>
+              <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></td>
+            </tr>
+            <tr>
+              <td>2 · Class Directory</td>
+              <td><a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-planned">planned</span></td>
+            </tr>
+            <tr>
+              <td>3 · Drug Encyclopedia</td>
+              <td><a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a> <span class="nav-status ns-planned">planned</span></td>
+            </tr>
+            <tr>
+              <td>4 · Diabetes</td>
+              <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-planned">planned</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="notice info">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span>The query index targets the path <code class="code-inline">/northern-california/health-wellness/**</code> — the same URL shape as production. Article documents themselves are authored in DA, not committed to this repo. The EDS URL pattern is <code class="code-inline">{branch}--kp-hw--adobedrago.aem.page</code> (preview) / <code class="code-inline">.aem.live</code> (published).</span>
+        </div>
+      </section>
+
+      <!-- SCENARIO 1 PROGRESS -->
+      <section class="doc-section" id="s1-progress">
+        <h2>
+          <span class="section-icon icon-green">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg>
+          </span>
+          Scenario 1 — Health &amp; Wellness Landing Page
+          <span class="status-badge sb-progress">In progress</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p>Progress against the four Scenario 1 requirements from the pilot requirements. The 9 June work covered the EDS article rendering and the article index; the backend-driven pieces (Content Hub, content selectors) are still to do.</p>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></p>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Load page using EDS rendering</div>
+              <div class="check-note">Article pages render through the EDS pipeline via the new <code class="code-inline">article</code> template. The landing page itself (<code class="code-inline">/northern-california/health-wellness</code>) is not yet authored/built.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Trigger Content Hub API call to fetch content fragments</div>
+              <div class="check-note">Not started — no Content Hub service layer yet.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Render related articles dynamically</div>
+              <div class="check-note">Data source exists — the <code class="code-inline">healtharticles</code> <code class="code-inline">query-index.json</code> provides the article feed. A block to fetch and render that feed dynamically still needs building.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Use content selector to fetch and render article content</div>
+              <div class="check-note">Not started — depends on the Content Hub integration above.</div>
+            </div>
+          </li>
+        </ul>
+        <h3>Supporting work delivered (9 June)</h3>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Article template (CSS + JS) matching production styling</div>
+              <div class="check-note">Detailed under Import process, Article template.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title"><code class="code-inline">healtharticles</code> query index</div>
+              <div class="check-note">Feeds any future listing / related-articles block. See Query index.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Tag pills + social share, footnotes styling</div>
+              <div class="check-note">Metadata-driven UI on the article body.</div>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- IMPORT PROCESS -->
+      <section class="doc-section" id="process">
+        <h2>
+          <span class="section-icon icon-green">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M0 3.75C0 2.784.784 2 1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0114.25 14H1.75A1.75 1.75 0 010 12.25v-8.5zm1.75-.25a.25.25 0 00-.25.25v.5h13v-.5a.25.25 0 00-.25-.25H1.75zM1.5 5.5v6.75c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V5.5h-13z"/></svg>
+          </span>
+          Import process — 9 June 2026
+        </h2>
+        <div class="section-rule"></div>
+        <p>The work landed as four commits, building the article page from the outside in: page styling first, then dynamic UI, then the footnotes detail, and finally the listing index.</p>
+
+        <div class="arch-diagram">
+          <div class="arch-row">
+            <div class="arch-node" style="background:#e6eef7;color:var(--kp-navy);">Template CSS</div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-node" style="background:#fff8d6;color:#5a3e00;">article.js + loader</div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-node" style="background:#f3edfb;color:#5b2d99;">Footnotes</div>
+            <div class="arch-arrow">→</div>
+            <div class="arch-node" style="background:#eaf6f1;color:#1a6b50;">Query index</div>
+          </div>
+        </div>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num"></div>
+            <div class="step-body">
+              <span class="step-commit">89bc308</span>
+              <div class="step-title">Add article template CSS</div>
+              <p>Created <code class="code-inline">templates/article/article.css</code> (+150 lines), scoped to <code class="code-inline">body.article-template</code>. Matches the production health article: 800px centered content column, navy body text (<code class="code-inline">#0d1c3d</code>), Gotham heading scale (H1 36px / H2 28px light), a styled byline, and a full-width hero image with a <code class="code-inline">2560/600</code> aspect ratio.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num"></div>
+            <div class="step-body">
+              <span class="step-commit">e28715c</span>
+              <div class="step-title">Add article.js — tag pills &amp; social share</div>
+              <p>Added <code class="code-inline">templates/article/article.js</code> (+172 lines). It reads tags from page metadata and renders a row of pill links, plus an Email / Facebook / Twitter / Pinterest share row derived from the page URL and title.</p>
+              <p>Because <code class="code-inline">ak.js</code> loads a template's <em>CSS</em> but not its JS, this commit also re-added a small <code class="code-inline">loadTemplateJS()</code> loader to <code class="code-inline">scripts/scripts.js</code> that dynamically imports <code class="code-inline">templates/&lt;template&gt;/&lt;template&gt;.js</code> after the area is decorated.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num"></div>
+            <div class="step-body">
+              <span class="step-commit">db5907d</span>
+              <div class="step-title">Style the footnotes section</div>
+              <p>Refined <code class="code-inline">article.css</code> (+37 lines) so the <code class="code-inline">.section.footnotes</code> block matches production — dropping the global grey divider, sizing superscripts to 12px, and italicizing the review/copyright line.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num"></div>
+            <div class="step-body">
+              <span class="step-commit">adf89b5</span>
+              <div class="step-title">Add the <code class="code-inline">healtharticles</code> query index</div>
+              <p>Added a <code class="code-inline">healtharticles</code> index to <code class="code-inline">helix-query.yaml</code> (+40 lines) covering <code class="code-inline">/northern-california/health-wellness/**</code>. It captures title, description, date, author, image, content excerpt, and tags so the articles can be listed and filtered.</p>
+            </div>
+          </li>
+        </ol>
+        <div class="notice tip">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span>All four commits merged to <code class="code-inline">main</code> via <a href="https://github.com/AdobeDrago/kp-hw/pull/3" target="_blank" rel="noopener" style="color:#1a6b50;">PR #3</a>.</span>
+        </div>
+      </section>
+
+      <!-- ARTICLE TEMPLATE -->
+      <section class="doc-section" id="template">
+        <h2>
+          <span class="section-icon icon-blue">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3.5A1.5 1.5 0 012.5 2h2A1.5 1.5 0 016 3.5v2A1.5 1.5 0 014.5 7h-2A1.5 1.5 0 011 5.5v-2zm5.5 0A1.5 1.5 0 018 2h2a1.5 1.5 0 011.5 1.5v2A1.5 1.5 0 0110 7H8A1.5 1.5 0 016.5 5.5v-2zm-5.5 5A1.5 1.5 0 012.5 7h2A1.5 1.5 0 016 8.5v2A1.5 1.5 0 014.5 12h-2A1.5 1.5 0 011 10.5v-2zm5.5 0A1.5 1.5 0 018 7h2a1.5 1.5 0 011.5 1.5v2A1.5 1.5 0 0110 12H8A1.5 1.5 0 016.5 10.5v-2z"/></svg>
+          </span>
+          Article template
+        </h2>
+        <div class="section-rule"></div>
+        <p>The template lives in <code class="code-inline">templates/article/</code> and activates when a page declares <code class="code-inline">template: article</code> in its metadata. The expected authored DOM:</p>
+        <div class="code-block"><span class="kw">body</span>.article-template
+  main
+    .section.tags.share        <span class="cmt"># the article body</span>
+      .default-content
+        h1                     <span class="cmt"># title</span>
+        p                      <span class="cmt"># byline "by Author | Date"</span>
+        p &gt; picture            <span class="cmt"># hero image</span>
+        p, h2, ul, ol …        <span class="cmt"># body content</span>
+    .section.footnotes         <span class="cmt"># footnotes / sources</span></div>
+
+        <h3>article.js</h3>
+        <p>On load, <code class="code-inline">decorateArticle()</code> finds the <code class="code-inline">.section.tags.share</code> section and appends two pieces to its content:</p>
+        <table class="spec-table">
+          <thead><tr><th>Function</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td>getTags()</td><td>Reads repeated <code class="code-inline">&lt;meta property="article:tag"&gt;</code>, falling back to a single comma-separated <code class="code-inline">&lt;meta name="tags"&gt;</code>.</td></tr>
+            <tr><td>buildPills()</td><td>Renders a labelled row of pill links; each pill links to <code class="code-inline">/pages/search?query={tag}</code>.</td></tr>
+            <tr><td>buildShare()</td><td>Renders Email / Facebook / Twitter / Pinterest share links from the current URL + title (only when the section also has the <code class="code-inline">share</code> class).</td></tr>
+          </tbody>
+        </table>
+
+        <h3>article.css highlights</h3>
+        <table class="spec-table">
+          <thead><tr><th>Area</th><th>Treatment</th></tr></thead>
+          <tbody>
+            <tr><td>Content column</td><td>800px, centered, 24px gutter</td></tr>
+            <tr><td>Body text</td><td>Navy <code class="code-inline">#0d1c3d</code>, line-height 1.5</td></tr>
+            <tr><td>Headings</td><td>H1 36px Gotham 5r · H2 28px Gotham 3r (light)</td></tr>
+            <tr><td>Hero image</td><td>Full column width, <code class="code-inline">aspect-ratio: 2560/600</code>, negative inline margin to touch column edges</td></tr>
+            <tr><td>Tag pills</td><td>Pale-blue fill, navy border, 30px radius; invert on hover</td></tr>
+            <tr><td>Footnotes</td><td>16px navy, 12px superscripts, italic review/copyright line, no divider</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- QUERY INDEX -->
+      <section class="doc-section" id="query-index">
+        <h2>
+          <span class="section-icon icon-orange">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3.5C2 2.12 4.69 1 8 1s6 1.12 6 2.5v9C14 13.88 11.31 15 8 15s-6-1.12-6-2.5v-9zM8 2.5C5.1 2.5 3.5 3.46 3.5 3.5S5.1 4.5 8 4.5s4.5-.96 4.5-1S10.9 2.5 8 2.5z"/></svg>
+          </span>
+          Query index
+        </h2>
+        <div class="section-rule"></div>
+        <p>The <code class="code-inline">healtharticles</code> index in <code class="code-inline">helix-query.yaml</code> crawls published article pages and produces a JSON feed that a listing/filter block can consume.</p>
+        <div class="code-block"><span class="kw">healtharticles</span>:
+  <span class="kw">include</span>:
+    - /northern-california/health-wellness/**
+  <span class="kw">target</span>: /northern-california/health-wellness/query-index.json
+  <span class="kw">properties</span>:
+    title, description, date, lastModified,
+    featured, author, image, content, tags</div>
+        <table class="spec-table">
+          <thead><tr><th>Property</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>title</td><td><code class="code-inline">meta[property="og:title"]</code></td></tr>
+            <tr><td>description</td><td><code class="code-inline">meta[name="description"]</code></td></tr>
+            <tr><td>date</td><td><code class="code-inline">meta[name="publication-date"]</code> (MM-DD-YYYY)</td></tr>
+            <tr><td>author</td><td><code class="code-inline">meta[name="author"]</code></td></tr>
+            <tr><td>image</td><td><code class="code-inline">meta[property="og:image"]</code> (path only)</td></tr>
+            <tr><td>tags</td><td><code class="code-inline">meta[property="article:tag"]</code> (repeated)</td></tr>
+            <tr><td>featured</td><td><code class="code-inline">meta[name="template"]</code> ⚠︎ see open questions</td></tr>
+            <tr><td>content</td><td>First 200 chars of <code class="code-inline">main &gt; div</code> text</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- OPEN QUESTIONS -->
+      <section class="doc-section" id="open-questions">
+        <h2>
+          <span class="section-icon icon-purple">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zM6.05 6.05a1.95 1.95 0 113.31 1.4c-.42.42-.86.86-.86 1.55a.5.5 0 01-1 0c0-1.1.66-1.76 1.15-2.25a.95.95 0 10-1.6-.7.5.5 0 01-1 0zM8 11.5A.75.75 0 108 13a.75.75 0 000-1.5z"/></svg>
+          </span>
+          Open questions &amp; issues
+        </h2>
+        <div class="section-rule"></div>
+        <p>Things worth confirming before this is considered done — these surfaced while reviewing the 9 June commits.</p>
+
+        <div class="notice question">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zM6.05 6.05a1.95 1.95 0 113.31 1.4c-.42.42-.86.86-.86 1.55a.5.5 0 01-1 0c0-1.1.66-1.76 1.15-2.25a.95.95 0 10-1.6-.7.5.5 0 01-1 0zM8 11.5A.75.75 0 108 13a.75.75 0 000-1.5z"/></svg>
+          <span><strong>1. What sets the <code class="code-inline">body.article-template</code> class?</strong> The CSS is scoped to it and <code class="code-inline">scripts.js</code> loads the JS from the <code class="code-inline">template</code> meta, but it's worth confirming <code class="code-inline">ak.js</code> actually emits a <code class="code-inline">&lt;template&gt;-template</code> body class for the value <code class="code-inline">article</code>.</span>
+        </div>
+        <div class="notice question">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zM6.05 6.05a1.95 1.95 0 113.31 1.4c-.42.42-.86.86-.86 1.55a.5.5 0 01-1 0c0-1.1.66-1.76 1.15-2.25a.95.95 0 10-1.6-.7.5.5 0 01-1 0zM8 11.5A.75.75 0 108 13a.75.75 0 000-1.5z"/></svg>
+          <span><strong>2. Tag pills link to <code class="code-inline">/pages/search?query=…</code></strong> — that's the KP production search path. Does an equivalent search route exist on this EDS site? If not, every pill is a dead link.</span>
+        </div>
+        <div class="notice warning">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"/></svg>
+          <span><strong>3. The <code class="code-inline">featured</code> index field maps to <code class="code-inline">meta[name="template"]</code>.</strong> That stores the template name (<code class="code-inline">"article"</code>) under a field called <em>featured</em>, which is semantically confusing. Is that intentional (a flag for "this is a templated article"), or a copy-paste from the <code class="code-inline">blog</code> index that should point at a real <code class="code-inline">featured</code> meta?</span>
+        </div>
+        <div class="notice question">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zM6.05 6.05a1.95 1.95 0 113.31 1.4c-.42.42-.86.86-.86 1.55a.5.5 0 01-1 0c0-1.1.66-1.76 1.15-2.25a.95.95 0 10-1.6-.7.5.5 0 01-1 0zM8 11.5A.75.75 0 108 13a.75.75 0 000-1.5z"/></svg>
+          <span><strong>4. Where do the article documents live?</strong> No article content (HTML/MD) is committed to the repo — only the template and index. Confirm the actual pages are authored in DA at <code class="code-inline">/northern-california/health-wellness/…</code> so the index has something to crawl, and that a listing block exists to consume <code class="code-inline">query-index.json</code>.</span>
+        </div>
+      </section>
+
+      <!-- SCENARIO 2 -->
+      <section class="doc-section scenario-stub" id="scenario-2">
+        <h2>
+          <span class="section-icon icon-purple">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1 1 0 00-.115-.099zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/></svg>
+          </span>
+          Scenario 2 — Health Class Directory
+          <span class="status-badge sb-planned">Planned</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a></p>
+        <p>Requirements (not yet started):</p>
+        <ul class="req-list">
+          <li>Integrate <strong>Lucid Search API</strong> for search functionality.</li>
+          <li>Render results dynamically.</li>
+          <li>Click loads the corresponding AEM-backed content page.</li>
+        </ul>
+      </section>
+
+      <!-- SCENARIO 3 -->
+      <section class="doc-section scenario-stub" id="scenario-3">
+        <h2>
+          <span class="section-icon icon-purple">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
+          </span>
+          Scenario 3 — Drug Encyclopedia
+          <span class="status-badge sb-planned">Planned</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia</a></p>
+        <p>Requirements (not yet started):</p>
+        <ul class="req-list">
+          <li>Use <strong>Lucid Search</strong> for queries.</li>
+          <li>Load detail page on selection.</li>
+          <li>Use content selectors for fragment mapping.</li>
+          <li>Call an <strong>AEM servlet</strong> to retrieve images and render dynamically.</li>
+        </ul>
+      </section>
+
+      <!-- SCENARIO 4 -->
+      <section class="doc-section scenario-stub" id="scenario-4">
+        <h2>
+          <span class="section-icon icon-purple">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-1.5 2.5-4 4.5-4 7a4 4 0 008 0c0-2.5-2.5-4.5-4-7z"/></svg>
+          </span>
+          Scenario 4 — Diabetes Landing Page
+          <span class="status-badge sb-planned">Planned</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes</a></p>
+        <p>Requirements (not yet started):</p>
+        <ul class="req-list">
+          <li>Trigger <strong>Lucid Search API</strong> for diabetes articles.</li>
+          <li>Render results dynamically.</li>
+          <li>Use content selectors for article rendering.</li>
+        </ul>
+      </section>
+
+      <!-- STORYBOOK DESIGN SYSTEM -->
+      <section class="doc-section" id="storybook">
+        <h2>
+          <span class="section-icon icon-navy">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zm8.4 1.3l-.1 1.6a.2.2 0 00.32.17l.55-.42.47.36a.2.2 0 00.32-.17l-.13-2.03h.8v11.4H4.4V2.3h6.5z"/></svg>
+          </span>
+          Storybook Design System
+          <span class="status-badge sb-progress">In progress</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, with <strong>Storybook as the design source of truth</strong>. This is the high-level workflow and recommended architecture; the detailed decisions, tooling, and status follow below.</p>
+
+        <h3>Recommended architecture</h3>
+        <p>Two contracts have to be reconciled: Storybook components are driven by <strong>args/props</strong>, while EDS blocks are driven by <strong>authored content</strong> (a table that <code class="code-inline">init(el)</code> decorates into DOM). The architecture threads them so <strong>one design pattern produces exactly one block</strong> — and the story and the shipping block can't silently drift apart.</p>
+        <div class="arch-diagram">
+          <div class="arch-row">
+            <div class="arch-node" style="background:#e6eef7;color:var(--kp-navy);min-width:240px;">Global Library (immutable)<br><span style="font-weight:400;font-size:11px;">vessel DS · Storybook reference stories · <code class="code-inline">--ds-*</code> tokens</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#fff8d6;color:#5a3e00;min-width:260px;">Project repo · one block per pattern<br><span style="font-weight:400;font-size:11px;">shared renderer · <code class="code-inline">init()</code> · sliced CSS · UE model</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#f3edfb;color:#5b2d99;">visual parity diff — CI gate <span style="font-weight:400;font-style:italic;">(planned)</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#eaf6f1;color:#1a6b50;">Published EDS page — matches the design system</div>
+          </div>
+        </div>
+        <ul class="req-list">
+          <li><strong>One Repo Per Project</strong>, consuming a referenceable, <strong>immutable Global Library</strong> (shared blocks, CSS, tokens).</li>
+          <li><strong>The block owns the renderer; the story imports it</strong> — a single source of truth for DOM, shipped with EDS.</li>
+          <li>Design tokens extracted to a namespaced <code class="code-inline">--ds-*</code> layer; component CSS <strong>sliced</strong> from the foundation and rescoped per block.</li>
+          <li>The Universal Editor content model is generated from the story's <code class="code-inline">argTypes</code>.</li>
+          <li>A <strong>visual parity diff</strong> compares the real block to its reference story and gates CI.</li>
+        </ul>
+
+        <h3>Workflow</h3>
+        <ol class="steps">
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Capture the design as a reference story</div>
+            <p>A vessel pattern becomes a vanilla HTML/CSS Storybook story — <code class="code-inline">render(args)</code> emits the canonical markup and <code class="code-inline">argTypes</code> are the authoring knobs. This is what designers review.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Derive tokens &amp; slice CSS</div>
+            <p>Run <code class="code-inline">npm run tokens:ds</code> for the <code class="code-inline">--ds-*</code> layer, and the slice tool to extract just this component's rules (wrapper stripped, colors tokenized).</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Build the block from the story</div>
+            <p>Move <code class="code-inline">render()</code> into the block as a <strong>shared renderer</strong>; <code class="code-inline">init(el)</code> turns the authored table into the same args; add the sliced CSS and generate the UE model from <code class="code-inline">argTypes</code>.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Verify parity</div>
+            <p>The EDS-block harness renders the real block (table → <code class="code-inline">init()</code> → DOM) beside its reference story; a screenshot diff fails CI on divergence.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Author &amp; publish</div>
+            <p>An author drops the block into a page in UE / DA and fills the fields; EDS decorates and the published page matches the design system because it runs the same renderer and extracted styling.</p>
+          </div></li>
+        </ol>
+        <div class="notice info">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span><strong>No drift, by construction.</strong> Story and block share one renderer and one token source. A DS update → re-run <code class="code-inline">tokens:ds</code>, re-slice CSS, update the story → the parity diff shows exactly what moved.</span>
+        </div>
+
+        <h3>Locked decisions</h3>
+        <table class="spec-table">
+          <thead><tr><th>Decision</th><th>Choice</th></tr></thead>
+          <tbody>
+            <tr><td>Story framework</td><td>Vanilla HTML/CSS (<code class="code-inline">@storybook/html-vite</code>) — maps closely to EDS DOM</td></tr>
+            <tr><td>Tokens</td><td>Namespaced <code class="code-inline">--ds-*</code> <code class="code-inline">:root</code> layer derived from the compiled CSS catalog</td></tr>
+            <tr><td>Token namespace</td><td><code class="code-inline">--ds-*</code>, separate from the existing generic <code class="code-inline">--color-*</code> palette (never touch it)</td></tr>
+            <tr><td>DOM source</td><td>Block owns the renderer; the story imports it</td></tr>
+            <tr><td>Existing blocks</td><td>Extend/replace, don't duplicate (vessel <code class="code-inline">card</code> evolves <code class="code-inline">blocks/card</code>)</td></tr>
+            <tr><td>CSS scoping</td><td>Per block — strip the <code class="code-inline">.ds-foundation</code> wrapper and rescope to the block root</td></tr>
+          </tbody>
+        </table>
+
+        <h3>What's built vs. planned</h3>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Token extractor — <code class="code-inline">npm run tokens:ds</code></div>
+              <div class="check-note">Parses <code class="code-inline">foundation.css</code> → <code class="code-inline">styles/ds-tokens.css</code>: 49 colors (with paired <code class="code-inline">--ds-on-*</code>) + a 5-step type scale.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">EDS-block harness — <code class="code-inline">stories/_eds/eds-harness.js</code></div>
+              <div class="check-note"><code class="code-inline">edsBlock({ name, rows, variants })</code> mounts any real block from an authored table, in the EDS cascade, beside its reference story.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">CSS-slice / rescope tool — <code class="code-inline">scripts/slice-block-css.mjs</code></div>
+              <div class="check-note">Brace-aware parser keeps one component's rules, strips the theme wrapper, tokenizes color literals. Card: 14.5k lines → 291 rules.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Card pilot (#12) — wired end-to-end, verified visually</div>
+              <div class="check-note"><code class="code-inline">card-dom.js</code> shared renderer · <code class="code-inline">card.js</code> <code class="code-inline">init()</code> · generated <code class="code-inline">card.css</code> slice. Matches the reference story; closing tasks remain.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Playwright visual-parity diff (CI gate)</div>
+              <div class="check-note">Screenshot diff per variant; fails CI on divergence. Manual comparison done; automation pending.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Shared-primitive hoisting · asset pipeline · scale-out</div>
+              <div class="check-note">Hoist shared rules (typography, <code class="code-inline">.button</code>, icon font) to global <code class="code-inline">styles/</code>; migrate icon fonts/SVGs; remaining patterns (#13).</div>
+            </div>
+          </li>
+        </ul>
+
+        <h3>Run it</h3>
+        <div class="code-block"><span class="cmt"># Storybook dev server (reference + EDS-block harness stories)</span>
+<span class="kw">npm</span> run storybook            <span class="cmt"># http://localhost:6006</span>
+
+<span class="cmt"># (Re)generate the --ds-* token layer from the vessel foundation</span>
+<span class="kw">npm</span> run tokens:ds            <span class="cmt"># writes styles/ds-tokens.css</span>
+
+<span class="cmt"># Slice one component's CSS out of a pattern foundation</span>
+<span class="kw">node</span> scripts/slice-block-css.mjs \
+  --src stories/card/foundation.css --match .ds-card --root .card --out &lt;file.css&gt;</div>
+
+        <div class="notice warning">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"/></svg>
+          <span><strong>Risks to keep in mind:</strong> EDS pages have no <code class="code-inline">.ds-foundation</code> wrapper, so slices must be rescoped per block. The type scale is base-only (responsive bump not yet captured). Each pattern's <code class="code-inline">foundation.css</code> is ~800 KB — never ship full foundations to EDS. Icon-font/SVG assets still need an EDS migration path. Existing <code class="code-inline">header</code>/<code class="code-inline">hero</code>/<code class="code-inline">footer</code> use Lit — refactor vs. keep is a per-block call.</span>
+        </div>
+
+        <h3>Tracking</h3>
+        <div class="url-grid">
+          <a class="url-card" href="https://github.com/AdobeDrago/kp-hw/issues/7" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Epic #7</div>
+            <div class="url-card-title">Storybook for vessel DS → EDS block seeds</div>
+            <div class="url-card-desc">Reference-story half — #4 setup · #5 pilot · #6 scale-out</div>
+          </a>
+          <a class="url-card" href="https://github.com/AdobeDrago/kp-hw/issues/10" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-blue"></span>Epic #10</div>
+            <div class="url-card-title">Reference stories → shipping EDS blocks</div>
+            <div class="url-card-desc">Implementation half — #11 infra · #12 pilot blocks · #13 scale-out</div>
+          </a>
+        </div>
+      </section>
+
+      <!-- DEVELOPER NOTES -->
+      <section class="doc-section" id="dev-notes">
+        <h2>
+          <span class="section-icon icon-orange">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+          </span>
+          Developer notes
+        </h2>
+        <div class="section-rule"></div>
+        <div class="skills-grid">
+          <div class="skill-card">
+            <div class="skill-card-header"><span class="skill-tag tag-js">JS</span><span class="skill-card-name">Template JS loader</span></div>
+            <p class="skill-card-desc"><code class="code-inline">ak.js</code> loads template CSS only. <code class="code-inline">scripts.js</code> dynamically imports <code class="code-inline">templates/&lt;name&gt;/&lt;name&gt;.js</code> after <code class="code-inline">loadArea()</code> and calls its default export.</p>
+          </div>
+          <div class="skill-card">
+            <div class="skill-card-header"><span class="skill-tag tag-js">JS</span><span class="skill-card-name">Metadata-driven UI</span></div>
+            <p class="skill-card-desc">Tags and template come from page <code class="code-inline">&lt;meta&gt;</code> — no block authoring needed. Authors only add a <code class="code-inline">tags, share</code> section style.</p>
+          </div>
+          <div class="skill-card">
+            <div class="skill-card-header"><span class="skill-tag tag-css">CSS</span><span class="skill-card-name">Body-class scoping</span></div>
+            <p class="skill-card-desc">All template CSS is scoped to <code class="code-inline">.article-template</code> so it never leaks into other page types in the shared codebase.</p>
+          </div>
+          <div class="skill-card">
+            <div class="skill-card-header"><span class="skill-tag tag-cfg">CFG</span><span class="skill-card-name">Query index</span></div>
+            <p class="skill-card-desc"><code class="code-inline">helix-query.yaml</code> is auto-generated metadata. After editing, the index rebuilds on publish; reindex via the admin API if needed.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="doc-footer">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="#b3b3b3"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+        AdobeDrago / kp-hw &nbsp;·&nbsp; Health &amp; Wellness Pilot &nbsp;·&nbsp; AEM Managed Services → Edge Delivery Services &nbsp;·&nbsp; Generated June 2026
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const links = document.querySelectorAll('.sidebar-link');
+  const sections = document.querySelectorAll('.doc-section[id], .page-hero[id]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        links.forEach((l) => {
+          l.classList.toggle('active', l.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach((s) => observer.observe(s));
+</script>
+</body>
+</html>
