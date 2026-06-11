@@ -228,16 +228,21 @@ export default function decorateArticle() {
   // Breadcrumb is always added (auto-generated from the URL path).
   buildBreadcrumb();
 
-  // The host section is authored with `style: tags, share`.
-  const section = document.querySelector('main .section.tags.share, main .section.tags');
-  if (!section) return;
+  // Tags + social-share render at the end of the article. Prefer a section authored
+  // with `style: tags, share`; otherwise fall back to the last content section so
+  // imported articles (which have no special section) still get them.
+  const authored = document.querySelector('main .section.tags.share, main .section.tags');
+  const host = authored || [...document.querySelectorAll('main .section')].pop();
+  if (!host) return;
 
-  const content = section.querySelector('.default-content') || section;
+  const content = host.querySelector('.default-content') || host;
 
   const pills = buildPills(getTags());
   if (pills) content.append(pills);
 
-  if (section.classList.contains('share')) {
+  // Share row: honor the `share` style on an authored section; otherwise always
+  // include it (standard on KP health articles).
+  if (!authored || host.classList.contains('share')) {
     content.append(buildShare());
   }
 }
