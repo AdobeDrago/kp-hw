@@ -18,11 +18,12 @@
 /* hidden must win over the display rules below (spinner/clear use flex) */
 .classes-search [hidden] { display: none !important; }
 
-/* Layout: row on desktop, column on mobile, controls bottom-aligned */
+/* Layout: row on desktop, column on mobile. Top-aligned so a field's inline
+   error message grows downward without dragging the other controls/button. */
 .classes-search .cs-form {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 16px;
 }
 
@@ -165,11 +166,12 @@
   .classes-search .cs-spinner::after { animation-duration: 1.6s; }
 }
 
-/* Submit: solid KP blue pill (hardened against global button styles) */
+/* Submit: solid KP blue pill (hardened against global button styles).
+   margin-top offsets the label zone so the button lines up with the controls. */
 .classes-search .cs-submit {
   flex: 0 0 auto;
   height: var(--cs-control-h);
-  margin: 0;
+  margin: calc(var(--cs-label-h) + 8px) 0 0;
   padding: 0 36px;
   border: 0;
   border-radius: calc(var(--cs-control-h) / 2);
@@ -190,6 +192,83 @@
   box-shadow: 0 0 0 3px rgb(0 116 173 / 35%);
 }
 
+/* --- Validation / error states --------------------------------------- */
+.classes-search {
+  --cs-error: #c8102e;
+}
+
+/* Error summary box shown above the form on a failed submit */
+.classes-search .cs-error-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 0 24px;
+  padding: 20px 24px;
+  border: 1px solid var(--cs-error);
+  border-radius: var(--cs-radius);
+  background: #fff;
+}
+
+.classes-search .cs-error-summary:focus { outline: none; }
+
+.classes-search .cs-error-summary-icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  color: var(--cs-error);
+}
+
+.classes-search .cs-error-summary-title {
+  margin: 0 0 8px;
+  font-family: var(--heading-font-family, 'Gotham 5r', sans-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cs-navy);
+}
+
+.classes-search .cs-error-summary-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.classes-search .cs-error-summary-list li { margin: 4px 0; }
+
+.classes-search .cs-error-summary-list a {
+  color: var(--cs-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Invalid control border */
+.classes-search .cs-input[aria-invalid="true"],
+.classes-search .cs-select[aria-invalid="true"] {
+  border-color: var(--cs-error);
+}
+
+.classes-search .cs-input[aria-invalid="true"]:focus,
+.classes-search .cs-select[aria-invalid="true"]:focus {
+  border-color: var(--cs-error);
+  box-shadow: 0 0 0 2px rgb(200 16 46 / 25%);
+}
+
+/* Inline per-field error message */
+.classes-search .cs-field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--cs-error);
+  font-size: 13px;
+}
+
+.classes-search .cs-field-error-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  line-height: 0;
+}
+
 /* Mobile: stack into a column, full-width controls */
 @media (width <= 768px) {
   .classes-search { padding: 16px; }
@@ -197,5 +276,5 @@
   .classes-search .cs-form { flex-direction: column; align-items: stretch; }
   .classes-search .cs-location,
   .classes-search .cs-topic { flex: 1 1 auto; width: 100%; }
-  .classes-search .cs-submit { width: 100%; }
+  .classes-search .cs-submit { width: 100%; margin-top: 0; }
 }
