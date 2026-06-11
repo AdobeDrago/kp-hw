@@ -30,3 +30,4 @@ design-files/.extracted/
 
 # visual parity diff output
 test/visual/__output__/
+.claude-plugin/

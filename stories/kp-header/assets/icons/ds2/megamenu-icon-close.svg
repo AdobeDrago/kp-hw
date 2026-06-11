@@ -1,0 +1,10 @@
+<svg id="megamenu-icon-close" width="30" height="30" viewBox="0 0 30 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip0_4017_57592)">
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M28.8 0L15 13.8L1.2 0.1L0 1.3L13.8 15L0 28.8L1.2 30L15 16.2L28.8 30L30 28.8L16.2 15L30 1.2L28.8 0Z" fill="#0D1C3D"/>
+  </g>
+  <defs>
+  <clipPath id="clip0_4017_57592">
+  <rect width="30" height="30" fill="white"/>
+  </clipPath>
+  </defs>
+</svg>

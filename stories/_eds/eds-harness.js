@@ -14,7 +14,9 @@
 // ?inline transform applies cleanly here. styles/ IS a staticDir (for fonts), so
 // global styles are loaded by <link> instead — see ensureGlobalStyles.
 const blockJs = import.meta.glob('../../blocks/*/*.js');
-const blockCss = import.meta.glob('../../blocks/*/*.css', { query: '?inline', import: 'default', eager: true });
+// Exclude the header's ~1.6MB kp-header CSS from eager inlining (the header harness
+// loads it via a served <link> instead) so it doesn't bloat every story's bundle.
+const blockCss = import.meta.glob(['../../blocks/*/*.css', '!../../blocks/header/header.css'], { query: '?inline', import: 'default', eager: true });
 
 const injected = new Set();
 
@@ -104,6 +106,17 @@ export function edsBlock({ name, rows = [], variants = [], section = true }) {
     block.insertAdjacentHTML('afterbegin', `<!-- eds-harness: no blocks/${name}/${name}.js found -->`);
   }
   return root;
+}
+
+/**
+ * Load the EDS global styles + a block's CSS into the preview, without building a
+ * block table. For blocks whose init() can't run in the table harness (e.g. the
+ * header loads a nav fragment) — a story can call this, then mount the block's
+ * shared renderer directly to compare against the reference under the sliced CSS.
+ */
+export function loadBlockStyles(name) {
+  ensureGlobalStyles();
+  injectStyle(`block-${name}`, blockCss[`../../blocks/${name}/${name}.css`]);
 }
 
 /** Convenience: an EDS `<picture>` referencing a statically-served image. */

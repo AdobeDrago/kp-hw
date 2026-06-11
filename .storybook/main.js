@@ -26,6 +26,9 @@ const config = {
     // EDS global styles + fonts, served at /styles so styles.css @font-face
     // url(/styles/fonts/...) resolves inside the EDS-block harness stories.
     { from: '../styles', to: '/styles' },
+    // Block-shipped header assets, served at the same block-relative path the
+    // markup + header.css use on the live EDS site (/blocks/header/assets/...).
+    { from: '../blocks/header/assets', to: '/blocks/header/assets' },
   ],
   // The EDS-block harness globs blocks/*/*.js; some blocks import scripts.js,
   // which uses top-level await. Bump the build/transpile target so TLA is
