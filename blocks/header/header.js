@@ -65,17 +65,37 @@ async function applyFragmentNav(authed, root) {
   }
 }
 
-// Region / Language selector dropdowns. STUB: the open/close interaction is wired
-// (the vendor JS normally does this), but the option lists are NOT populated yet.
-// TODO(#33): load options from content fragments —
-//   language → /fragments/nav/header/languages  (already authored)
-//   region   → /fragments/nav/header/regions     (needs authoring)
-// and set the selected label. Until then the dropdowns open empty.
+// Region / Language selector dropdowns. The open/close interaction is wired (the
+// vendor JS normally does this). Options + selected label are PLACEHOLDER data —
+// TODO(#33): replace with content fragments (language → /fragments/nav/header/languages,
+// already authored; region → /fragments/nav/header/regions, needs authoring).
+const DROPDOWN_PLACEHOLDER = {
+  'region-dark': { selected: 'California - Northern', options: ['California - Northern', 'California - Southern', 'Colorado', 'Georgia', 'Hawaii', 'Washington'] },
+  region: { selected: 'California - Northern', options: ['California - Northern', 'California - Southern', 'Colorado', 'Georgia', 'Hawaii', 'Washington'] },
+  language: { selected: 'English', options: ['English', 'Español', '中文'] },
+};
+
+function populatePlaceholder(pattern) {
+  const data = DROPDOWN_PLACEHOLDER[pattern.dataset.menuType];
+  if (!data) return;
+  const label = pattern.querySelector('.drop-menu-button-text');
+  if (label && !label.textContent.trim()) label.textContent = data.selected;
+  const list = pattern.querySelector('.drop-menu-list');
+  if (list && !list.children.length) {
+    list.innerHTML = data.options
+      .map((opt) => `<li class="drop-menu-list-op${opt === data.selected ? ' active' : ''}"><span class="drop-menu-list-text">${opt}</span></li>`)
+      .join('');
+  }
+}
+
 function wireDropdowns(root) {
   const triggers = [...root.querySelectorAll('.drop-menu-dropdown')];
   if (!triggers.length) return;
-  // The vendor JS adds this modifier; it gates the show/hide CSS, so add it here.
-  root.querySelectorAll('.drop-menu-pattern').forEach((p) => p.classList.add('--default-option'));
+  root.querySelectorAll('.drop-menu-pattern').forEach((p) => {
+    // The vendor JS adds this modifier; it gates the show/hide CSS, so add it here.
+    p.classList.add('--default-option');
+    populatePlaceholder(p);
+  });
 
   const closeAll = () => triggers.forEach((b) => b.setAttribute('aria-expanded', 'false'));
   closeAll();
@@ -86,7 +106,6 @@ function wireDropdowns(root) {
       const isOpen = btn.getAttribute('aria-expanded') === 'true';
       closeAll();
       btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-      // TODO(#33): on first open, populate btn's sibling .drop-menu-list from the fragment.
     });
   });
   document.addEventListener('click', (e) => {
