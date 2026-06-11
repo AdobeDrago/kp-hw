@@ -1,0 +1,1 @@
+import{a as e,d as r}from"./ak-C2Mp4uAe.js";import"./preload-helper-Ct5FWWRu.js";async function c(){const o=document.querySelector("footer");if(!o)return;const t=e("footer")||"footer";if(t==="off"){o.remove();return}o.className=t,r(o)}export{c as default};

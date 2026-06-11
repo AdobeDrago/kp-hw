@@ -3,6 +3,14 @@ coverage/
 logs/
 node_modules/
 
+# Storybook
+storybook-static/
+
+# Design-system vessel exports (large, not committed). The vendored foundation
+# under .storybook/foundation/ IS committed; the raw zips and extracts are not.
+design-files/*.zip
+design-files/.extracted/
+
 helix-importer-ui
 .DS_Store
 *.bak

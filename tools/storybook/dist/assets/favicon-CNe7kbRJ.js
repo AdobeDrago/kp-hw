@@ -1,0 +1,2 @@
+import{g as c,a as i}from"./ak-C2Mp4uAe.js";import"./preload-helper-Ct5FWWRu.js";(async function(){const{codeBase:a}=c(),o=i("favicon")||"favicon",e=`${a}/img/favicons/${o}`,t=`<link rel="apple-touch-icon" href="${e}-180.png">
+                <link rel="manifest" href="${e}.webmanifest">`;document.head.insertAdjacentHTML("beforeend",t);const n=document.head.querySelector('link[href="data:,"]');n&&(n.href=`${e}.ico`)})();
