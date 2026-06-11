@@ -14,7 +14,9 @@
 // ?inline transform applies cleanly here. styles/ IS a staticDir (for fonts), so
 // global styles are loaded by <link> instead — see ensureGlobalStyles.
 const blockJs = import.meta.glob('../../blocks/*/*.js');
-const blockCss = import.meta.glob('../../blocks/*/*.css', { query: '?inline', import: 'default', eager: true });
+// Exclude the header's ~1.6MB kp-header CSS from eager inlining (the header harness
+// loads it via a served <link> instead) so it doesn't bloat every story's bundle.
+const blockCss = import.meta.glob(['../../blocks/*/*.css', '!../../blocks/header/header.css'], { query: '?inline', import: 'default', eager: true });
 
 const injected = new Set();
 
