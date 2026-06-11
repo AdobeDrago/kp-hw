@@ -1,0 +1,14 @@
+/* stylelint-disable */
+/* EDS-integration overrides for the kp-header block.
+ *
+ * Appended after the scoped vendor CSS (see scripts/scope-block-css.mjs --append).
+ * The vendored kp-header redefines `.button` several times and collides with EDS's
+ * own `.button` system, which flattens the pill shape (border-radius + horizontal
+ * padding) of the header's action buttons. Re-assert it here, scoped + specific
+ * enough to win, excluding the tertiary (text-style) button variant. */
+.header.header .kp-header a.button:not(.-tertiary),
+.header.header .kp-header button.button:not(.-tertiary) {
+  min-width: 96px;
+  padding: 11px 24px;
+  border-radius: 24px;
+}
