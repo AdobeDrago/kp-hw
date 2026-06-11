@@ -727,7 +727,7 @@ aem-sidekick {
 @media (width >= 900px) {
   :root {
     --heading-font-size-xxl: 40px;
-    --header-height: 168px; /* desktop: utility + logo + nav bars */
+    --header-height: 90px; /* desktop: vessel .ds-header single bar */
   }
 
   .section > .default-content {

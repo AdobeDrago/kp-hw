@@ -106,6 +106,17 @@ export function edsBlock({ name, rows = [], variants = [], section = true }) {
   return root;
 }
 
+/**
+ * Load the EDS global styles + a block's CSS into the preview, without building a
+ * block table. For blocks whose init() can't run in the table harness (e.g. the
+ * header loads a nav fragment) — a story can call this, then mount the block's
+ * shared renderer directly to compare against the reference under the sliced CSS.
+ */
+export function loadBlockStyles(name) {
+  ensureGlobalStyles();
+  injectStyle(`block-${name}`, blockCss[`../../blocks/${name}/${name}.css`]);
+}
+
 /** Convenience: an EDS `<picture>` referencing a statically-served image. */
 export function picture(src, { alt = '', width, height } = {}) {
   const dims = [width && `width="${width}"`, height && `height="${height}"`].filter(Boolean).join(' ');
