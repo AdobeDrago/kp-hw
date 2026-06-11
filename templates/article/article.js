@@ -71,7 +71,11 @@ function buildBreadcrumb() {
   const wrap = document.createElement('div');
   wrap.className = 'breadcrumbs';
   wrap.append(renderBreadcrumbs(items));
-  main.prepend(wrap);
+
+  // Insert at the top of the first section, not as a bare child of <main>: EDS hides
+  // undecorated `main > div` (display:none), so a direct main child would be invisible.
+  const firstSection = main.querySelector(':scope > div');
+  (firstSection || main).prepend(wrap);
 }
 
 /* -------------------------------------------------------------------------- */
