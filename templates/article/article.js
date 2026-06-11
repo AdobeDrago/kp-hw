@@ -15,7 +15,70 @@
  * share row, both appended to the end of that section's .default-content.
  */
 
+import { renderBreadcrumbs } from '../../blocks/breadcrumbs/breadcrumbs-dom.js';
+
 const SEARCH_BASE = '/pages/search?query='; // mirrors production tag target
+
+/* -------------------------------------------------------------------------- */
+/* Breadcrumb (auto-generated from the URL path)                              */
+/* -------------------------------------------------------------------------- */
+
+// Path segments that are site scaffolding rather than navigable crumbs.
+const SKIP_SEGMENTS = new Set(['northern-california', 'southern-california']);
+
+/** Title-case a URL slug: "health-wellness" → "Health & Wellness". */
+function humanize(slug) {
+  const text = slug
+    .replace(/^healtharticle[.-]?/, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+  return text.replace(/\bAnd\b/g, '&');
+}
+
+/**
+ * Build crumbs from the current path: Home › …intermediate sections… › current page.
+ * The current page label comes from the <h1> (falls back to the humanized slug).
+ */
+function buildBreadcrumb() {
+  const main = document.querySelector('main');
+  if (!main || main.querySelector('.breadcrumbs')) return;
+
+  const segs = window.location.pathname.split('/').filter(Boolean);
+  if (!segs.length) return;
+
+  const items = [{ label: 'Home', href: '/' }];
+  let href = '';
+  segs.forEach((seg, i) => {
+    href += `/${seg}`;
+    if (SKIP_SEGMENTS.has(seg)) return;
+    const isLast = i === segs.length - 1;
+    const label = isLast
+      ? (document.querySelector('main h1')?.textContent.trim() || humanize(seg))
+      : humanize(seg);
+    items.push(isLast ? { label } : { label, href });
+  });
+
+  // Load the breadcrumbs block CSS (scoped to .breadcrumbs) once.
+  const cssHref = new URL('../../blocks/breadcrumbs/breadcrumbs.css', import.meta.url).href;
+  if (!document.querySelector(`link[href="${cssHref}"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = cssHref;
+    document.head.append(link);
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'breadcrumbs';
+  wrap.append(renderBreadcrumbs(items));
+
+  // Insert at the top of the article's content column so it aligns with the body
+  // (and isn't hidden — EDS hides bare `main > div` with display:none).
+  const target = main.querySelector('.section .default-content')
+    || main.querySelector(':scope > div')
+    || main;
+  target.prepend(wrap);
+}
 
 /* -------------------------------------------------------------------------- */
 /* Tags                                                                       */
@@ -92,7 +155,7 @@ const SHARE_ICONS = {
  */
 function buildShare() {
   const url = window.location.href;
-  const title = document.title;
+  const { title } = document;
   const eUrl = encodeURIComponent(url);
   const eTitle = encodeURIComponent(title);
 
@@ -157,16 +220,29 @@ function buildShare() {
 /* -------------------------------------------------------------------------- */
 
 export default function decorateArticle() {
-  // The host section is authored with `style: tags, share`.
-  const section = document.querySelector('main .section.tags.share, main .section.tags');
-  if (!section) return;
+  // article.css is scoped under body.article-template. ak.js adds that class for
+  // metadata-declared templates; when we assign the template by URL (see scripts.js),
+  // it isn't set — so ensure it here. Idempotent.
+  document.body.classList.add('article-template');
 
-  const content = section.querySelector('.default-content') || section;
+  // Breadcrumb is always added (auto-generated from the URL path).
+  buildBreadcrumb();
+
+  // Tags + social-share render at the end of the article. Prefer a section authored
+  // with `style: tags, share`; otherwise fall back to the last content section so
+  // imported articles (which have no special section) still get them.
+  const authored = document.querySelector('main .section.tags.share, main .section.tags');
+  const host = authored || [...document.querySelectorAll('main .section')].pop();
+  if (!host) return;
+
+  const content = host.querySelector('.default-content') || host;
 
   const pills = buildPills(getTags());
   if (pills) content.append(pills);
 
-  if (section.classList.contains('share')) {
+  // Share row: honor the `share` style on an authored section; otherwise always
+  // include it (standard on KP health articles).
+  if (!authored || host.classList.contains('share')) {
     content.append(buildShare());
   }
 }

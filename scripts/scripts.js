@@ -45,10 +45,30 @@ const decorateArea = ({ area = document }) => {
  * and the module exists. Runs after loadArea() so the DOM is fully decorated.
  */
 async function loadTemplateJS() {
-  const template = document.head.querySelector('meta[name="template"]')?.content;
+  let template = document.head.querySelector('meta[name="template"]')?.content;
+
+  // Fallback: health-article pages are identified by the `healtharticle` URL
+  // convention; the imported pages don't declare a template meta. (Production-clean
+  // alternative: set `template: article` via metadata.json for the article path —
+  // then this fallback is unnecessary.) When we assign the template here, ak.js has
+  // already run without loading its CSS, so we load it below.
+  const assignedByUrl = !template && /\/healtharticle[.-]/.test(window.location.pathname);
+  if (assignedByUrl) template = 'article';
   if (!template) return;
+
   const name = template.replaceAll(' ', '-').toLowerCase();
   const { codeBase } = getConfig();
+
+  if (assignedByUrl) {
+    const cssHref = `${codeBase}/templates/${name}/${name}.css`;
+    if (!document.querySelector(`link[href="${cssHref}"]`)) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = cssHref;
+      document.head.append(link);
+    }
+  }
+
   try {
     const mod = await import(`${codeBase}/templates/${name}/${name}.js`);
     if (typeof mod.default === 'function') await mod.default();
@@ -73,7 +93,6 @@ await loadPage();
 if (window.location.hostname.includes('ue.da.live')) {
   await import('../ue/scripts/ue.js').then(({ default: ue }) => ue());
 }
-
 
 (function da() {
   const { searchParams } = new URL(window.location.href);
