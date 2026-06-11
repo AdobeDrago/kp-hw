@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KP Health & Wellness POC — AEM MS → EDS Migration</title>
+<title>KP Health & Wellness Pilot — AEM MS → EDS Migration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
@@ -463,8 +463,8 @@
     kp-hw
   </a>
   <div class="topnav-divider"></div>
-  <span class="topnav-title">Health &amp; Wellness POC — AEM MS → EDS Migration</span>
-  <span class="topnav-badge">POC</span>
+  <span class="topnav-title">Health &amp; Wellness Pilot — AEM MS → EDS Migration</span>
+  <span class="topnav-badge">Pilot</span>
 </nav>
 
 <!-- LAYOUT -->
@@ -473,7 +473,7 @@
   <!-- SIDEBAR -->
   <nav class="sidebar" aria-label="Page navigation">
     <div class="sidebar-section">
-      <div class="sidebar-label">POC</div>
+      <div class="sidebar-label">Pilot</div>
       <a class="sidebar-link active" href="#overview">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>
         Overview
@@ -549,9 +549,9 @@
 
       <!-- PAGE HERO -->
       <div class="page-hero" id="overview">
-        <div class="page-hero-eyebrow">Kaiser Permanente · Proof of Concept</div>
-        <h1>Health &amp; Wellness POC</h1>
-        <p class="page-hero-sub">A proof of concept validating Kaiser Permanente's migration from <strong>AEM Managed Services</strong> to <strong>Edge Delivery Services</strong>, and confirming EDS can power <strong>dynamic, backend-driven experiences</strong> — not just static content. Four reference scenarios from the KP Health &amp; Wellness site drive the work. This guide tracks the architecture, engineering approach, and progress to date.</p>
+        <div class="page-hero-eyebrow">Kaiser Permanente · Pilot</div>
+        <h1>Health &amp; Wellness Pilot</h1>
+        <p class="page-hero-sub">A pilot validating Kaiser Permanente's migration from <strong>AEM Managed Services</strong> to <strong>Edge Delivery Services</strong>, and confirming EDS can power <strong>dynamic, backend-driven experiences</strong> — not just static content. Four reference scenarios from the KP Health &amp; Wellness site drive the work. This guide tracks the architecture, engineering approach, and progress to date.</p>
       </div>
 
       <!-- PROJECT OVERVIEW -->
@@ -563,7 +563,7 @@
           Project overview
         </h2>
         <div class="section-rule"></div>
-        <p>This is a <strong>proof of concept</strong> validating Kaiser Permanente's migration from <strong>AEM Managed Services (AEM MS)</strong> to <strong>Edge Delivery Services (EDS)</strong>, and proving out EDS support for dynamic, backend-driven experiences. Four reference scenarios from the production KP Health &amp; Wellness site anchor the effort, backed by a shared design system and engineering foundation.</p>
+        <p>This is a <strong>pilot</strong> validating Kaiser Permanente's migration from <strong>AEM Managed Services (AEM MS)</strong> to <strong>Edge Delivery Services (EDS)</strong>, and proving out EDS support for dynamic, backend-driven experiences. Four reference scenarios from the production KP Health &amp; Wellness site anchor the effort, backed by a shared design system and engineering foundation.</p>
 
         <h3>Purpose</h3>
         <ul class="req-list">
@@ -605,7 +605,7 @@
         <table class="spec-table" style="margin-top:16px;">
           <thead><tr><th>Attribute</th><th>Value</th></tr></thead>
           <tbody>
-            <tr><td>Effort</td><td>AEM Managed Services → Edge Delivery Services migration POC</td></tr>
+            <tr><td>Effort</td><td>AEM Managed Services → Edge Delivery Services migration pilot</td></tr>
             <tr><td>GitHub repo</td><td><code class="code-inline">AdobeDrago/kp-hw</code> · branch <code class="code-inline">main</code></td></tr>
             <tr><td>Architecture</td><td>One Repo Per Project + immutable Global Library</td></tr>
             <tr><td>Dev model</td><td>EDS block-based only (Author Kit runtime: <code class="code-inline">ak.js</code> + <code class="code-inline">scripts.js</code>)</td></tr>
@@ -674,7 +674,7 @@
         </div>
 
         <h3>Migration map · live → building</h3>
-        <p>Each POC scenario migrates a production AEM MS page to its EDS equivalent. The EDS target paths mirror the production URLs; most are not authored yet (404 until built).</p>
+        <p>Each pilot scenario migrates a production AEM MS page to its EDS equivalent. The EDS target paths mirror the production URLs; most are not authored yet (404 until built).</p>
         <table class="spec-table">
           <thead><tr><th>Scenario</th><th>Live (production)</th><th>Building (EDS preview)</th></tr></thead>
           <tbody>
@@ -717,7 +717,7 @@
           <span class="status-badge sb-progress">In progress</span>
         </h2>
         <div class="section-rule"></div>
-        <p>Progress against the four Scenario 1 requirements from the POC document. The 9 June work covered the EDS article rendering and the article index; the backend-driven pieces (Content Hub, content selectors) are still to do.</p>
+        <p>Progress against the four Scenario 1 requirements from the pilot requirements. The 9 June work covered the EDS article rendering and the article index; the backend-driven pieces (Content Hub, content selectors) are still to do.</p>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a><br>
         <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></p>
         <ul class="checklist">
@@ -1017,33 +1017,61 @@
           <span class="status-badge sb-progress">In progress</span>
         </h2>
         <div class="section-rule"></div>
-        <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, using <strong>Storybook as the design source of truth</strong> (replacing the Figma flow). The reference-story side is built; the implementation side (story → shipping block) is in progress.</p>
+        <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, with <strong>Storybook as the design source of truth</strong>. This is the high-level workflow and recommended architecture; the detailed decisions, tooling, and status follow below.</p>
 
-        <h3>The big idea — two contracts</h3>
-        <p>There are two contracts in play, and the whole effort reconciles them:</p>
+        <h3>Recommended architecture</h3>
+        <p>Two contracts have to be reconciled: Storybook components are driven by <strong>args/props</strong>, while EDS blocks are driven by <strong>authored content</strong> (a table that <code class="code-inline">init(el)</code> decorates into DOM). The architecture threads them so <strong>one design pattern produces exactly one block</strong> — and the story and the shipping block can't silently drift apart.</p>
+        <div class="arch-diagram">
+          <div class="arch-row">
+            <div class="arch-node" style="background:#e6eef7;color:var(--kp-navy);min-width:240px;">Global Library (immutable)<br><span style="font-weight:400;font-size:11px;">vessel DS · Storybook reference stories · <code class="code-inline">--ds-*</code> tokens</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#fff8d6;color:#5a3e00;min-width:260px;">Project repo · one block per pattern<br><span style="font-weight:400;font-size:11px;">shared renderer · <code class="code-inline">init()</code> · sliced CSS · UE model</span></div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#f3edfb;color:#5b2d99;">visual parity diff — CI gate</div>
+          </div>
+          <div class="arch-row" style="margin:4px 0;"><div class="arch-arrow" style="font-size:22px;">↓</div></div>
+          <div class="arch-row">
+            <div class="arch-node" style="background:#eaf6f1;color:#1a6b50;">Published EDS page — matches the design system</div>
+          </div>
+        </div>
         <ul class="req-list">
-          <li><strong>Storybook components</strong> are driven by <strong>args/props</strong>.</li>
-          <li><strong>EDS blocks</strong> are driven by <strong>authored content</strong> (a table of rows/cells that <code class="code-inline">init(el)</code> decorates into DOM).</li>
+          <li><strong>One Repo Per Project</strong>, consuming a referenceable, <strong>immutable Global Library</strong> (shared blocks, CSS, tokens).</li>
+          <li><strong>The block owns the renderer; the story imports it</strong> — a single source of truth for DOM, shipped with EDS.</li>
+          <li>Design tokens extracted to a namespaced <code class="code-inline">--ds-*</code> layer; component CSS <strong>sliced</strong> from the foundation and rescoped per block.</li>
+          <li>The Universal Editor content model is generated from the story's <code class="code-inline">argTypes</code>.</li>
+          <li>A <strong>visual parity diff</strong> compares the real block to its reference story and gates CI.</li>
         </ul>
-        <p>One design (a vessel pattern) produces one block. Storybook is the contract; the block is the implementation; a visual <strong>parity diff</strong> is the enforcement — so the story and the shipping block can never silently drift apart.</p>
 
-        <h3>End-to-end pipeline</h3>
-        <div class="code-block"><span class="cmt"># DESIGN CONTRACT (built)</span>
-KP vessel design system  ──►  Storybook reference story
-(compiled Sass exports)        render(args) + foundation.css
-                                        │
-<span class="cmt"># THE EDS BLOCK — one source of truth (Phase 4)</span>
-  shared renderer   ·  init(el): authored table → args → DOM
-  CSS slice + tokens ·  UE content model from argTypes
-                                        │
-<span class="cmt"># VERIFICATION</span>
-  visual parity diff  ◄── block vs reference story
-                                        │
-<span class="cmt"># AUTHORING + RUNTIME</span>
-  author in UE  ──►  EDS decorates  ──►  published page</div>
+        <h3>Workflow</h3>
+        <ol class="steps">
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Capture the design as a reference story</div>
+            <p>A vessel pattern becomes a vanilla HTML/CSS Storybook story — <code class="code-inline">render(args)</code> emits the canonical markup and <code class="code-inline">argTypes</code> are the authoring knobs. This is what designers review.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Derive tokens &amp; slice CSS</div>
+            <p>Run <code class="code-inline">npm run tokens:ds</code> for the <code class="code-inline">--ds-*</code> layer, and the slice tool to extract just this component's rules (wrapper stripped, colors tokenized).</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Build the block from the story</div>
+            <p>Move <code class="code-inline">render()</code> into the block as a <strong>shared renderer</strong>; <code class="code-inline">init(el)</code> turns the authored table into the same args; add the sliced CSS and generate the UE model from <code class="code-inline">argTypes</code>.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Verify parity</div>
+            <p>The EDS-block harness renders the real block (table → <code class="code-inline">init()</code> → DOM) beside its reference story; a screenshot diff fails CI on divergence.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Author &amp; publish</div>
+            <p>An author drops the block into a page in UE / DA and fills the fields; EDS decorates and the published page matches the design system because it runs the same renderer and extracted styling.</p>
+          </div></li>
+        </ol>
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>No drift, by construction.</strong> The story's <code class="code-inline">render()</code> moves <em>into</em> the block; both the story and <code class="code-inline">init()</code> import it. A DS update → re-run <code class="code-inline">tokens:ds</code>, re-slice CSS, update the story → the parity diff shows exactly what moved.</span>
+          <span><strong>No drift, by construction.</strong> Story and block share one renderer and one token source. A DS update → re-run <code class="code-inline">tokens:ds</code>, re-slice CSS, update the story → the parity diff shows exactly what moved.</span>
         </div>
 
         <h3>Locked decisions</h3>
@@ -1167,7 +1195,7 @@ KP vessel design system  ──►  Storybook reference story
 
       <div class="doc-footer">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="#b3b3b3"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
-        AdobeDrago / kp-hw &nbsp;·&nbsp; Health &amp; Wellness POC &nbsp;·&nbsp; AEM Managed Services → Edge Delivery Services &nbsp;·&nbsp; Generated June 2026
+        AdobeDrago / kp-hw &nbsp;·&nbsp; Health &amp; Wellness Pilot &nbsp;·&nbsp; AEM Managed Services → Edge Delivery Services &nbsp;·&nbsp; Generated June 2026
       </div>
 
     </div>
