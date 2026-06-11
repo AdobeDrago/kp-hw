@@ -65,9 +65,42 @@ async function applyFragmentNav(authed, root) {
   }
 }
 
+// Region / Language selector dropdowns. STUB: the open/close interaction is wired
+// (the vendor JS normally does this), but the option lists are NOT populated yet.
+// TODO(#33): load options from content fragments —
+//   language → /fragments/nav/header/languages  (already authored)
+//   region   → /fragments/nav/header/regions     (needs authoring)
+// and set the selected label. Until then the dropdowns open empty.
+function wireDropdowns(root) {
+  const triggers = [...root.querySelectorAll('.drop-menu-dropdown')];
+  if (!triggers.length) return;
+  // The vendor JS adds this modifier; it gates the show/hide CSS, so add it here.
+  root.querySelectorAll('.drop-menu-pattern').forEach((p) => p.classList.add('--default-option'));
+
+  const closeAll = () => triggers.forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  closeAll();
+
+  triggers.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = btn.getAttribute('aria-expanded') === 'true';
+      closeAll();
+      btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+      // TODO(#33): on first open, populate btn's sibling .drop-menu-list from the fragment.
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.drop-menu')) closeAll();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAll();
+  });
+}
+
 export default function init(el) {
   const authed = isAuthenticated();
   const header = elFromHTML(authed ? AUTH : NON_AUTH);
   el.replaceChildren(header);
   applyFragmentNav(authed, header);
+  wireDropdowns(header);
 }
