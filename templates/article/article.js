@@ -15,7 +15,64 @@
  * share row, both appended to the end of that section's .default-content.
  */
 
+import { renderBreadcrumbs } from '../../blocks/breadcrumbs/breadcrumbs-dom.js';
+
 const SEARCH_BASE = '/pages/search?query='; // mirrors production tag target
+
+/* -------------------------------------------------------------------------- */
+/* Breadcrumb (auto-generated from the URL path)                              */
+/* -------------------------------------------------------------------------- */
+
+// Path segments that are site scaffolding rather than navigable crumbs.
+const SKIP_SEGMENTS = new Set(['northern-california', 'southern-california']);
+
+/** Title-case a URL slug: "health-wellness" → "Health & Wellness". */
+function humanize(slug) {
+  const text = slug
+    .replace(/^healtharticle[.-]?/, '')
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+  return text.replace(/\bAnd\b/g, '&');
+}
+
+/**
+ * Build crumbs from the current path: Home › …intermediate sections… › current page.
+ * The current page label comes from the <h1> (falls back to the humanized slug).
+ */
+function buildBreadcrumb() {
+  const main = document.querySelector('main');
+  if (!main || main.querySelector('.breadcrumbs')) return;
+
+  const segs = window.location.pathname.split('/').filter(Boolean);
+  if (!segs.length) return;
+
+  const items = [{ label: 'Home', href: '/' }];
+  let href = '';
+  segs.forEach((seg, i) => {
+    href += `/${seg}`;
+    if (SKIP_SEGMENTS.has(seg)) return;
+    const isLast = i === segs.length - 1;
+    const label = isLast
+      ? (document.querySelector('main h1')?.textContent.trim() || humanize(seg))
+      : humanize(seg);
+    items.push(isLast ? { label } : { label, href });
+  });
+
+  // Load the breadcrumbs block CSS (scoped to .breadcrumbs) once.
+  const cssHref = new URL('../../blocks/breadcrumbs/breadcrumbs.css', import.meta.url).href;
+  if (!document.querySelector(`link[href="${cssHref}"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = cssHref;
+    document.head.append(link);
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'breadcrumbs';
+  wrap.append(renderBreadcrumbs(items));
+  main.prepend(wrap);
+}
 
 /* -------------------------------------------------------------------------- */
 /* Tags                                                                       */
@@ -92,7 +149,7 @@ const SHARE_ICONS = {
  */
 function buildShare() {
   const url = window.location.href;
-  const title = document.title;
+  const { title } = document;
   const eUrl = encodeURIComponent(url);
   const eTitle = encodeURIComponent(title);
 
@@ -157,6 +214,9 @@ function buildShare() {
 /* -------------------------------------------------------------------------- */
 
 export default function decorateArticle() {
+  // Breadcrumb is always added (auto-generated from the URL path).
+  buildBreadcrumb();
+
   // The host section is authored with `style: tags, share`.
   const section = document.querySelector('main .section.tags.share, main .section.tags');
   if (!section) return;
