@@ -1,15 +1,11 @@
-// Shared renderer for the Related articles block. Lives in the block (ships with
-// EDS) and is imported by BOTH this block's init() and the Storybook reference
-// story so the authored block and the design reference render the exact same DOM
-// and cannot drift — the same contract card-dom.js follows.
+// Shared renderer for the Related articles block. Imported by both init() and
+// the Storybook story so both render identical vessel DOM.
 //
-// Pure: given config + an array of article records, returns a detached
-// `.related-articles` element. No network, no Storybook helpers. Each tile reuses
-// the shared card renderer (renderCard) so tiles match Components/Card exactly.
-//
-// Tabs: authors control visible topics via the `topics` allowlist (comma-separated
-// in the block config). If omitted, defaults to the top-N tags by article count.
-// Non-active panels are built lazily on first click to keep initial DOM small.
+// Each tile is a clickable ds-card (the whole <a> is the card root, matching
+// the live ds-card__option--clickable pattern). Cards are grouped in a
+// ds-card-group grid wrapper. Topic tabs are built from each article's tags
+// array; falls back to a single flat grid when no articles are tagged.
+// Non-active panels are lazy-built on first click.
 
 import { renderCard } from '../card/card-dom.js';
 
@@ -25,46 +21,47 @@ function elFromHTML(html) {
   return tpl.content.firstElementChild;
 }
 
-// A media node for a tile: a caller-supplied factory (init() uses createPicture),
-// then a pre-built node on the record, then a plain lazy <img>, else nothing.
-function buildMedia(article, mediaFactory) {
-  if (mediaFactory) return mediaFactory(article);
-  if (article.media) return article.media;
-  if (!article.image) return null;
-  const img = document.createElement('img');
-  img.src = article.image;
-  img.alt = article.alt || '';
-  img.loading = 'lazy';
-  return img;
-}
-
-// One clickable article tile: a `large` ds-card (image + eyebrow + title) wrapped
-// in an anchor, mirroring the live ds-card__option--clickable pattern.
+// Build a clickable ds-card anchor tile. renderCard() produces a <div>; we
+// promote it to an <a> so the whole card is the link (vessel clickable pattern).
 function buildTile(article, opts) {
   const eyebrow = (article.tags && article.tags[0]) || opts.eyebrowFallback || '';
-  const card = renderCard({
+  const cardDiv = renderCard({
     variant: 'large',
-    media: buildMedia(article, opts.mediaFactory),
+    media: opts.mediaFactory ? opts.mediaFactory(article) : (() => {
+      if (!article.image) return null;
+      const img = document.createElement('img');
+      img.src = article.image;
+      img.alt = article.alt || '';
+      img.loading = 'lazy';
+      return img;
+    })(),
     eyebrow,
     title: article.title,
   });
-  card.classList.add('ds-card__option--clickable');
 
-  const link = elFromHTML('<a class="related-articles-card-link"></a>');
-  link.setAttribute('href', article.path);
-  link.append(card);
+  // Promote <div class="ds-card"> → <a class="ds-card ds-card__option--clickable">
+  const link = document.createElement('a');
+  link.href = article.path;
+  link.className = `${cardDiv.className} ds-card__option--clickable`;
+  for (const { name, value } of cardDiv.attributes) link.setAttribute(name, value);
+  link.append(...cardDiv.childNodes);
   return link;
 }
 
+// ds-card-group wrapper matching the vessel grid pattern used in Storybook.
 function buildGrid(articles, opts) {
-  const grid = document.createElement('div');
-  grid.className = `related-articles-grid related-articles-grid-cols-${opts.numCols}`;
+  const group = document.createElement('div');
+  group.className = 'ds-card-group';
+  group.dataset.dsTheme = 'vessel';
+  group.dataset.dsVariant = 'basic';
+  group.dataset.dsVersion = '2';
+  group.dataset.dsNumCols = String(opts.numCols);
   const list = opts.limit > 0 ? articles.slice(0, opts.limit) : articles;
-  list.forEach((a) => grid.append(buildTile(a, opts)));
-  return grid;
+  list.forEach((a) => group.append(buildTile(a, opts)));
+  return group;
 }
 
-// Map of tag -> articles, sorted by descending article count.
+// Map of tag → articles sorted by descending article count.
 function groupByTag(articles) {
   const groups = new Map();
   articles.forEach((a) => {
@@ -73,13 +70,10 @@ function groupByTag(articles) {
       groups.get(t).push(a);
     });
   });
-  // Sort by count descending so default top-N picks the most-covered topics.
   return new Map([...groups.entries()].sort((a, b) => b[1].length - a[1].length));
 }
 
-// Resolve which tab groups to show:
-//   - topics allowlist → exact ordered list the author specified
-//   - no allowlist     → top maxTabs groups by article count
+// Resolve which tab groups to show: author allowlist → top-N by count.
 function resolveGroups(groups, topics, maxTabs) {
   if (topics && topics.length) {
     return topics
@@ -90,18 +84,18 @@ function resolveGroups(groups, topics, maxTabs) {
 }
 
 /**
- * @param {object}   data
- * @param {string}   [data.heading]
- * @param {{label:string, href:string}|null} [data.explore]  "Explore library" link
- * @param {Array<{path,title,image,alt,tags,media}>} [data.articles]
- * @param {string[]} [data.topics]      ordered allowlist of tab labels; omit for top-N auto
- * @param {number}   [data.maxTabs]     cap when no topics allowlist (default 15)
- * @param {number}   [data.numCols]     desktop column count (2/3/4)
- * @param {number}   [data.limit]       max tiles per panel (0 = no cap)
- * @param {string}   [data.eyebrowFallback]  category shown when an article has no tag
- * @param {string}   [data.allTabLabel]
- * @param {(a:object)=>HTMLElement} [data.mediaFactory]  builds optimized media per tile
- * @returns {HTMLElement} the `.related-articles` element
+ * @param {object}   opts
+ * @param {string}   [opts.heading]
+ * @param {{label:string,href:string}|null} [opts.explore]
+ * @param {Array}    [opts.articles]
+ * @param {string[]} [opts.topics]         ordered allowlist of tab labels
+ * @param {number}   [opts.maxTabs]        cap when no allowlist (default 15)
+ * @param {number}   [opts.numCols]        2/3/4 (default 4)
+ * @param {number}   [opts.limit]          max tiles per panel (default 12)
+ * @param {string}   [opts.eyebrowFallback]
+ * @param {string}   [opts.allTabLabel]
+ * @param {Function} [opts.mediaFactory]
+ * @returns {HTMLElement}
  */
 export function renderRelatedArticles({
   heading = 'Related articles',
@@ -118,51 +112,49 @@ export function renderRelatedArticles({
   const root = document.createElement('div');
   root.className = 'related-articles';
 
+  // Header: heading + optional "Explore library" pill link.
   const header = elFromHTML('<div class="related-articles-header"></div>');
   header.append(elFromHTML(`<h2 class="related-articles-heading">${heading}</h2>`));
-  if (explore && explore.href) {
-    const link = elFromHTML('<a class="related-articles-explore"></a>');
-    link.setAttribute('href', explore.href);
-    link.textContent = explore.label || 'Explore library';
-    header.append(link);
+  if (explore?.href) {
+    const a = elFromHTML('<a class="related-articles-explore"></a>');
+    a.href = explore.href;
+    a.textContent = explore.label || 'Explore library';
+    header.append(a);
   }
   root.append(header);
 
-  const opts = { numCols, limit, eyebrowFallback, mediaFactory };
+  const gridOpts = { numCols, limit, eyebrowFallback, mediaFactory };
   const groups = groupByTag(articles);
 
-  // Fallback: nothing is tagged → a single flat grid, no tab bar.
+  // Fallback: no tags → flat grid, no tabs.
   if (groups.size === 0) {
-    root.append(buildGrid(articles, opts));
+    root.append(buildGrid(articles, gridOpts));
     return root;
   }
 
-  // Resolve visible tabs (allowlist → top-N by count).
   const visibleGroups = resolveGroups(groups, topics, maxTabs);
-  const tabs = [[allTabLabel, articles], ...visibleGroups];
+  const tabData = [[allTabLabel, articles], ...visibleGroups];
   const instanceId = uid('ra');
 
   const tablist = elFromHTML('<div class="related-articles-tabs" role="tablist" aria-label="View by topic"></div>');
   const panelsWrap = elFromHTML('<div class="related-articles-panels"></div>');
   const buttons = [];
   const panels = [];
-  // articleLists holds each tab's data so non-active panels can be built lazily.
   const articleLists = [];
 
-  tabs.forEach(([label, list], idx) => {
+  tabData.forEach(([label, list], idx) => {
     const tabId = `${instanceId}-tab-${idx}`;
     const panelId = `${instanceId}-panel-${idx}`;
 
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'related-articles-tab';
+    btn.className = `related-articles-tab${idx === 0 ? ' is-active' : ''}`;
     btn.role = 'tab';
     btn.id = tabId;
     btn.setAttribute('aria-controls', panelId);
     btn.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
     btn.setAttribute('tabindex', idx === 0 ? '0' : '-1');
     btn.textContent = label;
-    if (idx === 0) btn.classList.add('is-active');
     tablist.append(btn);
     buttons.push(btn);
 
@@ -172,7 +164,7 @@ export function renderRelatedArticles({
     panel.role = 'tabpanel';
     panel.setAttribute('aria-labelledby', tabId);
     if (idx === 0) {
-      panel.append(buildGrid(list, opts));
+      panel.append(buildGrid(list, gridOpts));
     } else {
       panel.hidden = true;
     }
@@ -183,15 +175,14 @@ export function renderRelatedArticles({
 
   function activate(idx) {
     buttons.forEach((b, i) => {
-      const selected = i === idx;
-      b.classList.toggle('is-active', selected);
-      b.setAttribute('aria-selected', selected ? 'true' : 'false');
-      b.setAttribute('tabindex', selected ? '0' : '-1');
+      const on = i === idx;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.setAttribute('tabindex', on ? '0' : '-1');
     });
     panels.forEach((p, i) => {
       if (i === idx) {
-        // Lazy-build panel content on first activation.
-        if (!p.firstElementChild) p.append(buildGrid(articleLists[i], opts));
+        if (!p.firstElementChild) p.append(buildGrid(articleLists[i], gridOpts));
         p.hidden = false;
       } else {
         p.hidden = true;
@@ -199,12 +190,12 @@ export function renderRelatedArticles({
     });
   }
 
-  buttons.forEach((b, idx) => b.addEventListener('click', () => activate(idx)));
+  buttons.forEach((b, i) => b.addEventListener('click', () => activate(i)));
   tablist.addEventListener('keydown', (e) => {
-    const current = buttons.findIndex((b) => b.classList.contains('is-active'));
+    const cur = buttons.findIndex((b) => b.classList.contains('is-active'));
     let next;
-    if (e.key === 'ArrowRight') next = (current + 1) % buttons.length;
-    else if (e.key === 'ArrowLeft') next = (current - 1 + buttons.length) % buttons.length;
+    if (e.key === 'ArrowRight') next = (cur + 1) % buttons.length;
+    else if (e.key === 'ArrowLeft') next = (cur - 1 + buttons.length) % buttons.length;
     else if (e.key === 'Home') next = 0;
     else if (e.key === 'End') next = buttons.length - 1;
     else return;

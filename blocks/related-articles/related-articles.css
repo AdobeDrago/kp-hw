@@ -1,15 +1,15 @@
 /*
- * Related articles block. Tile visuals come from the shared .ds-card (card block
- * CSS, loaded by init()); this file styles the wrapper, header, topic tabs and the
- * responsive grid. Breakpoints mirror the vessel card-group (2-up tablet, N-up at
- * 1152px) so tiles line up with the rest of the design system.
+ * Related articles block.
+ * Tile + grid visuals come from the vessel ds-card + ds-card-group patterns
+ * (card block CSS loaded dynamically by init()). This file styles the
+ * block wrapper, section header, topic tab bar, and the ds-card-group grid.
  */
 
 .related-articles {
-  color: #0D1C3D;
-  font-family: "Gotham 4r", Verdana, sans-serif;
   margin-bottom: 24px;
 }
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
 
 .related-articles-header {
   display: flex;
@@ -39,7 +39,8 @@
   text-decoration: underline;
 }
 
-/* View-by-topic tabs */
+/* ── View-by-topic tabs ───────────────────────────────────────────────────── */
+
 .related-articles-tabs {
   display: flex;
   gap: 12px;
@@ -51,13 +52,13 @@
 .related-articles-tab {
   background-color: transparent;
   border: none;
+  border-bottom: 2px solid transparent;
   padding: 4px 8px;
   margin: 0;
   font: inherit;
   font-size: var(--body-font-size-xl, 1.125rem);
   white-space: nowrap;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
   transition: border-bottom-color 0.2s ease-in-out;
 }
 
@@ -75,37 +76,39 @@
   display: none;
 }
 
-/* Responsive tile grid */
-.related-articles-grid {
+/* ── ds-card-group grid (vessel pattern, no card-group block in repo) ─────── */
+
+.related-articles .ds-card-group {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
+  margin-bottom: 0;
 }
 
 @media (width >= 768px) {
-  .related-articles-grid {
+  .related-articles .ds-card-group {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (width >= 1152px) {
-  .related-articles-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-  .related-articles-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-  .related-articles-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .related-articles .ds-card-group[data-ds-num-cols="2"] { grid-template-columns: repeat(2, 1fr); }
+  .related-articles .ds-card-group[data-ds-num-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+  .related-articles .ds-card-group[data-ds-num-cols="4"] { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* Whole tile is the link */
-.related-articles-card-link {
-  display: block;
+/* Clickable card (whole <a> is the tile) fills its grid cell. */
+/* stylelint-disable selector-class-pattern */
+.related-articles .ds-card__option--clickable {
+  display: flex;
+  flex-direction: column;
   text-decoration: none;
   color: inherit;
+  cursor: pointer;
 }
 
-.related-articles-card-link:focus-visible {
+.related-articles .ds-card__option--clickable:focus-visible {
   outline: 2px solid currentcolor;
   outline-offset: 3px;
 }
-
-.related-articles-card-link .ds-card {
-  height: 100%;
-}
+/* stylelint-enable selector-class-pattern */

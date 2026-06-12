@@ -2,76 +2,93 @@ import { getConfig, loadStyle } from '../../scripts/ak.js';
 import { createPicture } from '../../scripts/utils/picture.js';
 import { renderRelatedArticles } from './related-articles-dom.js';
 
-// Default index for the Northern California health-wellness section. Authors can
-// point at a different query-index via an "Index" config row.
+// Authored block shape (all rows are optional except the index URL):
+//
+//   | /northern-california/health-wellness/query-index.json |  ← index URL (row 1)
+//   | heading  | Related articles                           |  ← optional
+//   | explore  | [Explore library link]                     |  ← optional
+//   | limit    | 12                                         |  ← optional
+//   | topics   | Mental health, Diabetes, Healthy eating    |  ← optional
+//
+// Row 1 is always the index: either a bare link cell or a key|value row where
+// key is "index". Every other row is key|value.
+
 const DEFAULT_INDEX = '/northern-california/health-wellness/query-index.json';
 
-// Index titles carry a " | Kaiser Permanente" suffix; show just the headline.
 function cleanTitle(raw) {
-  const s = String(raw || '').trim();
-  const head = s.split('|')[0].trim();
-  return head || s;
+  return String(raw || '').split('|')[0].trim() || String(raw || '').trim();
 }
 
-// `tags` may be a JSON array string or a comma/semicolon list. Empty today.
 function parseTags(raw) {
-  const s = String(raw || '').trim();
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(String).map((t) => t.trim()).filter(Boolean);
+  const s = String(raw).trim();
   if (!s) return [];
   if (s.startsWith('[')) {
     try {
       const arr = JSON.parse(s);
-      if (Array.isArray(arr)) return arr.map((t) => String(t).trim()).filter(Boolean);
-    } catch (e) { /* fall through to delimiter split */ }
+      if (Array.isArray(arr)) return arr.map(String).map((t) => t.trim()).filter(Boolean);
+    } catch (e) { /* fall through */ }
   }
   return s.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
 }
 
-// Authored config: each row is `key | value`. Returns key -> value cells.
-function readConfig(el) {
-  const cfg = {};
-  [...el.querySelectorAll(':scope > div')].forEach((row) => {
-    const cells = [...row.children];
-    if (cells.length < 2) return;
-    const key = cells[0].textContent.trim().toLowerCase();
-    cfg[key] = cells.slice(1);
-  });
-  return cfg;
-}
-
-function cellText(cells) {
-  return cells ? cells.map((c) => c.textContent.trim()).filter(Boolean).join(' ') : '';
-}
-
 export default async function init(el) {
   const { codeBase, log } = getConfig();
-  const cfg = readConfig(el);
 
-  const heading = cellText(cfg.heading) || 'Related articles';
-  const limit = parseInt(cellText(cfg.limit), 10) || 12;
-  const numCols = parseInt(cellText(cfg.columns || cfg.cols), 10) || 4;
-  const eyebrowFallback = cellText(cfg['category fallback'] || cfg.category) || '';
-  const indexUrl = cellText(cfg.index) || DEFAULT_INDEX;
-  const pathPrefix = cellText(cfg.filter || cfg.prefix) || '';
-  // `topics` row: comma-separated ordered list of tab labels to show.
-  // Omit the row to auto-select the top 15 tags by article count.
-  const topicsRaw = cellText(cfg.topics);
-  const topics = topicsRaw ? topicsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
-  const maxTabs = parseInt(cellText(cfg['max tabs'] || cfg.maxtabs), 10) || 15;
+  // Parse all rows into a config map. Row 1 is special: a single-cell row whose
+  // only content is a link (or plain text URL) is the index source.
+  const rows = [...el.querySelectorAll(':scope > div')];
+  const cfg = {};
+  let indexUrl = DEFAULT_INDEX;
 
-  // "Explore library" link: prefer an authored anchor, else plain text.
-  let explore = null;
-  const exploreCells = cfg.explore || cfg['explore link'];
-  if (exploreCells) {
-    const anchor = exploreCells.map((c) => c.querySelector('a')).find(Boolean);
-    if (anchor) explore = { label: anchor.textContent.trim(), href: anchor.getAttribute('href') };
-    else {
-      const txt = cellText(exploreCells);
-      if (txt) explore = { label: txt, href: '#' };
+  rows.forEach((row, i) => {
+    const cells = [...row.children];
+    const key = cells[0]?.textContent.trim().toLowerCase();
+    const valueCell = cells[1] ?? null;
+    const valueText = (valueCell ?? cells[0])?.textContent.trim() ?? '';
+
+    if (i === 0 && cells.length === 1) {
+      // Single-cell first row → index URL (link href or plain text).
+      const a = cells[0].querySelector('a');
+      const raw = a ? a.getAttribute('href') : valueText;
+      // Strip query params like ?one (DA artefact).
+      try {
+        indexUrl = new URL(raw, window.location.href).pathname;
+      } catch {
+        [indexUrl] = raw.split('?');
+      }
+      return;
     }
+
+    if (key === 'index') {
+      const a = valueCell?.querySelector('a');
+      const raw = a ? a.getAttribute('href') : valueText;
+      try {
+        indexUrl = new URL(raw, window.location.href).pathname;
+      } catch {
+        [indexUrl] = raw.split('?');
+      }
+      return;
+    }
+
+    cfg[key] = { cell: valueCell ?? cells[0], text: valueText };
+  });
+
+  const heading = cfg.heading?.text || 'Related articles';
+  const limit = parseInt(cfg.limit?.text, 10) || 12;
+  const topicsRaw = cfg.topics?.text;
+  const topics = topicsRaw ? topicsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
+
+  let explore = null;
+  if (cfg.explore) {
+    const a = cfg.explore.cell?.querySelector('a');
+    if (a) explore = { label: a.textContent.trim(), href: a.getAttribute('href') };
+    else if (cfg.explore.text) explore = { label: cfg.explore.text, href: '#' };
   }
 
-  // Tiles render the shared .ds-card; ensure the card block's styles are present
-  // even on pages without an authored card block.
+  // Tiles use ds-card vessel CSS — ensure card block styles are loaded even on
+  // pages that don't have an authored card block.
   loadStyle(`${codeBase}/blocks/card/card.css`);
 
   let articles = [];
@@ -79,10 +96,9 @@ export default async function init(el) {
     const resp = await fetch(indexUrl);
     if (resp.ok) {
       const json = await resp.json();
-      const rows = json.data || [];
       const here = window.location.pathname;
-      articles = rows
-        .filter((r) => r.path && r.path !== here && (!pathPrefix || r.path.startsWith(pathPrefix)))
+      articles = (json.data || [])
+        .filter((r) => r.path && r.path !== here)
         .map((r) => ({
           path: r.path,
           title: cleanTitle(r.title),
@@ -91,7 +107,7 @@ export default async function init(el) {
           tags: parseTags(r.tags),
         }));
     } else {
-      log(`related-articles: index fetch failed (${resp.status}) for ${indexUrl}`, el);
+      log(`related-articles: index fetch failed (${resp.status})`, el);
     }
   } catch (ex) {
     log(ex, el);
@@ -102,11 +118,7 @@ export default async function init(el) {
     explore,
     articles,
     topics,
-    maxTabs,
-    numCols,
     limit,
-    eyebrowFallback,
-    // Build optimized <picture> only for the tiles actually rendered.
     mediaFactory: (a) => (a.image ? createPicture({ src: a.image, alt: a.alt }) : null),
   }));
 }
