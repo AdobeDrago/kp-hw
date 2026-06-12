@@ -90,10 +90,11 @@ function resolveGroups(groups, topics, maxTabs) {
  * @param {Array}    [opts.articles]
  * @param {string[]} [opts.topics]         ordered allowlist of tab labels
  * @param {number}   [opts.maxTabs]        cap when no allowlist (default 15)
- * @param {number}   [opts.numCols]        2/3/4 (default 4)
+ * @param {number}   [opts.numCols]        2/3/4 (default 3)
  * @param {number}   [opts.limit]          max tiles per panel (default 12)
  * @param {string}   [opts.eyebrowFallback]
  * @param {string}   [opts.allTabLabel]
+ * @param {string}   [opts.sidebarLabel]   "View by topic:" heading above the nav
  * @param {Function} [opts.mediaFactory]
  * @returns {HTMLElement}
  */
@@ -103,10 +104,11 @@ export function renderRelatedArticles({
   articles = [],
   topics = [],
   maxTabs = 15,
-  numCols = 4,
+  numCols = 3,
   limit = 12,
   eyebrowFallback = '',
   allTabLabel = 'All topics',
+  sidebarLabel = 'View by topic:',
   mediaFactory = null,
 } = {}) {
   const root = document.createElement('div');
@@ -129,81 +131,96 @@ export function renderRelatedArticles({
   // Fallback: no tags → flat grid, no tabs.
   if (groups.size === 0) {
     root.append(buildGrid(articles, gridOpts));
-    return root;
-  }
+  } else {
+    const visibleGroups = resolveGroups(groups, topics, maxTabs);
+    const tabData = [[allTabLabel, articles], ...visibleGroups];
+    const instanceId = uid('ra');
 
-  const visibleGroups = resolveGroups(groups, topics, maxTabs);
-  const tabData = [[allTabLabel, articles], ...visibleGroups];
-  const instanceId = uid('ra');
-
-  const tablist = elFromHTML('<div class="related-articles-tabs" role="tablist" aria-label="View by topic"></div>');
-  const panelsWrap = elFromHTML('<div class="related-articles-panels"></div>');
-  const buttons = [];
-  const panels = [];
-  const articleLists = [];
-
-  tabData.forEach(([label, list], idx) => {
-    const tabId = `${instanceId}-tab-${idx}`;
-    const panelId = `${instanceId}-panel-${idx}`;
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `related-articles-tab${idx === 0 ? ' is-active' : ''}`;
-    btn.role = 'tab';
-    btn.id = tabId;
-    btn.setAttribute('aria-controls', panelId);
-    btn.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
-    btn.setAttribute('tabindex', idx === 0 ? '0' : '-1');
-    btn.textContent = label;
-    tablist.append(btn);
-    buttons.push(btn);
-
-    const panel = document.createElement('div');
-    panel.className = 'related-articles-panel';
-    panel.id = panelId;
-    panel.role = 'tabpanel';
-    panel.setAttribute('aria-labelledby', tabId);
-    if (idx === 0) {
-      panel.append(buildGrid(list, gridOpts));
-    } else {
-      panel.hidden = true;
+    const sidebar = elFromHTML('<div class="related-articles-tabs" role="tablist" aria-label="View by topic"></div>');
+    if (sidebarLabel) {
+      sidebar.append(elFromHTML(`<div class="related-articles-tabs-label" aria-hidden="true">${sidebarLabel}</div>`));
     }
-    panelsWrap.append(panel);
-    panels.push(panel);
-    articleLists.push(list);
-  });
+    const panelsWrap = elFromHTML('<div class="related-articles-panels"></div>');
+    const buttons = [];
+    const panels = [];
+    const articleLists = [];
 
-  function activate(idx) {
-    buttons.forEach((b, i) => {
-      const on = i === idx;
-      b.classList.toggle('is-active', on);
-      b.setAttribute('aria-selected', on ? 'true' : 'false');
-      b.setAttribute('tabindex', on ? '0' : '-1');
-    });
-    panels.forEach((p, i) => {
-      if (i === idx) {
-        if (!p.firstElementChild) p.append(buildGrid(articleLists[i], gridOpts));
-        p.hidden = false;
+    tabData.forEach(([label, list], idx) => {
+      const tabId = `${instanceId}-tab-${idx}`;
+      const panelId = `${instanceId}-panel-${idx}`;
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `related-articles-tab${idx === 0 ? ' is-active' : ''}`;
+      btn.role = 'tab';
+      btn.id = tabId;
+      btn.setAttribute('aria-controls', panelId);
+      btn.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+      btn.setAttribute('tabindex', idx === 0 ? '0' : '-1');
+      btn.textContent = label;
+      sidebar.append(btn);
+      buttons.push(btn);
+
+      const panel = document.createElement('div');
+      panel.className = 'related-articles-panel';
+      panel.id = panelId;
+      panel.role = 'tabpanel';
+      panel.setAttribute('aria-labelledby', tabId);
+      if (idx === 0) {
+        panel.append(buildGrid(list, gridOpts));
       } else {
-        p.hidden = true;
+        panel.hidden = true;
       }
+      panelsWrap.append(panel);
+      panels.push(panel);
+      articleLists.push(list);
     });
+
+    function activate(idx) {
+      buttons.forEach((b, i) => {
+        const on = i === idx;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.setAttribute('tabindex', on ? '0' : '-1');
+      });
+      panels.forEach((p, i) => {
+        if (i === idx) {
+          if (!p.firstElementChild) p.append(buildGrid(articleLists[i], gridOpts));
+          p.hidden = false;
+        } else {
+          p.hidden = true;
+        }
+      });
+    }
+
+    buttons.forEach((b, i) => b.addEventListener('click', () => activate(i)));
+    sidebar.addEventListener('keydown', (e) => {
+      const cur = buttons.findIndex((b) => b.classList.contains('is-active'));
+      let next;
+      if (e.key === 'ArrowDown') next = (cur + 1) % buttons.length;
+      else if (e.key === 'ArrowUp') next = (cur - 1 + buttons.length) % buttons.length;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = buttons.length - 1;
+      else return;
+      e.preventDefault();
+      activate(next);
+      buttons[next].focus();
+    });
+
+    const body = elFromHTML('<div class="related-articles-body"></div>');
+    body.append(sidebar, panelsWrap);
+    root.append(body);
   }
 
-  buttons.forEach((b, i) => b.addEventListener('click', () => activate(i)));
-  tablist.addEventListener('keydown', (e) => {
-    const cur = buttons.findIndex((b) => b.classList.contains('is-active'));
-    let next;
-    if (e.key === 'ArrowRight') next = (cur + 1) % buttons.length;
-    else if (e.key === 'ArrowLeft') next = (cur - 1 + buttons.length) % buttons.length;
-    else if (e.key === 'Home') next = 0;
-    else if (e.key === 'End') next = buttons.length - 1;
-    else return;
-    e.preventDefault();
-    activate(next);
-    buttons[next].focus();
-  });
+  // Footer "View all" CTA (same explore link, centered below the grid).
+  if (explore?.href) {
+    const footer = elFromHTML('<div class="related-articles-footer"></div>');
+    const a = elFromHTML('<a class="related-articles-view-all"></a>');
+    a.href = explore.href;
+    a.textContent = explore.label || 'Explore library';
+    footer.append(a);
+    root.append(footer);
+  }
 
-  root.append(tablist, panelsWrap);
   return root;
 }
