@@ -7,10 +7,9 @@
 // `.related-articles` element. No network, no Storybook helpers. Each tile reuses
 // the shared card renderer (renderCard) so tiles match Components/Card exactly.
 //
-// Tabs are data-driven by each article's `tags` (the topic taxonomy): one tab per
-// distinct tag, plus a leading "All topics" tab. With no tags anywhere, it falls
-// back to a single flat grid (no tab bar) — the state today, until articles are
-// tagged (see issue #34).
+// Tabs: authors control visible topics via the `topics` allowlist (comma-separated
+// in the block config). If omitted, defaults to the top-N tags by article count.
+// Non-active panels are built lazily on first click to keep initial DOM small.
 
 import { renderCard } from '../card/card-dom.js';
 
@@ -65,8 +64,7 @@ function buildGrid(articles, opts) {
   return grid;
 }
 
-// Map of tag -> articles, in first-seen tag order. An article with multiple tags
-// appears under each of its topics.
+// Map of tag -> articles, sorted by descending article count.
 function groupByTag(articles) {
   const groups = new Map();
   articles.forEach((a) => {
@@ -75,7 +73,20 @@ function groupByTag(articles) {
       groups.get(t).push(a);
     });
   });
-  return groups;
+  // Sort by count descending so default top-N picks the most-covered topics.
+  return new Map([...groups.entries()].sort((a, b) => b[1].length - a[1].length));
+}
+
+// Resolve which tab groups to show:
+//   - topics allowlist → exact ordered list the author specified
+//   - no allowlist     → top maxTabs groups by article count
+function resolveGroups(groups, topics, maxTabs) {
+  if (topics && topics.length) {
+    return topics
+      .map((t) => [t, groups.get(t)])
+      .filter(([, list]) => list && list.length);
+  }
+  return [...groups.entries()].slice(0, maxTabs);
 }
 
 /**
@@ -83,8 +94,10 @@ function groupByTag(articles) {
  * @param {string}   [data.heading]
  * @param {{label:string, href:string}|null} [data.explore]  "Explore library" link
  * @param {Array<{path,title,image,alt,tags,media}>} [data.articles]
- * @param {number}   [data.numCols]    desktop column count (2/3/4)
- * @param {number}   [data.limit]      max tiles per panel (0 = no cap)
+ * @param {string[]} [data.topics]      ordered allowlist of tab labels; omit for top-N auto
+ * @param {number}   [data.maxTabs]     cap when no topics allowlist (default 15)
+ * @param {number}   [data.numCols]     desktop column count (2/3/4)
+ * @param {number}   [data.limit]       max tiles per panel (0 = no cap)
  * @param {string}   [data.eyebrowFallback]  category shown when an article has no tag
  * @param {string}   [data.allTabLabel]
  * @param {(a:object)=>HTMLElement} [data.mediaFactory]  builds optimized media per tile
@@ -94,6 +107,8 @@ export function renderRelatedArticles({
   heading = 'Related articles',
   explore = null,
   articles = [],
+  topics = [],
+  maxTabs = 15,
   numCols = 4,
   limit = 12,
   eyebrowFallback = '',
@@ -116,20 +131,23 @@ export function renderRelatedArticles({
   const opts = { numCols, limit, eyebrowFallback, mediaFactory };
   const groups = groupByTag(articles);
 
-  // Fallback: nothing is tagged yet → a single flat grid, no tab bar.
+  // Fallback: nothing is tagged → a single flat grid, no tab bar.
   if (groups.size === 0) {
     root.append(buildGrid(articles, opts));
     return root;
   }
 
-  // Tabbed: "All topics" then one tab per distinct tag.
-  const tabs = [[allTabLabel, articles], ...groups.entries()];
+  // Resolve visible tabs (allowlist → top-N by count).
+  const visibleGroups = resolveGroups(groups, topics, maxTabs);
+  const tabs = [[allTabLabel, articles], ...visibleGroups];
   const instanceId = uid('ra');
 
   const tablist = elFromHTML('<div class="related-articles-tabs" role="tablist" aria-label="View by topic"></div>');
   const panelsWrap = elFromHTML('<div class="related-articles-panels"></div>');
   const buttons = [];
   const panels = [];
+  // articleLists holds each tab's data so non-active panels can be built lazily.
+  const articleLists = [];
 
   tabs.forEach(([label, list], idx) => {
     const tabId = `${instanceId}-tab-${idx}`;
@@ -153,10 +171,14 @@ export function renderRelatedArticles({
     panel.id = panelId;
     panel.role = 'tabpanel';
     panel.setAttribute('aria-labelledby', tabId);
-    if (idx !== 0) panel.hidden = true;
-    panel.append(buildGrid(list, opts));
+    if (idx === 0) {
+      panel.append(buildGrid(list, opts));
+    } else {
+      panel.hidden = true;
+    }
     panelsWrap.append(panel);
     panels.push(panel);
+    articleLists.push(list);
   });
 
   function activate(idx) {
@@ -166,7 +188,15 @@ export function renderRelatedArticles({
       b.setAttribute('aria-selected', selected ? 'true' : 'false');
       b.setAttribute('tabindex', selected ? '0' : '-1');
     });
-    panels.forEach((p, i) => { p.hidden = i !== idx; });
+    panels.forEach((p, i) => {
+      if (i === idx) {
+        // Lazy-build panel content on first activation.
+        if (!p.firstElementChild) p.append(buildGrid(articleLists[i], opts));
+        p.hidden = false;
+      } else {
+        p.hidden = true;
+      }
+    });
   }
 
   buttons.forEach((b, idx) => b.addEventListener('click', () => activate(idx)));

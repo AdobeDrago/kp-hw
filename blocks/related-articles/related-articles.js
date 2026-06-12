@@ -52,6 +52,11 @@ export default async function init(el) {
   const eyebrowFallback = cellText(cfg['category fallback'] || cfg.category) || '';
   const indexUrl = cellText(cfg.index) || DEFAULT_INDEX;
   const pathPrefix = cellText(cfg.filter || cfg.prefix) || '';
+  // `topics` row: comma-separated ordered list of tab labels to show.
+  // Omit the row to auto-select the top 15 tags by article count.
+  const topicsRaw = cellText(cfg.topics);
+  const topics = topicsRaw ? topicsRaw.split(',').map((t) => t.trim()).filter(Boolean) : [];
+  const maxTabs = parseInt(cellText(cfg['max tabs'] || cfg.maxtabs), 10) || 15;
 
   // "Explore library" link: prefer an authored anchor, else plain text.
   let explore = null;
@@ -96,6 +101,8 @@ export default async function init(el) {
     heading,
     explore,
     articles,
+    topics,
+    maxTabs,
     numCols,
     limit,
     eyebrowFallback,
