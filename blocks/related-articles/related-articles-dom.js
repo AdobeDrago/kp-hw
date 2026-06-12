@@ -40,10 +40,14 @@ function buildTile(article, opts) {
   });
 
   // Promote <div class="ds-card"> → <a class="ds-card ds-card__option--clickable">
+  // Skip 'class' in the attribute copy — we set className above and don't want
+  // the loop to overwrite it and strip ds-card__option--clickable.
   const link = document.createElement('a');
   link.href = article.path;
   link.className = `${cardDiv.className} ds-card__option--clickable`;
-  for (const { name, value } of cardDiv.attributes) link.setAttribute(name, value);
+  for (const { name, value } of cardDiv.attributes) {
+    if (name !== 'class') link.setAttribute(name, value);
+  }
   link.append(...cardDiv.childNodes);
   return link;
 }
