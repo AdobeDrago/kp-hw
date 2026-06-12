@@ -1,0 +1,111 @@
+/*
+ * Related articles block. Tile visuals come from the shared .ds-card (card block
+ * CSS, loaded by init()); this file styles the wrapper, header, topic tabs and the
+ * responsive grid. Breakpoints mirror the vessel card-group (2-up tablet, N-up at
+ * 1152px) so tiles line up with the rest of the design system.
+ */
+
+.related-articles {
+  color: #0D1C3D;
+  font-family: "Gotham 4r", Verdana, sans-serif;
+  margin-bottom: 24px;
+}
+
+.related-articles-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 16px;
+}
+
+.related-articles-heading {
+  margin: 0;
+}
+
+.related-articles-explore {
+  white-space: nowrap;
+  padding: 8px 20px;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  font-size: var(--body-font-size-s, 0.875rem);
+  line-height: 1.5;
+}
+
+.related-articles-explore:hover {
+  text-decoration: underline;
+}
+
+/* View-by-topic tabs */
+.related-articles-tabs {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  padding-bottom: 2px;
+}
+
+.related-articles-tab {
+  background-color: transparent;
+  border: none;
+  padding: 4px 8px;
+  margin: 0;
+  font: inherit;
+  font-size: var(--body-font-size-xl, 1.125rem);
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: border-bottom-color 0.2s ease-in-out;
+}
+
+.related-articles-tab.is-active {
+  border-bottom-color: currentcolor;
+  font-weight: 700;
+}
+
+.related-articles-tab:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+.related-articles-panel[hidden] {
+  display: none;
+}
+
+/* Responsive tile grid */
+.related-articles-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (width >= 768px) {
+  .related-articles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (width >= 1152px) {
+  .related-articles-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .related-articles-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .related-articles-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Whole tile is the link */
+.related-articles-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.related-articles-card-link:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 3px;
+}
+
+.related-articles-card-link .ds-card {
+  height: 100%;
+}
