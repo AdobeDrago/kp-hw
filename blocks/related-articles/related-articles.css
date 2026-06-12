@@ -1,0 +1,166 @@
+/*
+ * Related articles block.
+ * Tile + grid visuals come from the vessel ds-card + ds-card-group patterns
+ * (card block CSS loaded dynamically by init()). This file styles the
+ * block wrapper, section header, vertical topic nav sidebar, and the
+ * ds-card-group grid.
+ */
+
+.related-articles {
+  margin-bottom: 24px;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.related-articles-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+}
+
+.related-articles-heading {
+  margin: 0;
+}
+
+.related-articles-explore {
+  white-space: nowrap;
+  padding: 8px 20px;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  font-size: var(--body-font-size-s, 0.875rem);
+  line-height: 1.5;
+}
+
+.related-articles-explore:hover {
+  text-decoration: underline;
+}
+
+/* ── Body: sidebar + panels ───────────────────────────────────────────────── */
+
+.related-articles-body {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* ── View-by-topic sidebar ────────────────────────────────────────────────── */
+
+.related-articles-tabs {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 180px;
+  gap: 0;
+}
+
+.related-articles-tabs-label {
+  font-size: var(--body-font-size-s, 0.875rem);
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: inherit;
+}
+
+.related-articles-tab {
+  background-color: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 10px 12px;
+  margin: 0;
+  text-align: left;
+  font: inherit;
+  font-size: var(--body-font-size-m, 1rem);
+  white-space: normal;
+  cursor: pointer;
+  color: inherit;
+  transition: border-left-color 0.15s ease-in-out;
+}
+
+.related-articles-tab.is-active {
+  border-left-color: var(--color-brand-primary, #006298);
+  font-weight: 700;
+}
+
+.related-articles-tab:hover:not(.is-active) {
+  border-left-color: currentcolor;
+  opacity: 0.7;
+}
+
+.related-articles-tab:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 2px;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+
+.related-articles-panels {
+  flex: 1;
+  min-width: 0;
+}
+
+.related-articles-panel[hidden] {
+  display: none;
+}
+
+/* ── ds-card-group grid (vessel pattern) ──────────────────────────────────── */
+
+.related-articles .ds-card-group {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  margin-bottom: 0;
+}
+
+@media (width >= 768px) {
+  .related-articles .ds-card-group {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (width >= 1152px) {
+  .related-articles .ds-card-group[data-ds-num-cols="2"] { grid-template-columns: repeat(2, 1fr); }
+  .related-articles .ds-card-group[data-ds-num-cols="3"] { grid-template-columns: repeat(3, 1fr); }
+  .related-articles .ds-card-group[data-ds-num-cols="4"] { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Clickable card (whole <a> is the tile) fills its grid cell. */
+/* stylelint-disable selector-class-pattern */
+.related-articles .ds-card__option--clickable {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.related-articles .ds-card__option--clickable:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 3px;
+}
+/* stylelint-enable selector-class-pattern */
+
+/* ── Footer CTA ───────────────────────────────────────────────────────────── */
+
+.related-articles-footer {
+  text-align: center;
+  margin-top: 32px;
+}
+
+.related-articles-view-all {
+  display: inline-block;
+  padding: 10px 28px;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  font-size: var(--body-font-size-m, 1rem);
+  line-height: 1.5;
+}
+
+.related-articles-view-all:hover {
+  text-decoration: underline;
+}
