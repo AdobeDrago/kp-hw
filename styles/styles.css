@@ -1024,24 +1024,24 @@ body.library-template footer {
 }
 
 /* ==========================================================================
-   SECTION NAV
+   INNER NAV
    ============================================================================
-   style: section-nav — "Jump to section" anchor pill row.
-   Author a heading followed by a list of in-page anchor links; each link
-   renders as an outlined pill button.
+   style: inner-nav — "Jump to section" anchor pill row.
+   Author a heading followed by a paragraph of space-separated anchor links;
+   each link renders as an outlined pill button.
 
    Example document content:
      ## Jump to section
-     - [Healthy living spotlight](#healthy-living-spotlight)
-     - [Managing your health](#managing-your-health)
+     [Healthy living spotlight](#healthy-living-spotlight)
+     [Managing your health](#managing-your-health)
    ========================================================================== */
 
-main .section.section-nav {
+main .section.inner-nav {
   padding: var(--spacing-l) 0;
 }
 
-main .section.section-nav .default-content h2,
-main .section.section-nav .default-content h3 {
+main .section.inner-nav .default-content h2,
+main .section.inner-nav .default-content h3 {
   font-size: var(--heading-font-size-xs);
   font-family: var(--heading-font-family);
   font-weight: 700;
@@ -1050,20 +1050,14 @@ main .section.section-nav .default-content h3 {
   letter-spacing: 0;
 }
 
-main .section.section-nav .default-content ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+main .section.inner-nav .default-content p {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-s);
-}
-
-main .section.section-nav .default-content ul li {
   margin: 0;
 }
 
-main .section.section-nav .default-content ul li a:any-link {
+main .section.inner-nav .default-content p a:any-link {
   display: inline-block;
   padding: 10px 20px;
   border: 1.5px solid var(--color-navy);
@@ -1075,11 +1069,11 @@ main .section.section-nav .default-content ul li a:any-link {
   text-decoration: none;
   background: transparent;
   transition: background-color 0.2s ease, color 0.2s ease;
-  word-break: normal;
+  white-space: nowrap;
 }
 
-main .section.section-nav .default-content ul li a:hover,
-main .section.section-nav .default-content ul li a:focus {
+main .section.inner-nav .default-content p a:hover,
+main .section.inner-nav .default-content p a:focus {
   background-color: var(--color-navy);
   color: var(--color-white);
   text-decoration: none;
