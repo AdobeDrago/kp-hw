@@ -192,7 +192,5 @@ const data = await fetchResults({
 `callProxy` sends a `POST` request to `PROXY_ENDPOINT` with a JSON body:
 
 ```json
-{ "url": "<full-kp-search-url>", "method": "GET" }
+{ "url": "<full-kp-search-url>" }
 ```
-
-The `method` field tells the App Builder action which HTTP method to use when forwarding the request to KP.

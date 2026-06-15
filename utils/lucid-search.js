@@ -49,7 +49,7 @@ export async function callProxy(kpUrl) {
   const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: kpUrl, method: 'GET' }),
+    body: JSON.stringify({ url: kpUrl }),
   });
   if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
   return res.json();
