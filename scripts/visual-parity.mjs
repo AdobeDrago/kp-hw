@@ -29,6 +29,10 @@ const notif = (v) => ({ name: `notification-${v}`, selector: '.ds-notification',
 const PAIRS = [
   card('basic'), card('large'), card('thumbnail'),
   notif('informational'), notif('alert'), notif('error'), notif('success'), notif('dismissible'),
+  // KP header block (auth-toggle) vs the kp-header reference — same markup + CSS,
+  // so this is a tight sanity check that the block injects the right variant.
+  { name: 'header-nonauth', selector: '.kp-header', eds: 'eds-blocks-header--non-authenticated', ref: 'components-kp-header--non-authenticated' },
+  { name: 'header-auth', selector: '.kp-header', eds: 'eds-blocks-header--authenticated', ref: 'components-kp-header--authenticated' },
 ];
 
 async function shoot(page, id, selector) {
@@ -79,12 +83,14 @@ async function run() {
     });
     writeFileSync(resolve(dir, 'diff.png'), PNG.sync.write(diff));
     const ratio = n / (w * h);
+    const limit = pair.maxDiff ?? MAX_DIFF;
     results.push({
       name: pair.name,
       ratio,
+      limit,
       sizeMismatch,
       dims: `eds ${edsPng.width}x${edsPng.height} / ref ${refPng.width}x${refPng.height}`,
-      pass: ratio <= MAX_DIFF,
+      pass: ratio <= limit,
     });
   }
 
@@ -94,7 +100,8 @@ async function run() {
   let failed = false;
   for (const r of results) {
     if (!r.pass) failed = true;
-    console.log(`  ${r.pass ? 'PASS' : 'FAIL'}  ${r.name.padEnd(16)} ${(r.ratio * 100).toFixed(2).padStart(6)}% diff${r.sizeMismatch ? `  (size: ${r.dims})` : ''}`);
+    const limitNote = r.limit !== MAX_DIFF ? ` (limit ${(r.limit * 100).toFixed(0)}%)` : '';
+    console.log(`  ${r.pass ? 'PASS' : 'FAIL'}  ${r.name.padEnd(16)} ${(r.ratio * 100).toFixed(2).padStart(6)}% diff${limitNote}${r.sizeMismatch ? `  (size: ${r.dims})` : ''}`);
   }
   console.log(`\n  Diff images: ${OUT}\n`);
   process.exit(failed ? 1 : 0);
