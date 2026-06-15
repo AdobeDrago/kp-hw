@@ -45,14 +45,28 @@ export function buildKpSearchUrl({
   return `${KP_SEARCH_BASE}?${params.join('&')}`;
 }
 
+// On main-- domains the App Builder proxy handles CORS. On branch previews
+// and localhost the AEM dev server proxies requests, so call KP directly.
+const useProxy = () => window.location.hostname.startsWith('main--');
+
 export async function callProxy(kpUrl, body) {
-  const payload = body ? { url: kpUrl, body } : { url: kpUrl };
-  const res = await fetch(PROXY_ENDPOINT, {
+  if (useProxy()) {
+    const payload = body ? { url: kpUrl, body } : { url: kpUrl };
+    const res = await fetch(PROXY_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
+    return res.json();
+  }
+  // Dev / branch preview: call KP directly (dev server handles CORS).
+  const res = await fetch(kpUrl, body ? {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
+    body: JSON.stringify(body),
+  } : undefined);
+  if (!res.ok) throw new Error(`KP request failed: ${res.status}`);
   return res.json();
 }
 
