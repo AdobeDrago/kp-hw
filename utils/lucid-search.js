@@ -1,0 +1,66 @@
+export const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-search';
+export const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
+
+export const DEFAULT_ROP = 'SCA';
+export const DEFAULT_DISTANCE = 50;
+
+export function zipToRop(zip) {
+  const n = parseInt(zip, 10);
+  if (Number.isNaN(n)) return DEFAULT_ROP;
+  // NorCal ZIPs are roughly 94000–96199; SoCal 90000–93599.
+  return n >= 94000 ? 'NCA' : 'SCA';
+}
+
+export function latToRop(lat) {
+  // Rough CA split near 35.8°N.
+  return lat >= 35.8 ? 'NCA' : 'SCA';
+}
+
+// Builds the KP search URL.
+// - The base binning-state carries distance + topic, newline-joined as "%0A"
+//   (a literal "\n" gets stripped by the proxy's URL parser; "%0A" survives).
+// - Each active sidebar filter is its OWN extra `binning-state` query param.
+export function buildKpSearchUrl({
+  rop, zip = '', lat = '', lon = '', miles = DEFAULT_DISTANCE,
+  topicLabel = '', listShow = 0, vstate = '', filterTokens = [],
+}) {
+  const base = [`distance=0:${miles}`];
+  if (topicLabel) base.push(`health_topic==${topicLabel}`);
+  const params = [
+    'v:sources=kp-health-classes-proximity',
+    'v:project=kp-classes-project',
+    'query=',
+    `rop=${rop}`,
+    `user_zip=${zip}`,
+    `binning-state=${base.join('%0A')}`,
+    `user_lat=${lat}`,
+    `user_lon=${lon}`,
+    'locale=en-us',
+    'render.function=json-feed-display-document',
+    'content-type=application-json',
+    `render.list-show=${listShow}`,
+  ];
+  if (vstate) params.push(`v:state=${vstate}`);
+  filterTokens.forEach((t) => params.push(`binning-state=${t}`));
+  return `${KP_SEARCH_BASE}?${params.join('&')}`;
+}
+
+export async function callProxy(kpUrl) {
+  const res = await fetch(`${PROXY_ENDPOINT}?url=${encodeURIComponent(kpUrl)}`);
+  if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
+  return res.json();
+}
+
+// Topic facets only — no topic in binning-state, list-show=0.
+export async function fetchTopics(opts) {
+  const data = await callProxy(buildKpSearchUrl({ ...opts, listShow: 0 }));
+  const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
+  return (set?.bins || []).map((b) => ({ label: b.label, token: b.token, count: Number(b.ndocs) || 0 }));
+}
+
+// Paginated results + facets + navigation, 10 per page.
+export async function fetchResults(opts) {
+  return callProxy(buildKpSearchUrl({
+    ...opts, listShow: 10, vstate: `root|root-${opts.offset || 0}-10`,
+  }));
+}

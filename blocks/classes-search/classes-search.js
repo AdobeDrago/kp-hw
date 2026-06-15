@@ -1,64 +1,6 @@
-// Adobe AppBuilder (kp-search) proxy that adds CORS headers and calls KP
-// server-side. Deployed from the "Proxy NoCors" App Builder project (Stage).
-const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-search';
-
-const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
-
-// KP "region of practice". KP has several regions; this is a best-effort map of
-// California ZIPs to Northern (NCA) vs Southern (SCA) California. Extend with
-// the official KP region mapping if other regions are needed.
-const DEFAULT_ROP = 'SCA';
-
-function zipToRop(zip) {
-  const n = parseInt(zip, 10);
-  if (Number.isNaN(n)) return DEFAULT_ROP;
-  // NorCal ZIPs are roughly 94000–96199; SoCal 90000–93599.
-  return n >= 94000 ? 'NCA' : 'SCA';
-}
-
-function latToRop(lat) {
-  // Rough CA split near 35.8°N.
-  return lat >= 35.8 ? 'NCA' : 'SCA';
-}
-
-// Builds the KP search URL. `listShow: 0` returns the topic facets only (no
-// result documents) — that's all we need to populate the dropdown.
-function buildKpSearchUrl({ rop, zip = '', lat = '', lon = '', listShow = 0 }) {
-  const params = [
-    'v:sources=kp-health-classes-proximity',
-    'v:project=kp-classes-project',
-    'query=',
-    `rop=${rop}`,
-    `user_zip=${zip}`,
-    'binning-state=distance=0:50',
-    `user_lat=${lat}`,
-    `user_lon=${lon}`,
-    'locale=en-us',
-    'render.function=json-feed-display-document',
-    'content-type=application-json',
-    `render.list-show=${listShow}`,
-  ].join('&');
-  return `${KP_SEARCH_BASE}?${params}`;
-}
-
-// Calls KP through the proxy and returns the list of health topics:
-// [{ label, token, count }]. Topics live in the `health_topic` binning set.
-async function fetchTopics(opts) {
-  const kpUrl = buildKpSearchUrl({ ...opts, listShow: 0 });
-  const proxyUrl = `${PROXY_ENDPOINT}?url=${encodeURIComponent(kpUrl)}`;
-  const res = await fetch(proxyUrl);
-  if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
-  const data = await res.json();
-  // TEMP: inspect the raw KP API response in the console. Remove when done.
-  // eslint-disable-next-line no-console
-  console.log('[classes-search] raw KP response:', data);
-  const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
-  return (set?.bins || []).map((b) => ({
-    label: b.label,
-    token: b.token,
-    count: Number(b.ndocs) || 0,
-  }));
-}
+import {
+  DEFAULT_ROP, DEFAULT_DISTANCE, zipToRop, latToRop, fetchTopics,
+} from '../../utils/lucid-search.js';
 
 // Reads the results-page path authored in the block (a link or a plain-text
 // cell), e.g. "southern-california/health-wellness/classes-programs/search-results".
@@ -72,7 +14,7 @@ function readResultsPath(block) {
 // Builds the results-page URL: the authored path + the user's search as query
 // params, matching the param names the live KP site uses:
 //   ?user_zip=90012&distance_label=50&health_topic=Diabetes
-const DISTANCE_LABEL = '50'; // matches the 0:50 mile radius used for the search
+const DISTANCE_LABEL = String(DEFAULT_DISTANCE);
 
 function buildResultsUrl(path, state, topicLabel) {
   const normalized = /^https?:\/\//i.test(path) ? path : `/${path.replace(/^\/+/, '')}`;
