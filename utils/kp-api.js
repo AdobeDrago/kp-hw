@@ -45,9 +45,7 @@ export function buildKpSearchUrl({
   return `${KP_SEARCH_BASE}?${params.join('&')}`;
 }
 
-// On main-- domains the App Builder proxy handles CORS. On branch previews
-// and localhost the AEM dev server proxies requests, so call KP directly.
-const useProxy = () => window.location.hostname.startsWith('main--');
+const useProxy = () => !window.location.hostname.startsWith('main--');
 
 export async function callProxy(kpUrl, body) {
   if (useProxy()) {
