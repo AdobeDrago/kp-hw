@@ -1,4 +1,4 @@
-export const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-search';
+export const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-api';
 export const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
 
 export const DEFAULT_ROP = 'SCA';
@@ -45,14 +45,33 @@ export function buildKpSearchUrl({
   return `${KP_SEARCH_BASE}?${params.join('&')}`;
 }
 
-export async function callProxy(kpUrl) {
+export async function callProxy(kpUrl, body) {
+  const payload = body ? { url: kpUrl, body } : { url: kpUrl };
   const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url: kpUrl }),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
   return res.json();
+}
+
+const CONTENT_HUB_SQL = 'https://apims.kaiserpermanente.org/kp/care/api/kpd/csconsumptionapi/v1/sql';
+
+// Fetches KP health articles from the Content Hub SQL API.
+// tags: string[] — cq:tag values OR'd in the WHERE clause
+// language: string — e.g. 'english', 'spanish'
+// taxonomicID: string — content taxonomy ID
+export async function fetchArticles({ tags = [], language = 'english', taxonomicID }) {
+  const tagParams = tags.map((value, i) => ({ name: `@cqTagsOr0${i}`, value }));
+  const whereTag = tagParams.map((p) => `CONTAINS(c.metadata["cq:tags"], ${p.name})`).join(' OR ');
+  const query = `SELECT c.title, c.name, c.elements["headline"], c.elements["teaser"], c.elements["primaryImageOfPage"] FROM c WHERE (${whereTag}) AND IS_DEFINED(c.elements.language.variations[@language]) AND c.metadata["taxonomicID"] = @taxonomicID ORDER BY c.elements.displayDate["value"] DESC`;
+  const parameters = [
+    ...tagParams,
+    { name: '@language', value: language },
+    { name: '@taxonomicID', value: taxonomicID },
+  ];
+  return callProxy(CONTENT_HUB_SQL, { query, parameters });
 }
 
 // Topic facets only — no topic in binning-state, list-show=0.

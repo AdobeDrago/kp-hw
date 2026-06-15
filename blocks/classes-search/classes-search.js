@@ -1,6 +1,6 @@
 import {
   DEFAULT_ROP, DEFAULT_DISTANCE, zipToRop, latToRop, fetchTopics,
-} from '../../utils/lucid-search.js';
+} from '../../utils/kp-api.js';
 
 // Reads the results-page path authored in the block (a link or a plain-text
 // cell), e.g. "southern-california/health-wellness/classes-programs/search-results".

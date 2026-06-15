@@ -1,6 +1,6 @@
 import {
   DEFAULT_ROP, DEFAULT_DISTANCE, zipToRop, latToRop, fetchTopics, fetchResults,
-} from '../../utils/lucid-search.js';
+} from '../../utils/kp-api.js';
 
 const DISTANCE_OPTIONS = [5, 10, 25, 50, 75, 100];
 const FACET_VISIBLE = 6; // facet options shown before "Show More"
