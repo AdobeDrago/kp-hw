@@ -1,11 +1,8 @@
-// Adobe AppBuilder (kp-search) proxy — the same one classes-search uses to get
-// around CORS on the KP search API.
-const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-search';
-const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
+import {
+  DEFAULT_ROP, DEFAULT_DISTANCE, zipToRop, latToRop, fetchTopics, fetchResults,
+} from '../../utils/kp-api.js';
 
-const DEFAULT_ROP = 'SCA';
-const DISTANCE_OPTIONS = [5, 10, 25, 50, 75, 100]; // miles (hardcoded)
-const DEFAULT_DISTANCE = 50;
+const DISTANCE_OPTIONS = [5, 10, 25, 50, 75, 100];
 const FACET_VISIBLE = 6; // facet options shown before "Show More"
 const FEE_TOKEN = 'fee_required==No';
 const FEE_LABEL = 'No fee classes & programs';
@@ -17,71 +14,10 @@ const FILTER_GROUPS = [
   { key: 'language', bsId: 'languages', label: 'Language' },
 ];
 
-function zipToRop(zip) {
-  const n = parseInt(zip, 10);
-  if (Number.isNaN(n)) return DEFAULT_ROP;
-  // NorCal ZIPs are roughly 94000–96199; SoCal 90000–93599.
-  return n >= 94000 ? 'NCA' : 'SCA';
-}
-
-function latToRop(lat) {
-  // Rough CA split near 35.8°N.
-  return lat >= 35.8 ? 'NCA' : 'SCA';
-}
-
 // "distance_label" arrives as "50" or "Within 50 miles" — pull the mileage out.
 function parseDistance(distanceLabel) {
   const n = parseInt((String(distanceLabel || '').match(/\d+/) || [])[0], 10);
   return DISTANCE_OPTIONS.includes(n) ? n : DEFAULT_DISTANCE;
-}
-
-// Builds the KP search URL.
-// - The base binning-state carries distance + topic, newline-joined as "%0A"
-//   (a literal "\n" gets stripped by the proxy's URL parser; "%0A" survives).
-// - Each active sidebar filter is its OWN extra `binning-state` query param.
-function buildKpSearchUrl({
-  rop, zip = '', lat = '', lon = '', miles = DEFAULT_DISTANCE,
-  topicLabel = '', listShow = 0, vstate = '', filterTokens = [],
-}) {
-  const base = [`distance=0:${miles}`];
-  if (topicLabel) base.push(`health_topic==${topicLabel}`);
-  const params = [
-    'v:sources=kp-health-classes-proximity',
-    'v:project=kp-classes-project',
-    'query=',
-    `rop=${rop}`,
-    `user_zip=${zip}`,
-    `binning-state=${base.join('%0A')}`,
-    `user_lat=${lat}`,
-    `user_lon=${lon}`,
-    'locale=en-us',
-    'render.function=json-feed-display-document',
-    'content-type=application-json',
-    `render.list-show=${listShow}`,
-  ];
-  if (vstate) params.push(`v:state=${vstate}`);
-  filterTokens.forEach((t) => params.push(`binning-state=${t}`));
-  return `${KP_SEARCH_BASE}?${params.join('&')}`;
-}
-
-async function callProxy(kpUrl) {
-  const res = await fetch(`${PROXY_ENDPOINT}?url=${encodeURIComponent(kpUrl)}`);
-  if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
-  return res.json();
-}
-
-// Topic facets only (for the Topic dropdown) — no topic in binning-state.
-async function fetchTopics(opts) {
-  const data = await callProxy(buildKpSearchUrl({ ...opts, listShow: 0 }));
-  const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
-  return (set?.bins || []).map((b) => ({ label: b.label, token: b.token }));
-}
-
-// The filtered listing (10 per page) + facets + navigation.
-async function fetchResults(opts) {
-  return callProxy(buildKpSearchUrl({
-    ...opts, listShow: 10, vstate: `root|root-${opts.offset || 0}-10`,
-  }));
 }
 
 // --- HTML helpers (pure) -------------------------------------------------
