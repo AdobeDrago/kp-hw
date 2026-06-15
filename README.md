@@ -116,3 +116,83 @@ blue, gray, green, magenta, organge, red, purple, yellow
 
 ### Color schemes
 light, dark
+
+## KP Lucid Search (`utils/lucid-search.js`)
+
+Shared library for blocks that query the KP Lucid Search API. Handles URL construction, region mapping, and the CORS proxy — blocks import what they need and focus on UI.
+
+### Why a proxy?
+
+The KP Lucid Search API (`apims.kaiserpermanente.org`) does not return CORS headers, so browser `fetch()` calls are blocked. Requests route through an Adobe App Builder action (`kp-search`) that calls KP server-side and returns the response with CORS headers. The browser only ever talks to the proxy.
+
+### Exports
+
+| Export | Type | Description |
+|---|---|---|
+| `PROXY_ENDPOINT` | `string` | App Builder proxy URL (stage) |
+| `KP_SEARCH_BASE` | `string` | KP Lucid Search API base URL |
+| `DEFAULT_ROP` | `string` | Default region of practice (`'SCA'`) |
+| `DEFAULT_DISTANCE` | `number` | Default search radius in miles (`50`) |
+| `zipToRop(zip)` | `function` | Maps a 5-digit CA ZIP to `'NCA'` or `'SCA'` |
+| `latToRop(lat)` | `function` | Maps a latitude to `'NCA'` or `'SCA'` |
+| `buildKpSearchUrl(opts)` | `function` | Builds the full KP search URL from search options |
+| `callProxy(kpUrl)` | `function` | POSTs `{ url, method }` to the proxy and returns parsed JSON |
+| `fetchTopics(opts)` | `function` | Returns `[{ label, token, count }]` — topic facets, no results |
+| `fetchResults(opts)` | `function` | Returns paginated results + facets + navigation |
+
+### Usage
+
+```js
+import {
+  DEFAULT_ROP, DEFAULT_DISTANCE,
+  zipToRop, latToRop,
+  fetchTopics, fetchResults,
+} from '../../utils/lucid-search.js';
+```
+
+#### Populate a topic dropdown from a ZIP code
+
+```js
+const rop = zipToRop('94105');           // 'NCA'
+const topics = await fetchTopics({ rop, zip: '94105' });
+// topics: [{ label: 'Diabetes', token: 'health_topic==Diabetes', count: 51 }, ...]
+```
+
+#### Fetch a page of results with filters
+
+```js
+const data = await fetchResults({
+  rop: 'NCA',
+  zip: '94105',
+  miles: 25,
+  topicLabel: 'Diabetes',
+  offset: 0,                             // page 1; increment by 10 for "load more"
+  filterTokens: ['facility==Oakland Medical Center'],
+});
+// data.list.document — result records
+// data.binning['binning-set'] — facet groups for sidebar filters
+// data.list.num — total result count
+```
+
+#### `buildKpSearchUrl` options
+
+| Option | Default | Description |
+|---|---|---|
+| `rop` | — | Region of practice (`'NCA'` / `'SCA'`) — required |
+| `zip` | `''` | 5-digit ZIP code |
+| `lat` / `lon` | `''` | Coordinates (used when ZIP unavailable) |
+| `miles` | `DEFAULT_DISTANCE` | Search radius |
+| `topicLabel` | `''` | Health topic label (e.g. `'Diabetes'`) |
+| `listShow` | `0` | `0` = facets only; `10` = results + facets + navigation |
+| `vstate` | `''` | Pagination window, e.g. `'root\|root-10-10'` |
+| `filterTokens` | `[]` | Active sidebar filter tokens — one entry per active filter |
+
+#### Proxy transport
+
+`callProxy` sends a `POST` request to `PROXY_ENDPOINT` with a JSON body:
+
+```json
+{ "url": "<full-kp-search-url>", "method": "GET" }
+```
+
+The `method` field tells the App Builder action which HTTP method to use when forwarding the request to KP.
