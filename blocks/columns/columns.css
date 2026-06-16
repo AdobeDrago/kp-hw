@@ -172,3 +172,52 @@
   background: #1b3055;
   color: #fff;
 }
+
+/* ── Topics variant: links render as pill buttons with a show-more toggle ──── */
+
+.columns.topics .topic-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.columns.topics .topic-pills a:any-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-blue);
+  border-radius: 24px;
+  padding: 11px 24px;
+  background-color: #fff;
+  color: var(--color-blue);
+  font-size: var(--body-font-size-m, 1rem);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.columns.topics .topic-pills a:any-link:hover {
+  background-color: var(--color-blue);
+  color: #fff;
+  text-decoration: none;
+}
+
+.columns.topics .topic-pill--hidden {
+  display: none;
+}
+
+.columns.topics .topic-pills-toggle {
+  margin-top: 1rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--color-blue);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.columns.topics .topic-pills-toggle:hover {
+  color: var(--color-link-hover, #005a87);
+}
