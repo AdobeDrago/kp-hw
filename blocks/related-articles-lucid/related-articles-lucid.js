@@ -25,9 +25,10 @@ function readConfig(block) {
     if (cells.length < 2) return;
     const key = cells[0].textContent.trim().toLowerCase();
     if (key === 'topic') {
+      // topic | <label> | <topic cq:tag>
       config.topics.push({
         label: cells[1].textContent.trim(),
-        tags: cells[2] ? cells[2].textContent.trim().split(',').map((t) => t.trim()).filter(Boolean) : [],
+        topic: cells[2] ? cells[2].textContent.trim() : '',
       });
     } else {
       config[key] = cells[1].textContent.trim();
@@ -138,13 +139,16 @@ export default async function init(block) {
   wrapper.append(sidebar, content);
   block.append(wrapper);
 
-  // Topic click handler: re-fetch with topic's tags (or default for "All topics")
-  async function selectTopic(topicItem, tags) {
+  // Topic click handler: re-fetch the base pool narrowed by the topic tag.
+  // "All topics" passes an empty topic, so no narrowing clause is applied.
+  async function selectTopic(topicItem, topic) {
     topicList.querySelectorAll('.ral-topic-item').forEach((li) => li.classList.remove('is-active'));
     topicItem.classList.add('is-active');
     grid.innerHTML = '';
     try {
-      const data = await fetchArticles({ tags, language, taxonomicID });
+      const data = await fetchArticles({
+        tags: defaultTags, topic, language, taxonomicID,
+      });
       const raw = Array.isArray(data) ? data : (data.documents || data.value || data.results || []);
       renderGrid(grid, raw.slice(0, MAX_ARTICLES), region, language);
     } catch (err) {
@@ -160,17 +164,17 @@ export default async function init(block) {
     const allBtn = document.createElement('button');
     allBtn.type = 'button';
     allBtn.textContent = 'All topics';
-    allBtn.addEventListener('click', () => selectTopic(allItem, defaultTags));
+    allBtn.addEventListener('click', () => selectTopic(allItem, ''));
     allItem.append(allBtn);
     topicList.append(allItem);
 
-    config.topics.forEach(({ label, tags: topicTags }) => {
+    config.topics.forEach(({ label, topic }) => {
       const li = document.createElement('li');
       li.className = 'ral-topic-item';
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = label;
-      btn.addEventListener('click', () => selectTopic(li, topicTags.length ? topicTags : defaultTags));
+      btn.addEventListener('click', () => selectTopic(li, topic));
       li.append(btn);
       topicList.append(li);
     });
