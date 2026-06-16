@@ -90,7 +90,9 @@ export async function fetchArticles({ tags = [], language = 'english', taxonomic
 export async function fetchTopics(opts) {
   const data = await callProxy(buildKpSearchUrl({ ...opts, listShow: 0 }));
   const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
-  return (set?.bins || []).map((b) => ({ label: b.label, token: b.token, count: Number(b.ndocs) || 0 }));
+  return (set?.bins || []).map((b) => ({
+    label: b.label, token: b.token, count: Number(b.ndocs) || 0,
+  }));
 }
 
 // Paginated results + facets + navigation, 10 per page.
