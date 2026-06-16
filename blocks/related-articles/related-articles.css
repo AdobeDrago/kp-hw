@@ -10,6 +10,62 @@
   margin-bottom: 24px;
 }
 
+/* ── Columns block used as section header ─────────────────────────────────── */
+
+.related-articles .columns .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+}
+
+/* Left col: icon sits inline with the heading */
+.related-articles .columns .col:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.related-articles .columns .col:first-child img {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.related-articles .columns .col:first-child h2 {
+  margin: 0;
+  font-size: var(--heading-font-size-m, 1.5rem);
+  line-height: 1.2;
+  color: #1b3055;
+}
+
+/* Right col: "Explore library" pill button */
+.related-articles .columns .col:last-child {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.related-articles .columns .col:last-child a {
+  display: inline-block;
+  border: 1.5px solid #1b3055;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: var(--body-font-size-s, 0.875rem);
+  font-weight: 600;
+  color: #1b3055;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.related-articles .columns .col:last-child a:hover {
+  background: #1b3055;
+  color: #fff;
+}
+
 /* ── Header ───────────────────────────────────────────────────────────────── */
 
 .related-articles-header {
