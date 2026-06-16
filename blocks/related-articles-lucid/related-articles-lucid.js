@@ -41,16 +41,13 @@ function getRegion() {
   return parts[0] || 'northern-california';
 }
 
-function resolveField(element, language) {
-  if (!element) return '';
-  if (language !== 'english' && element.variations?.[language]?.value) {
-    return element.variations[language].value;
-  }
-  return element.value || '';
+// Always use the base `value` (English), not the language variations.
+function resolveField(element) {
+  return element?.value || '';
 }
 
 function buildCard(article, region, language) {
-  const headline = resolveField(article.headline, language);
+  const headline = resolveField(article.headline);
   const imageValue = article.primaryImageOfPage?.value || '';
   const imageSrc = imageValue ? `${KP_BASE}${imageValue}` : '';
   const langCode = language === 'english' ? 'en' : language.slice(0, 2);
