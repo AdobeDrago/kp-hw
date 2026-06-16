@@ -124,23 +124,29 @@
   margin-bottom: 24px;
 }
 
+/* Left col: icon (picture/img) + text node inline */
 .related-articles .columns .col:first-child {
   display: flex;
   align-items: center;
   gap: 12px;
+  font-size: var(--heading-font-size-m, 1.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1b3055;
+}
+
+/* Constrain icon — overrides the default full-width img rule above */
+.related-articles .columns .col:first-child picture {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: block;
 }
 
 .related-articles .columns .col:first-child img {
   width: 28px;
   height: 28px;
-  flex-shrink: 0;
-}
-
-.related-articles .columns .col:first-child h2 {
-  margin: 0;
-  font-size: var(--heading-font-size-m, 1.5rem);
-  line-height: 1.2;
-  color: #1b3055;
+  display: block;
 }
 
 .related-articles .columns .col:last-child {
