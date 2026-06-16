@@ -2001,3 +2001,14 @@
 .card .ds-card[data-ds-variant=video i].pl-card-version:before {
   content: "4.1.1";
 }
+
+/* stylelint-enable */
+
+/* Custom: text-only cards (no image — e.g. "Tools for you") render as
+   bordered boxes to match the live KP site. Image cards stay borderless. */
+.card .ds-card:not(:has(.ds-card__image)) {
+  border: 1px solid #919191;
+  border-radius: 4px;
+  background: #fff;
+  padding-bottom: 8px;
+}
