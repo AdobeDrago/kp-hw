@@ -115,6 +115,69 @@
   line-height: 1.35;
 }
 
+/* Loading skeletons — match real card dimensions to avoid layout shift */
+.ral-card--skeleton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.ral-card--skeleton:hover {
+  box-shadow: none;
+}
+
+.ral-skeleton-box,
+.ral-skeleton-line {
+  position: relative;
+  overflow: hidden;
+  background: #e8ecf1;
+}
+
+.ral-skeleton-box::after,
+.ral-skeleton-line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+  animation: ral-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Headline lines sized to the real headline line-height (1.1rem * 1.35)
+   so two lines reserve the same space a typical 2-line headline occupies. */
+.ral-skeleton-line {
+  display: block;
+  height: 1.1rem;
+  border-radius: 3px;
+}
+
+.ral-skeleton-line--eyebrow {
+  width: 45%;
+  height: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.ral-skeleton-line--short {
+  width: 65%;
+}
+
+@keyframes ral-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ral-skeleton-box::after,
+  .ral-skeleton-line::after {
+    animation: none;
+  }
+}
+
 /* View all button */
 .ral-view-all {
   text-align: center;

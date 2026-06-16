@@ -93,6 +93,31 @@ function renderGrid(grid, articles, region, language) {
   articles.forEach((article) => grid.append(buildCard(article, region, language)));
 }
 
+// A placeholder card matching the real card's dimensions so loading swaps
+// in/out without layout shift (CLS).
+function buildSkeletonCard() {
+  const card = document.createElement('div');
+  card.className = 'ral-card ral-card--skeleton';
+  card.setAttribute('aria-hidden', 'true');
+
+  const imageWrap = document.createElement('div');
+  imageWrap.className = 'ral-card-image ral-skeleton-box';
+
+  const body = document.createElement('div');
+  body.className = 'ral-card-body';
+  body.innerHTML = '<span class="ral-skeleton-line ral-skeleton-line--eyebrow"></span>'
+    + '<span class="ral-skeleton-line"></span>'
+    + '<span class="ral-skeleton-line ral-skeleton-line--short"></span>';
+
+  card.append(imageWrap, body);
+  return card;
+}
+
+function renderSkeletons(grid, count) {
+  grid.innerHTML = '';
+  for (let i = 0; i < count; i += 1) grid.append(buildSkeletonCard());
+}
+
 export default async function init(block) {
   const config = readConfig(block);
   const defaultTags = (config.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
@@ -144,7 +169,7 @@ export default async function init(block) {
   async function selectTopic(topicItem, topic) {
     topicList.querySelectorAll('.ral-topic-item').forEach((li) => li.classList.remove('is-active'));
     topicItem.classList.add('is-active');
-    grid.innerHTML = '';
+    renderSkeletons(grid, MAX_ARTICLES);
     try {
       const data = await fetchArticles({
         tags: defaultTags, topic, language, taxonomicID,
@@ -180,7 +205,9 @@ export default async function init(block) {
     });
   }
 
-  // Initial fetch
+  // Initial fetch — show skeletons up front so the grid reserves its height
+  // and articles swap in without layout shift.
+  renderSkeletons(grid, MAX_ARTICLES);
   try {
     const data = await fetchArticles({ tags: defaultTags, language, taxonomicID });
     const raw = Array.isArray(data) ? data : (data.documents || data.value || data.results || []);
