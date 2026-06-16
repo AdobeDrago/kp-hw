@@ -1,5 +1,10 @@
 .related-articles-lucid {
   padding: 2rem 0;
+
+  /* Reserve the block's height before JS populates it, so the content below
+     doesn't shift when the grid fills in (CLS). Value tracks the 3-col layout;
+     overridden per breakpoint below to match the column count. */
+  min-height: 860px;
 }
 
 .ral-wrapper {
@@ -204,6 +209,11 @@
 
 /* Responsive */
 @media (width <= 1024px) {
+  /* 2-col → 3 rows of cards */
+  .related-articles-lucid {
+    min-height: 1120px;
+  }
+
   .ral-wrapper {
     grid-template-columns: 180px 1fr;
   }
@@ -214,6 +224,11 @@
 }
 
 @media (width <= 768px) {
+  /* sidebar stacks above the grid, adding a row */
+  .related-articles-lucid {
+    min-height: 1180px;
+  }
+
   .ral-wrapper {
     grid-template-columns: 1fr;
   }
@@ -242,6 +257,11 @@
 }
 
 @media (width <= 500px) {
+  /* 1-col → 6 stacked cards */
+  .related-articles-lucid {
+    min-height: 2850px;
+  }
+
   .ral-grid {
     grid-template-columns: 1fr;
   }
