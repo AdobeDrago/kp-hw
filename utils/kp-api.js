@@ -1,8 +1,9 @@
 export const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-api';
 export const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
 
-export const DEFAULT_ROP = 'SCA';
-export const DEFAULT_DISTANCE = 50;
+// Region of practice. Derived from the user's location; defaults to
+// N. California (the region KP's sample calls use) when none is given.
+export const DEFAULT_ROP = 'NCA';
 
 export function zipToRop(zip) {
   const n = parseInt(zip, 10);
@@ -16,25 +17,30 @@ export function latToRop(lat) {
   return lat >= 35.8 ? 'NCA' : 'SCA';
 }
 
-// Builds the KP search URL.
-// - The base binning-state carries distance + topic, newline-joined as "%0A"
-//   (a literal "\n" gets stripped by the proxy's URL parser; "%0A" survives).
+// Two sources now, depending on the call:
+//  - FACET_SOURCE  → the topic (and facet) listing, list-show=0
+//  - TOPIC_SOURCE  → a topic's results + facets + pagination, list-show=10
+export const FACET_SOURCE = 'kp-health-classes';
+export const TOPIC_SOURCE = 'kp-health-classes-topic';
+
+// Builds the KP search URL (topic-first model — no distance/ZIP/geolocation).
+// - The base binning-state carries just `health_topic==<label>` (empty for the
+//   facet listing). Multi-word topics keep their literal spaces, as KP's own
+//   calls do.
 // - Each active sidebar filter is its OWN extra `binning-state` query param.
 export function buildKpSearchUrl({
-  rop, zip = '', lat = '', lon = '', miles = DEFAULT_DISTANCE,
-  topicLabel = '', listShow = 0, vstate = '', filterTokens = [],
+  source, rop = DEFAULT_ROP, topicLabel = '',
+  listShow = 0, vstate = '', filterTokens = [],
 }) {
-  const base = [`distance=0:${miles}`];
-  if (topicLabel) base.push(`health_topic==${topicLabel}`);
   const params = [
-    'v:sources=kp-health-classes-proximity',
+    `v:sources=${source}`,
     'v:project=kp-classes-project',
     'query=',
     `rop=${rop}`,
-    `user_zip=${zip}`,
-    `binning-state=${base.join('%0A')}`,
-    `user_lat=${lat}`,
-    `user_lon=${lon}`,
+    'user_zip=',
+    `binning-state=${topicLabel ? `health_topic==${topicLabel}` : ''}`,
+    'user_lat=',
+    'user_lon=',
     'locale=en-us',
     'render.function=json-feed-display-document',
     'content-type=application-json',
@@ -91,18 +97,21 @@ export async function fetchArticles({
   return callProxy(CONTENT_HUB_SQL, { query, parameters });
 }
 
-// Topic facets only — no topic in binning-state, list-show=0.
-export async function fetchTopics(opts) {
-  const data = await callProxy(buildKpSearchUrl({ ...opts, listShow: 0 }));
+// Health-topic facets only — no topic in binning-state, list-show=0.
+export async function fetchTopics({ rop = DEFAULT_ROP } = {}) {
+  const data = await callProxy(buildKpSearchUrl({ source: FACET_SOURCE, rop, listShow: 0 }));
   const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
   return (set?.bins || []).map((b) => ({
     label: b.label, token: b.token, count: Number(b.ndocs) || 0,
   }));
 }
 
-// Paginated results + facets + navigation, 10 per page.
-export async function fetchResults(opts) {
+// Paginated results + facets + navigation for a topic, 10 per page.
+export async function fetchResults({
+  rop = DEFAULT_ROP, topicLabel, offset = 0, filterTokens = [],
+}) {
   return callProxy(buildKpSearchUrl({
-    ...opts, listShow: 10, vstate: `root|root-${opts.offset || 0}-10`,
+    source: TOPIC_SOURCE, rop, topicLabel, filterTokens,
+    listShow: 10, vstate: `root|root-${offset}-10`,
   }));
 }

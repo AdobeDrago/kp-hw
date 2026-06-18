@@ -1,9 +1,9 @@
 import {
-  DEFAULT_ROP, DEFAULT_DISTANCE, zipToRop, latToRop, fetchTopics,
+  DEFAULT_ROP, zipToRop, latToRop, fetchTopics,
 } from '../../utils/kp-api.js';
 
 // Reads the results-page path authored in the block (a link or a plain-text
-// cell), e.g. "southern-california/health-wellness/classes-programs/search-results".
+// cell), e.g. "northern-california/health-wellness/classes-programs/search-results".
 function readResultsPath(block) {
   const link = block.querySelector('a[href]');
   if (link) return link.getAttribute('href').trim();
@@ -13,9 +13,7 @@ function readResultsPath(block) {
 
 // Builds the results-page URL: the authored path + the user's search as query
 // params, matching the param names the live KP site uses:
-//   ?user_zip=90012&distance_label=50&health_topic=Diabetes
-const DISTANCE_LABEL = String(DEFAULT_DISTANCE);
-
+//   ?user_zip=94110&health_topic=Diabetes
 function buildResultsUrl(path, state, topicLabel) {
   const normalized = /^https?:\/\//i.test(path) ? path : `/${path.replace(/^\/+/, '')}`;
   const base = new URL(normalized, window.location.origin);
@@ -26,7 +24,6 @@ function buildResultsUrl(path, state, topicLabel) {
     params.push(`user_lat=${encodeURIComponent(state.lat)}`);
     params.push(`user_lon=${encodeURIComponent(state.lon)}`);
   }
-  params.push(`distance_label=${DISTANCE_LABEL}`);
   params.push(`health_topic=${encodeURIComponent(topicLabel)}`);
   // encodeURIComponent encodes spaces as %20 to match the live KP URLs
   // (URLSearchParams would use "+").
@@ -117,7 +114,9 @@ export default function init(el) {
   const summaryList = summary.querySelector('.cs-error-summary-list');
 
   // --- State --------------------------------------------------------------
-  let state = { zip: '', lat: '', lon: '', rop: DEFAULT_ROP };
+  let state = {
+    zip: '', lat: '', lon: '', rop: DEFAULT_ROP,
+  };
   let reqToken = 0; // guards against out-of-order responses
 
   // --- Topic dropdown rendering ------------------------------------------
@@ -151,19 +150,19 @@ export default function init(el) {
     }
     topics.forEach((t) => {
       const opt = document.createElement('option');
-      opt.value = t.token;
+      opt.value = t.label;
       opt.textContent = t.label;
       select.append(opt);
     });
     select.disabled = false;
   }
 
-  async function loadTopics(opts) {
+  async function loadTopics(rop) {
     const token = ++reqToken;
-    state.rop = opts.rop;
+    state.rop = rop;
     showTopicsLoading();
     try {
-      const topics = await fetchTopics(opts);
+      const topics = await fetchTopics({ rop });
       if (token !== reqToken) return; // a newer request superseded this one
       renderTopics(topics);
     } catch (err) {
@@ -186,10 +185,14 @@ export default function init(el) {
 
     clearTimeout(debounce);
     if (zip.length === 5) {
-      state = { zip, lat: '', lon: '', rop: zipToRop(zip) };
-      debounce = setTimeout(() => loadTopics({ rop: state.rop, zip }), 400);
+      state = {
+        zip, lat: '', lon: '', rop: zipToRop(zip),
+      };
+      debounce = setTimeout(() => loadTopics(state.rop), 400);
     } else {
-      state = { zip: '', lat: '', lon: '', rop: DEFAULT_ROP };
+      state = {
+        zip: '', lat: '', lon: '', rop: DEFAULT_ROP,
+      };
       resetTopics();
     }
   });
@@ -197,7 +200,9 @@ export default function init(el) {
   clearBtn.addEventListener('click', () => {
     input.value = '';
     clearBtn.hidden = true;
-    state = { zip: '', lat: '', lon: '', rop: DEFAULT_ROP };
+    state = {
+      zip: '', lat: '', lon: '', rop: DEFAULT_ROP,
+    };
     resetTopics();
     clearFieldError('zip');
     input.focus();
@@ -227,12 +232,15 @@ export default function init(el) {
       if (/^\d{5}$/.test(zip)) {
         input.value = zip;
         clearBtn.hidden = false;
-        state = { zip, lat: '', lon: '', rop: zipToRop(zip) };
-        loadTopics({ rop: state.rop, zip });
+        state = {
+          zip, lat: '', lon: '', rop: zipToRop(zip),
+        };
       } else {
-        state = { zip: '', lat: latitude, lon: longitude, rop: latToRop(latitude) };
-        loadTopics({ rop: state.rop, lat: latitude, lon: longitude });
+        state = {
+          zip: '', lat: latitude, lon: longitude, rop: latToRop(latitude),
+        };
       }
+      loadTopics(state.rop);
     }, (err) => {
       // eslint-disable-next-line no-console
       console.error('[classes-search] geolocation failed:', err);
@@ -327,7 +335,6 @@ export default function init(el) {
     }
     // Navigate to the authored results page, carrying the search as query
     // params (health_topic uses the topic label, e.g. "Diabetes").
-    const topicLabel = select.selectedOptions[0]?.textContent || '';
-    window.location.assign(buildResultsUrl(resultsPath, state, topicLabel));
+    window.location.assign(buildResultsUrl(resultsPath, state, select.value));
   });
 }
