@@ -1,5 +1,8 @@
 import { fetchArticles } from '../../utils/kp-api.js';
 
+const KP_BASE = 'https://healthy.kaiserpermanente.org';
+const MAX_ARTICLES = 6;
+
 const LOCALE_TO_LANGUAGE = {
   en: 'english',
   es: 'spanish',
@@ -16,28 +19,199 @@ function resolveLanguage(authored) {
 }
 
 function readConfig(block) {
-  const config = {};
+  const config = { topics: [] };
   block.querySelectorAll(':scope > div').forEach((row) => {
-    const [keyEl, valEl] = row.querySelectorAll(':scope > div');
-    if (!keyEl || !valEl) return;
-    config[keyEl.textContent.trim().toLowerCase()] = valEl.textContent.trim();
+    const cells = row.querySelectorAll(':scope > div');
+    if (cells.length < 2) return;
+    const key = cells[0].textContent.trim().toLowerCase();
+    if (key === 'topic') {
+      // topic | <label> | <topic cq:tag>
+      config.topics.push({
+        label: cells[1].textContent.trim(),
+        topic: cells[2] ? cells[2].textContent.trim() : '',
+      });
+    } else {
+      config[key] = cells[1].textContent.trim();
+    }
   });
   return config;
 }
 
+function getRegion() {
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  return parts[0] || 'northern-california';
+}
+
+// Always use the base `value` (English), not the language variations.
+function resolveField(element) {
+  return element?.value || '';
+}
+
+function buildCard(article, region, language) {
+  const headline = resolveField(article.headline);
+  const imageValue = article.primaryImageOfPage?.value || '';
+  const imageSrc = imageValue ? `${KP_BASE}${imageValue}` : '';
+  const langCode = language === 'english' ? 'en' : language.slice(0, 2);
+  const imageAlt = article.primaryImageOfPage?.[`alt-${langCode}`]
+    || article.primaryImageOfPage?.['alt-en']
+    || headline;
+  const href = `${KP_BASE}/${region}/health-wellness/healtharticle.${article.name}`;
+
+  const card = document.createElement('a');
+  card.className = 'ral-card';
+  card.href = href;
+
+  if (imageSrc) {
+    const imageWrap = document.createElement('div');
+    imageWrap.className = 'ral-card-image';
+    const img = document.createElement('img');
+    img.src = imageSrc;
+    img.alt = imageAlt;
+    img.loading = 'lazy';
+    imageWrap.append(img);
+    card.append(imageWrap);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'ral-card-body';
+
+  const category = document.createElement('span');
+  category.className = 'ral-card-category';
+  category.textContent = 'Health and wellness';
+
+  const headlineEl = document.createElement('p');
+  headlineEl.className = 'ral-card-headline';
+  headlineEl.textContent = headline;
+
+  body.append(category, headlineEl);
+  card.append(body);
+  return card;
+}
+
+function renderGrid(grid, articles, region, language) {
+  grid.innerHTML = '';
+  articles.forEach((article) => grid.append(buildCard(article, region, language)));
+}
+
+// A placeholder card matching the real card's dimensions so loading swaps
+// in/out without layout shift (CLS).
+function buildSkeletonCard() {
+  const card = document.createElement('div');
+  card.className = 'ral-card ral-card--skeleton';
+  card.setAttribute('aria-hidden', 'true');
+
+  const imageWrap = document.createElement('div');
+  imageWrap.className = 'ral-card-image ral-skeleton-box';
+
+  const body = document.createElement('div');
+  body.className = 'ral-card-body';
+  body.innerHTML = '<span class="ral-skeleton-line ral-skeleton-line--eyebrow"></span>'
+    + '<span class="ral-skeleton-line"></span>'
+    + '<span class="ral-skeleton-line ral-skeleton-line--short"></span>';
+
+  card.append(imageWrap, body);
+  return card;
+}
+
+function renderSkeletons(grid, count) {
+  grid.innerHTML = '';
+  for (let i = 0; i < count; i += 1) grid.append(buildSkeletonCard());
+}
+
 export default async function init(block) {
   const config = readConfig(block);
-  const tags = (config.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
+  const defaultTags = (config.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
   const taxonomicID = config.taxonomicid || config.taxonomicID || '';
   const language = resolveLanguage(config.language);
+  const region = getRegion();
+  const hasSidebar = config.topics.length > 0;
 
   block.textContent = '';
 
+  // Wrapper: sidebar + content
+  const wrapper = document.createElement('div');
+  wrapper.className = `ral-wrapper${hasSidebar ? '' : ' ral-no-sidebar'}`;
+
+  // Sidebar
+  const sidebar = document.createElement('aside');
+  sidebar.className = 'ral-sidebar';
+  sidebar.hidden = !hasSidebar;
+
+  const sidebarHeading = document.createElement('p');
+  sidebarHeading.className = 'ral-sidebar-heading';
+  sidebarHeading.textContent = 'View by topic:';
+
+  const topicList = document.createElement('ul');
+  topicList.className = 'ral-topic-list';
+
+  // Content area
+  const content = document.createElement('div');
+  content.className = 'ral-content';
+
+  const grid = document.createElement('div');
+  grid.className = 'ral-grid';
+
+  const viewAll = document.createElement('div');
+  viewAll.className = 'ral-view-all';
+  const viewAllLink = document.createElement('a');
+  viewAllLink.className = 'ral-view-all-link';
+  viewAllLink.href = `${KP_BASE}/${region}/health-wellness`;
+  viewAllLink.textContent = 'View all Healthy Living articles';
+  viewAll.append(viewAllLink);
+
+  content.append(grid, viewAll);
+  sidebar.append(sidebarHeading, topicList);
+  wrapper.append(sidebar, content);
+  block.append(wrapper);
+
+  // Topic click handler: re-fetch the base pool narrowed by the topic tag.
+  // "All topics" passes an empty topic, so no narrowing clause is applied.
+  async function selectTopic(topicItem, topic) {
+    topicList.querySelectorAll('.ral-topic-item').forEach((li) => li.classList.remove('is-active'));
+    topicItem.classList.add('is-active');
+    renderSkeletons(grid, MAX_ARTICLES);
+    try {
+      const data = await fetchArticles({
+        tags: defaultTags, topic, language, taxonomicID,
+      });
+      const raw = Array.isArray(data) ? data : (data.documents || data.value || data.results || []);
+      renderGrid(grid, raw.slice(0, MAX_ARTICLES), region, language);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[related-articles-lucid] fetch failed:', err);
+    }
+  }
+
+  // Build "All topics" item
+  if (hasSidebar) {
+    const allItem = document.createElement('li');
+    allItem.className = 'ral-topic-item is-active';
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.textContent = 'All topics';
+    allBtn.addEventListener('click', () => selectTopic(allItem, ''));
+    allItem.append(allBtn);
+    topicList.append(allItem);
+
+    config.topics.forEach(({ label, topic }) => {
+      const li = document.createElement('li');
+      li.className = 'ral-topic-item';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = label;
+      btn.addEventListener('click', () => selectTopic(li, topic));
+      li.append(btn);
+      topicList.append(li);
+    });
+  }
+
+  // Initial fetch — show skeletons up front so the grid reserves its height
+  // and articles swap in without layout shift.
+  renderSkeletons(grid, MAX_ARTICLES);
   try {
-    // eslint-disable-next-line no-console
-    const data = await fetchArticles({ tags, language, taxonomicID });
-    // eslint-disable-next-line no-console
-    console.log('[related-articles-lucid] response:', data);
+    const data = await fetchArticles({ tags: defaultTags, language, taxonomicID });
+    const raw = Array.isArray(data) ? data : (data.documents || data.value || data.results || []);
+    renderGrid(grid, raw.slice(0, MAX_ARTICLES), region, language);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[related-articles-lucid] fetch failed:', err);

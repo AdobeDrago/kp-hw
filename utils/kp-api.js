@@ -71,18 +71,23 @@ export async function callProxy(kpUrl, body) {
 const CONTENT_HUB_SQL = 'https://apims.kaiserpermanente.org/kp/care/api/kpd/csconsumptionapi/v1/sql';
 
 // Fetches KP health articles from the Content Hub SQL API.
-// tags: string[] — cq:tag values OR'd in the WHERE clause
+// tags: string[] — source cq:tag values OR'd to define the article pool
+// topic: string — optional topic cq:tag AND'd to narrow the pool
 // language: string — e.g. 'english', 'spanish'
 // taxonomicID: string — content taxonomy ID
-export async function fetchArticles({ tags = [], language = 'english', taxonomicID }) {
+export async function fetchArticles({
+  tags = [], topic = '', language = 'english', taxonomicID,
+}) {
   const tagParams = tags.map((value, i) => ({ name: `@cqTagsOr0${i}`, value }));
   const whereTag = tagParams.map((p) => `CONTAINS(c.metadata["cq:tags"], ${p.name})`).join(' OR ');
-  const query = `SELECT c.title, c.name, c.elements["headline"], c.elements["teaser"], c.elements["primaryImageOfPage"] FROM c WHERE (${whereTag}) AND IS_DEFINED(c.elements.language.variations[@language]) AND c.metadata["taxonomicID"] = @taxonomicID ORDER BY c.elements.displayDate["value"] DESC`;
+  const topicClause = topic ? ' AND CONTAINS(c.metadata["cq:tags"], @topic)' : '';
+  const query = `SELECT c.title, c.name, c.elements["headline"], c.elements["teaser"], c.elements["primaryImageOfPage"] FROM c WHERE (${whereTag})${topicClause} AND IS_DEFINED(c.elements.language.variations[@language]) AND c.metadata["taxonomicID"] = @taxonomicID ORDER BY c.elements.displayDate["value"] DESC`;
   const parameters = [
     ...tagParams,
     { name: '@language', value: language },
     { name: '@taxonomicID', value: taxonomicID },
   ];
+  if (topic) parameters.push({ name: '@topic', value: topic });
   return callProxy(CONTENT_HUB_SQL, { query, parameters });
 }
 
@@ -90,7 +95,9 @@ export async function fetchArticles({ tags = [], language = 'english', taxonomic
 export async function fetchTopics(opts) {
   const data = await callProxy(buildKpSearchUrl({ ...opts, listShow: 0 }));
   const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
-  return (set?.bins || []).map((b) => ({ label: b.label, token: b.token, count: Number(b.ndocs) || 0 }));
+  return (set?.bins || []).map((b) => ({
+    label: b.label, token: b.token, count: Number(b.ndocs) || 0,
+  }));
 }
 
 // Paginated results + facets + navigation, 10 per page.
