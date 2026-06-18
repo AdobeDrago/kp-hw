@@ -1,0 +1,27 @@
+/* ==========================================================================
+   HEALTH ENCYCLOPEDIA ARTICLE TEMPLATE
+
+   The article body is server-rendered by the AEM Edge Function
+   (aem-edge-functions/src/health-encyclopedia-article-handler.js): it fetches
+   the Healthwise RHTML and injects it into <main> as
+   <div class="section"><article class="hea-content">…</article></div>.
+
+   Healthwise's own stylesheet (inc/style/main.css) is added to <head> by the
+   edge function and styles the Hw* internals. This file only handles
+   page-level layout. Scoped to body.health-encyclopedia-article-template.
+   ========================================================================== */
+
+.health-encyclopedia-article-template main {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.health-encyclopedia-article-template .hea-content {
+  line-height: 1.6;
+}
+
+.health-encyclopedia-article-template .hea-content img {
+  max-width: 100%;
+  height: auto;
+}
