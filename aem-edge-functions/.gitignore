@@ -1,3 +1,6 @@
+# Local secrets (never commit the real Healthwise key)
+hw_key.local
+
 # Legacy tools
 deploy
 

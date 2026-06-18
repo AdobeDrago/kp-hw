@@ -8,8 +8,10 @@ data:
       origins:
         - name: healthwise
           domain: ixbapi.healthwise.net
-        - name: eds-origin
+        - name: eds-prod
           domain: main--kp-hw--adobedrago.aem.live
+        - name: eds-preview
+          domain: main--kp-hw--adobedrago.aem.page
   # hw.key — define the underlying secret in Cloud Manager first, then this
   # references it. Read in code via SecretStoreManager.getSecret('HW_KEY').
   secrets:

@@ -3,10 +3,46 @@
 // Server-side renders a Healthwise health-encyclopedia article into the
 // published EDS page. See ../README or the kp-hw project notes for the flow.
 
+import { env } from 'fastly:env';
 import { SecretStoreManager } from './lib/config.js';
 
-const ORIGIN_HOST = 'main--kp-hw--adobedrago.aem.live';
 const TEMPLATE_PATH = '/northern-california/health-wellness/health-encyclopedia/article';
+
+// Page-shell origin per environment, resolved at runtime so there's nothing to
+// flip or revert before a PR:
+//   - local `serve` (Viceroy)        → DEV_ORIGIN     (your local `aem up`)
+//   - preview host (*.aem.page)      → PREVIEW_ORIGIN
+//   - production (anything else)     → PROD_ORIGIN
+// FASTLY_HOSTNAME is "localhost" only in the local runtime; in prod/preview it
+// is a real cache-node name, so we fall back to the request host to choose.
+const PROD_ORIGIN = 'https://main--kp-hw--adobedrago.aem.live';
+const PREVIEW_ORIGIN = 'https://main--kp-hw--adobedrago.aem.page';
+const DEV_ORIGIN = 'http://localhost:3000';
+
+export function isLocalDev() {
+  return env('FASTLY_HOSTNAME') === 'localhost';
+}
+
+// Resolve the shell origin AND the matching declared backend for this env.
+// The backend (not the URL host) decides where the connection goes, so each
+// origin needs its own backend: eds-local (fastly.toml), eds-preview / eds-prod
+// (edgeFunctions.yaml).
+export function getShellTarget(req) {
+  if (isLocalDev()) return { origin: DEV_ORIGIN, backend: 'eds-local' };
+  const host = new URL(req.url).hostname;
+  if (host.includes('aem.page')) return { origin: PREVIEW_ORIGIN, backend: 'eds-preview' };
+  return { origin: PROD_ORIGIN, backend: 'eds-prod' };
+}
+
+// DEV ONLY: proxy any non-article request (scripts, styles, templates,
+// fragments, images) to the shell origin so :7676 is a complete local preview.
+// In production the CDN only routes the article path to this function, so this
+// branch is never hit there.
+export function proxyToShell(req) {
+  const url = new URL(req.url);
+  const { origin, backend } = getShellTarget(req);
+  return fetch(`${origin}${url.pathname}${url.search}`, { backend });
+}
 
 function buildHealthwiseUrl(id, key) {
   const p = new URLSearchParams({ 'hw.key': key, 'hw.format': 'rhtml' });
@@ -34,12 +70,13 @@ export async function articleHandler(req) {
   const id = url.searchParams.get('articleID');
   if (!id) return new Response('Missing articleID', { status: 400 });
 
-  const key = await SecretStoreManager.getSecret('HW_KEY');
+  const key = (await SecretStoreManager.getSecret('HW_KEY')).trim();
 
   // Parallel fetches. The shell is fetched WITHOUT articleID, so in production
   // the CDN origin-selector rule won't re-route it into this function (loop guard).
+  const { origin, backend } = getShellTarget(req);
   const [shellRes, articleRes] = await Promise.all([
-    fetch(`https://${ORIGIN_HOST}${TEMPLATE_PATH}`, { backend: 'eds-origin' }),
+    fetch(`${origin}${TEMPLATE_PATH}`, { backend }),
     fetch(buildHealthwiseUrl(id, key), { backend: 'healthwise' }),
   ]);
 
