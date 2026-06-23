@@ -51,26 +51,17 @@ export function buildKpSearchUrl({
   return `${KP_SEARCH_BASE}?${params.join('&')}`;
 }
 
-const useProxy = () => !window.location.hostname.startsWith('main--');
-
+// Every KP Lucid Search call goes through the App Builder proxy. KP sends no
+// CORS headers on any origin, so the browser can never reach it directly —
+// there's no host (main, branch preview, or localhost) where a direct call works.
 export async function callProxy(kpUrl, body) {
-  if (useProxy()) {
-    const payload = body ? { url: kpUrl, body } : { url: kpUrl };
-    const res = await fetch(PROXY_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
-    return res.json();
-  }
-  // Dev / branch preview: call KP directly (dev server handles CORS).
-  const res = await fetch(kpUrl, body ? {
+  const payload = body ? { url: kpUrl, body } : { url: kpUrl };
+  const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  } : undefined);
-  if (!res.ok) throw new Error(`KP request failed: ${res.status}`);
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
   return res.json();
 }
 
