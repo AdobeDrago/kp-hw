@@ -3,16 +3,16 @@ version: '1'
 data:
   originSelectors:
     rules:
-      # Route the article page to the edge function ONLY when ?articleID= is
-      # present. This is also the loop guard: the function fetches the same
-      # path without articleID for the shell, so that request won't match here.
+      # Route /…/article/<articleID> to the edge function. Excludes
+      # /…/article/default — that's the folder-mapped shell the function fetches,
+      # so excluding it is the loop guard (and lets /default serve the template).
       - name: route-health-encyclopedia-article-to-edge-function
         when:
           allOf:
             - reqProperty: path
-              equals: "/northern-california/health-wellness/health-encyclopedia/article"
-            - queryParam: articleID
-              exists: true
+              matches: "^/northern-california/health-wellness/health-encyclopedia/article/[^/]+$"
+            - reqProperty: path
+              doesNotEqual: "/northern-california/health-wellness/health-encyclopedia/article/default"
         action:
           type: selectAemOrigin
           originName: edgefunction-kp-article

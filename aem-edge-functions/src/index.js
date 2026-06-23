@@ -14,7 +14,7 @@ governing permissions and limitations under the License.
 
 import * as response from './lib/response.js';
 import { log } from './lib/log.js';
-import { articleHandler, proxyToShell } from './health-encyclopedia-article-handler.js';
+import { articleHandler, proxyToShell, getArticleId } from './health-encyclopedia-article-handler.js';
 
 addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
@@ -25,8 +25,8 @@ async function handleRequest(event) {
   let finalResponse;
 
   try {
-    // Route matching
-    if (url.pathname === '/northern-california/health-wellness/health-encyclopedia/article' && req.method === 'GET') {
+    // Route matching: /…/article/<articleID> (not /default) → render the article.
+    if (getArticleId(url.pathname) && req.method === 'GET') {
       finalResponse = await articleHandler(req);
     } else {
       // DEV ONLY: proxy everything else (assets, scripts, fragments) to the

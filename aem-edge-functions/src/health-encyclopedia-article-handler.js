@@ -6,7 +6,22 @@
 import { env } from 'fastly:env';
 import { SecretStoreManager } from './lib/config.js';
 
-const TEMPLATE_PATH = '/northern-california/health-wellness/health-encyclopedia/article';
+// Folder-mapped article path: the page is authored at <ARTICLE_BASE>/default and
+// every <ARTICLE_BASE>/<articleID> URL renders it (commerce drop-in pattern).
+// The last path segment IS the Healthwise article ID — SEO-friendly path instead
+// of a ?articleID= query.
+const ARTICLE_BASE = '/northern-california/health-wellness/health-encyclopedia/article';
+const SHELL_PATH = `${ARTICLE_BASE}/default`;
+
+// Article ID from a request path, or null if this isn't an article-detail
+// request (the /default doc itself, the base, or an asset path).
+export function getArticleId(pathname) {
+  const prefix = `${ARTICLE_BASE}/`;
+  if (!pathname.startsWith(prefix)) return null;
+  const seg = pathname.slice(prefix.length).split('/')[0].trim();
+  if (!seg || seg === 'default') return null;
+  return seg;
+}
 
 // Page-shell origin per environment, resolved at runtime so there's nothing to
 // flip or revert before a PR:
@@ -65,18 +80,36 @@ function sanitize(html) {
     .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '');
 }
 
+// Pull the per-article title + description from the RHTML <head> so each
+// folder-mapped URL gets its own SEO metadata (otherwise every article shares
+// the /default doc's title).
+function extractMeta(rhtml) {
+  const metaContent = (name) => rhtml
+    .match(new RegExp(`<meta\\s+name=["']${name}["']\\s+content=["']([^"']*)["']`, 'i'))?.[1];
+  const title = metaContent('consumertitle')
+    || rhtml.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim()
+    || '';
+  const description = metaContent('description') || '';
+  return { title, description };
+}
+
+// Replace (or insert before </head>) a head tag matched by `re`.
+function setHeadTag(html, re, tag) {
+  if (!tag) return html;
+  return re.test(html) ? html.replace(re, tag) : html.replace('</head>', `${tag}\n</head>`);
+}
+
 export async function articleHandler(req) {
-  const url = new URL(req.url);
-  const id = url.searchParams.get('articleID');
-  if (!id) return new Response('Missing articleID', { status: 400 });
+  const id = getArticleId(new URL(req.url).pathname);
+  if (!id) return new Response('Missing article ID', { status: 400 });
 
   const key = (await SecretStoreManager.getSecret('HW_KEY')).trim();
 
-  // Parallel fetches. The shell is fetched WITHOUT articleID, so in production
-  // the CDN origin-selector rule won't re-route it into this function (loop guard).
+  // Parallel fetches. The shell is the /default doc — a different path than the
+  // request — so fetching it from the origin won't re-enter this function (loop guard).
   const { origin, backend } = getShellTarget(req);
   const [shellRes, articleRes] = await Promise.all([
-    fetch(`${origin}${TEMPLATE_PATH}`, { backend }),
+    fetch(`${origin}${SHELL_PATH}`, { backend }),
     fetch(buildHealthwiseUrl(id, key), { backend: 'healthwise' }),
   ]);
 
@@ -88,7 +121,14 @@ export async function articleHandler(req) {
   const section = `<div class="section"><article class="hea-content">${sanitize(extractBody(rhtml))}</article></div>`;
 
   // Inject the article as the first section inside <main> (template approach, no block).
-  const html = shell.replace(/<main\b[^>]*>/i, (m) => `${m}${section}`);
+  let html = shell.replace(/<main\b[^>]*>/i, (m) => `${m}${section}`);
+
+  // Per-article SEO metadata from the RHTML head.
+  const { title, description } = extractMeta(rhtml);
+  if (title) html = setHeadTag(html, /<title[^>]*>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
+  if (description) {
+    html = setHeadTag(html, /<meta\s+name=["']description["'][^>]*>/i, `<meta name="description" content="${description}">`);
+  }
 
   return new Response(html, {
     status: 200,
