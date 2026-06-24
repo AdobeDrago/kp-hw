@@ -2,26 +2,322 @@
    HEALTH ENCYCLOPEDIA ARTICLE TEMPLATE
 
    The article body is server-rendered by the AEM Edge Function
-   (aem-edge-functions/src/health-encyclopedia-article-handler.js): it fetches
-   the Healthwise RHTML and injects it into <main> as
-   <div class="section"><article class="hea-content">…</article></div>.
+   (aem-edge-functions/src/health-encyclopedia-article-handler.js): it converts
+   the Healthwise RHTML into EDS semantic default content (one <div> section per
+   Healthwise section). The page's scripts.js decorates these into
+   `.section > .default-content`.
 
-   Healthwise's own stylesheet (inc/style/main.css) is added to <head> by the
-   edge function and styles the Hw* internals. This file only handles
-   page-level layout. Scoped to body.health-encyclopedia-article-template.
+   Styling MIGRATED from KP's production Healthwise CSS
+   (KP/_healthwise-overrides.scss) — the Hw* selectors retargeted onto the
+   semantic elements, with SCSS variables resolved from the live compiled
+   stylesheet (health-encyclopedia.css):
+     $base-font-family   → "Gotham 4r"   (regular)
+     $light-font-family  → "Gotham 3r"   (light, used for H1)
+     $medium-font-family → "Gotham 5r"   (medium)
+     $text-dark          → #0d1c3d
+     $link-color         → #006ba6
+   Gotham faces are loaded via @font-face in styles/styles.css.
+
+   The bulk of the source SCSS (symptom checker, decision points, media-gallery
+   dialogs, interactive tools, modals) targets Healthwise widgets that don't
+   exist in the semantic article and is intentionally not migrated.
+
+   Scoped to body.health-encyclopedia-article-template.
    ========================================================================== */
 
 .health-encyclopedia-article-template main {
-  max-width: 56rem;
-  margin: 0 auto;
-  padding: 1.5rem 1rem;
+  --hw-text: #0d1c3d;
+  --hw-link: #006ba6;
+  --hw-font-base: "Gotham 4r", Arial, sans-serif;
+  --hw-font-light: "Gotham 3r", "Gotham 4r", Arial, sans-serif;
+  --hw-font-medium: "Gotham 5r", "Gotham 4r", Arial, sans-serif;
+
+  color: var(--hw-text);
+  font-family: var(--hw-font-base);
 }
 
-.health-encyclopedia-article-template .hea-content {
-  line-height: 1.6;
+/* --- Reading column (KP content area is ~9/12 of the container) ------------ */
+.health-encyclopedia-article-template main .section .default-content {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  box-sizing: border-box;
 }
 
-.health-encyclopedia-article-template .hea-content img {
+.health-encyclopedia-article-template main > .section:first-of-type {
+  padding-top: 24px;
+}
+
+.health-encyclopedia-article-template main > .section:last-of-type {
+  padding-bottom: 48px;
+}
+
+/* --- Headings (normal weight throughout, per KP) --------------------------- */
+.health-encyclopedia-article-template main h1,
+.health-encyclopedia-article-template main h2,
+.health-encyclopedia-article-template main h3,
+.health-encyclopedia-article-template main h4,
+.health-encyclopedia-article-template main h5,
+.health-encyclopedia-article-template main h6 {
+  color: var(--hw-text);
+  font-weight: normal;
+}
+
+/* H1 (#HwContentTitle): Gotham 3r light, very large */
+.health-encyclopedia-article-template main h1 {
+  font-family: var(--hw-font-light);
+  font-size: clamp(2.75rem, 6vw, 4rem); /* 44–72px */
+  line-height: 1.05;
+  margin: 0.2em 0 0.3em;
+}
+
+/* H2 (.HwSectionTitle): Gotham 3r light, ~40px */
+.health-encyclopedia-article-template main h2 {
+  font-family: var(--hw-font-light);
+  font-size: 2rem;
+  line-height: 1.15;
+  margin: 0.6em 0 0.6em;
+}
+
+/* H3 (.HwSubSectionTitle): Gotham 4r, ~24px, normal weight */
+.health-encyclopedia-article-template main h3 {
+  font-family: var(--hw-font-base);
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.3;
+  margin: 1.4em 0 0.4em;
+}
+
+.health-encyclopedia-article-template main h4 {
+  font-size: 1rem;
+  margin: 1em 0 0.3em;
+}
+
+/* --- Body text (line-height 1.5, per KP) ----------------------------------- */
+.health-encyclopedia-article-template main p,
+.health-encyclopedia-article-template main li {
+  font-family: var(--hw-font-base);
+  font-size: 1rem; /* 16px */
+  line-height: 1.5;
+}
+
+.health-encyclopedia-article-template main p {
+  margin: 0 0 1em;
+}
+
+/* --- Lists ----------------------------------------------------------------- */
+.health-encyclopedia-article-template main ul,
+.health-encyclopedia-article-template main ol {
+  margin: 0 0 1em;
+  padding-left: 1.5em;
+}
+
+.health-encyclopedia-article-template main ul { list-style: disc; }
+.health-encyclopedia-article-template main ol { list-style: decimal; }
+.health-encyclopedia-article-template main li { margin: 0.25em 0; }
+
+/* --- Links: KP blue (#006ba6) ---------------------------------------------- */
+.health-encyclopedia-article-template main a:any-link {
+  color: var(--hw-link);
+  text-decoration: underline;
+}
+
+.health-encyclopedia-article-template main a:hover,
+.health-encyclopedia-article-template main a:focus {
+  text-decoration: none;
+}
+
+/* --- Images ---------------------------------------------------------------- */
+.health-encyclopedia-article-template main img,
+.health-encyclopedia-article-template main picture {
+  display: block;
   max-width: 100%;
   height: auto;
+}
+
+.health-encyclopedia-article-template main p:has(> picture),
+.health-encyclopedia-article-template main p:has(> img) {
+  margin: 1em 0 1.5em;
+}
+
+/* --- Tables (KP: borderless, header in Gotham 5r) -------------------------- */
+.health-encyclopedia-article-template main table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0 1.5em;
+  font-size: 1rem;
+}
+
+.health-encyclopedia-article-template main th,
+.health-encyclopedia-article-template main td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #ddd;
+}
+
+.health-encyclopedia-article-template main th {
+  font-family: var(--hw-font-medium);
+  font-weight: normal;
+}
+
+/* --- Class hooks preserved from the RHTML (migrated from the override SCSS) -- */
+
+/* Media link grids (.HwMediaItemList / .HwMediaItem) — thumbnail rows in the
+   "Learn more / Watch" sections. KP: li width ~20%, inline, 36px gutter. */
+.health-encyclopedia-article-template main ol.HwMediaItemList,
+.health-encyclopedia-article-template main ul.HwMediaItemList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  list-style: none;
+  padding-left: 0;
+}
+
+.health-encyclopedia-article-template main li.HwMediaItem {
+  flex: 0 0 auto;
+  width: calc(20% - 20px);
+  margin: 0 0 1em;
+}
+
+.health-encyclopedia-article-template main li.HwMediaItem img.HwMediaImage {
+  width: 100%;
+  margin: 0 0 5px;
+}
+
+/* Credits — smaller, muted (KP: 13px, #677083). Muting the whole section covers
+   bare text ("Current as of …") without needing inner-div class hooks. */
+.health-encyclopedia-article-template main .HwCreditsSection {
+  margin-top: 1.5em;
+  font-size: 0.8125rem; /* 13px */
+  color: #677083;
+}
+
+.health-encyclopedia-article-template main .HwCreditsSection p {
+  font-size: 0.8125rem;
+  color: #677083;
+}
+
+/* --- Section navigation ("Topic Contents") --------------------------------- */
+/* Built by health-encyclopedia-article.js: nav (left) + content (right), with
+   only the hash-selected section visible. Mirrors the production KP page. */
+
+.health-encyclopedia-article-template main .he-layout {
+  display: flex;
+  gap: 56px;
+  max-width: 1280px;
+  margin: 3rem auto 0;
+  padding: 8px 24px 0;
+  box-sizing: border-box;
+}
+
+/* Content left, Topic Contents right (DOM order: content then nav). */
+.health-encyclopedia-article-template main .he-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.health-encyclopedia-article-template main .he-toc {
+  flex: 0 0 280px;
+  position: sticky;
+  top: 16px;
+  align-self: flex-start;
+}
+
+/* Sections moved into the content column shouldn't re-center/re-pad. */
+.health-encyclopedia-article-template main .he-content .section .default-content {
+  max-width: none;
+  margin: 0;
+  padding: 1rem 0;
+}
+
+/* Show only the active rotating section; the persistent Credits footer stays. */
+.health-encyclopedia-article-template main.he-sectioned .he-content .HwNavigationSection:not(.is-active):not(.he-persistent) {
+  display: none;
+}
+
+/* Credits — persistent footer shown beneath every section (no "Credits" title). */
+.health-encyclopedia-article-template main .he-content .he-persistent {
+  margin-top: 40px;
+  padding-top: 24px;
+}
+
+.health-encyclopedia-article-template main .he-content .he-persistent h2 {
+  display: none;
+}
+
+/* Prev/next pager at the bottom of each section (« Prev … Next »). */
+.health-encyclopedia-article-template main .he-pager {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.health-encyclopedia-article-template main .he-pager a {
+  color: var(--hw-link);
+  text-decoration: underline;
+  font-size: 1.125rem;
+}
+
+.health-encyclopedia-article-template main .he-pager-next {
+  text-align: right;
+}
+
+/* Topic Contents nav list — plain links; current item is plain dark text. */
+.health-encyclopedia-article-template main .he-toc-title {
+  font-family: var(--hw-font-light);
+  font-size: 1.75rem; /* 28px */
+  font-weight: bold;
+  color: var(--hw-text);
+  margin: 0 0 0.75em;
+}
+
+.health-encyclopedia-article-template main .he-toc ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.health-encyclopedia-article-template main .he-toc li {
+  margin: 0 0 1em;
+}
+
+.health-encyclopedia-article-template main .he-toc a {
+  color: var(--hw-link);
+  text-decoration: underline;
+  line-height: 1.3;
+}
+
+.health-encyclopedia-article-template main .he-toc a.is-current {
+  color: var(--hw-text);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* --- Responsive: mobile ---------------------------------------------------- */
+@media (width < 900px) {
+  .health-encyclopedia-article-template main .he-layout {
+    display: block;
+    margin-top: 1rem;
+  }
+
+  .health-encyclopedia-article-template main .he-toc {
+    position: static;
+    margin-top: 32px;
+  }
+}
+
+@media (width < 768px) {
+  .health-encyclopedia-article-template main li.HwMediaItem { width: 100%; }
+}
+
+@media (width < 600px) {
+  .health-encyclopedia-article-template main h2 {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  .health-encyclopedia-article-template main .section .default-content {
+    padding-inline: 16px;
+  }
 }
