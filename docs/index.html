@@ -395,6 +395,7 @@
   }
   .ns-progress { background: #fff4e5; color: #8a4b08; }
   .ns-planned  { background: var(--gray-200); color: var(--gray-600); }
+  .ns-done     { background: #eaf6f1; color: #1a6b50; }
 
   /* ── SCENARIO STATUS BADGE (in section headers) ── */
   .status-badge {
@@ -408,6 +409,7 @@
   }
   .sb-progress { background: #fff4e5; color: #8a4b08; }
   .sb-planned  { background: var(--gray-100); color: var(--gray-600); }
+  .sb-done     { background: #eaf6f1; color: #1a6b50; }
   .doc-section h2 { width: 100%; }
 
   /* ── PROGRESS CHECKLIST ── */
@@ -504,21 +506,21 @@
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Scenario 2 · Class Directory <span class="nav-status ns-progress">In progress</span></div>
+      <div class="sidebar-label">Scenario 2 · Class Directory <span class="nav-status ns-done">Complete</span></div>
       <a class="sidebar-link" href="#scenario-2">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1 1 0 00-.115-.099zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/></svg>
         Health Class Directory
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Scenario 3 · Drug Encyclopedia <span class="nav-status ns-planned">Planned</span></div>
+      <div class="sidebar-label">Scenario 3 · Health Encyclopedia <span class="nav-status ns-progress">In progress</span></div>
       <a class="sidebar-link" href="#scenario-3">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
-        Drug Encyclopedia
+        Health Encyclopedia
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Scenario 4 · Diabetes <span class="nav-status ns-planned">Planned</span></div>
+      <div class="sidebar-label">Scenario 4 · Diabetes <span class="nav-status ns-done">Complete</span></div>
       <a class="sidebar-link" href="#scenario-4">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-1.5 2.5-4 4.5-4 7a4 4 0 008 0c0-2.5-2.5-4.5-4-7z"/></svg>
         Diabetes Landing Page
@@ -588,15 +590,15 @@
           <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th></tr></thead>
           <tbody>
             <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
-            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
-            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Drug Encyclopedia</a></td><td>Lucid Search · content selectors · AEM servlet images</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
-            <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic results · content selectors</td><td><span class="nav-status ns-planned">Planned</span></td></tr>
+            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-done">Complete</span></td></tr>
+            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Health Encyclopedia</a></td><td>Edge Function (Fastly Compute) · Healthwise RHTML · server-side render into the EDS shell</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
+            <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic article grid · filters &amp; modal</td><td><span class="nav-status ns-done">Complete</span></td></tr>
           </tbody>
         </table>
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> is now in progress — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks are complete, driving the KP Lucid Search end to end through a CORS-proxy (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Remaining backend integration (Content Hub, AEM-backed detail pages, AEM servlets) is still to come.</span>
+          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> is <strong>complete</strong> — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks drive the KP Lucid Search end to end (topic-first) through the <code class="code-inline">cors-proxy</code> App Builder action (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2</a>). <strong>Scenario 4</strong> is also <strong>complete</strong> — the <code class="code-inline">article-collection</code> block renders the Diabetes article grid from Lucid Search with filters and a detail modal (see <a href="#scenario-4" style="color:#0d51b5;">Scenario 4</a>). <strong>Scenario 3</strong> is underway — Health Encyclopedia articles now render <strong>server-side at the edge</strong> via a Fastly Compute function that injects Healthwise content into the EDS page shell (see <a href="#scenario-3" style="color:#0d51b5;">Scenario 3 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Remaining work centers on <strong>Scenario 1</strong>'s Content Hub integration and Scenario 3's production rollout.</span>
         </div>
 
         <table class="spec-table" style="margin-top:16px;">
@@ -683,17 +685,17 @@
             <tr>
               <td>2 · Class Directory</td>
               <td><a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a></td>
-              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-progress">building</span></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-done">complete</span></td>
             </tr>
             <tr>
-              <td>3 · Drug Encyclopedia</td>
-              <td><a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a></td>
-              <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a> <span class="nav-status ns-planned">planned</span></td>
+              <td>3 · Health Encyclopedia</td>
+              <td><a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/health-encyclopedia</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span></td>
             </tr>
             <tr>
               <td>4 · Diabetes</td>
               <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a></td>
-              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-planned">planned</span></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-done">complete</span></td>
             </tr>
           </tbody>
         </table>
@@ -950,32 +952,32 @@
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11.742 10.344a6.5 6.5 0 10-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 001.415-1.414l-3.85-3.85a1 1 0 00-.115-.099zM12 6.5a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"/></svg>
           </span>
           Scenario 2 — Health Class Directory
-          <span class="status-badge sb-progress">In progress</span>
+          <span class="status-badge sb-done">Complete</span>
         </h2>
         <div class="section-rule"></div>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a> <span class="nav-status ns-progress">building</span></p>
-        <p>Progress against the three Scenario 2 requirements. The front end is built — two new blocks drive the KP Lucid Search end to end (search → dynamic, filterable results). The AEM-backed detail page on click is still to come.</p>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a> <span class="nav-status ns-done">complete</span></p>
+        <p>All three Scenario 2 requirements are met. Two blocks drive the KP Lucid Search end to end — a <strong>topic-first</strong> flow (search → dynamic, filterable results → AEM-backed detail page). KP moved the API to a topic-first model (no proximity), so location now selects <strong>region</strong> (NCA/SCA) rather than a distance radius.</p>
         <ul class="checklist">
           <li class="check-item">
             <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Integrate the Lucid Search API for search</div>
-              <div class="check-note">KP's Lucid Search API blocks browser calls with CORS, so requests route through a public <code class="code-inline">kp-search</code> Adobe App Builder action (the <code class="code-inline">fetch-nocors</code> proxy) that calls KP server-side and returns the data with CORS headers.</div>
+              <div class="check-note">KP's Lucid Search API blocks browser calls with CORS, so requests route through a public <code class="code-inline">cors-proxy</code> Adobe App Builder action (the <code class="code-inline">fetch-nocors</code> proxy) that calls KP server-side and returns the data with CORS headers. Topic-first sources: <code class="code-inline">kp-health-classes</code> (facets) and <code class="code-inline">kp-health-classes-topic</code> (results).</div>
             </div>
           </li>
           <li class="check-item">
             <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Render results dynamically</div>
-              <div class="check-note">The <code class="code-inline">classes-results</code> block renders programs grouped by title with their locations and a result count, faceted sidebar filters (Facility / Format / Language / no-fee) sourced from the response <code class="code-inline">binning-set</code>, and "View more programs" pagination.</div>
+              <div class="check-note">The <code class="code-inline">classes-results</code> block renders programs grouped by title with a result count, faceted sidebar filters (Facility / Format / Language / no-fee) sourced from the response <code class="code-inline">binning-set</code> — groups with no options are hidden — and "View more programs" pagination.</div>
             </div>
           </li>
           <li class="check-item">
-            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Click loads the corresponding AEM-backed content page</div>
-              <div class="check-note">"More program details" currently links to KP's live detail pages — the EDS-backed detail page is still to build.</div>
+              <div class="check-note">"More program details for this location" links each offering to its AEM-backed detail page (the <code class="code-inline">p_url</code> from the Lucid Search response).</div>
             </div>
           </li>
         </ul>
@@ -985,57 +987,175 @@
             <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title"><code class="code-inline">classes-search</code> — search entry</div>
-              <div class="check-note">ZIP / "Use my location" geolocation, a topic dropdown populated dynamically from Lucid Search, and a validation error state. Redirects to the results page with <code class="code-inline">user_zip</code> / <code class="code-inline">distance_label</code> / <code class="code-inline">health_topic</code> query params.</div>
+              <div class="check-note">ZIP / "Use my location" geolocation (selects region NCA/SCA), a topic dropdown populated dynamically from Lucid Search, and a validation error state. Redirects to the results page with <code class="code-inline">user_zip</code> / <code class="code-inline">health_topic</code> query params.</div>
             </div>
           </li>
           <li class="check-item">
             <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title"><code class="code-inline">classes-results</code> — results + filters</div>
-              <div class="check-note">Reads the URL params, runs Lucid Search through the proxy, and renders the dynamic listing, faceted filters, and pagination. Re-searching (Location / Distance / Topic) updates the URL in place with no page reload.</div>
+              <div class="check-note">Reads the URL params, runs Lucid Search through the proxy, and renders the dynamic listing, faceted filters, and pagination. Re-searching (Location / Topic) updates the URL in place with no page reload. Distance is retained for parity but no longer filters (the topic-first API dropped proximity).</div>
             </div>
           </li>
         </ul>
       </section>
 
       <!-- SCENARIO 3 -->
-      <section class="doc-section scenario-stub" id="scenario-3">
+      <section class="doc-section" id="scenario-3">
         <h2>
           <span class="section-icon icon-purple">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
           </span>
-          Scenario 3 — Drug Encyclopedia
-          <span class="status-badge sb-planned">Planned</span>
+          Scenario 3 — Health Encyclopedia
+          <span class="status-badge sb-progress">In progress</span>
         </h2>
         <div class="section-rule"></div>
-        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/drug-encyclopedia</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/drug-encyclopedia</a></p>
-        <p>Requirements (not yet started):</p>
-        <ul class="req-list">
-          <li>Use <strong>Lucid Search</strong> for queries.</li>
-          <li>Load detail page on selection.</li>
-          <li>Use content selectors for fragment mapping.</li>
-          <li>Call an <strong>AEM servlet</strong> to retrieve images and render dynamically.</li>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/health-encyclopedia</a><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span></p>
+
+        <p>Health Encyclopedia articles are sourced from <strong>Healthwise</strong>. Rather than a client-side block, each article is <strong>server-side rendered at the edge</strong> by a <strong>Fastly Compute</strong> function (the AEM <strong>Edge Functions</strong> boilerplate, in <code class="code-inline">aem-edge-functions/</code>) and injected into the published EDS page shell — so the article is present in the initial HTML (SEO, no layout shift, works without JS). The earlier <code class="code-inline">health-encyclopedia-article</code> block was removed in favor of this <strong>template + edge function</strong> approach.</p>
+
+        <h3>How a request renders</h3>
+        <ol class="steps">
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Folder-mapped, SEO-friendly URL</div>
+            <p>The page is authored once at <code class="code-inline">…/health-encyclopedia/article/default</code>; every <code class="code-inline">…/article/&lt;articleID&gt;</code> URL renders it (commerce drop-in pattern). The <strong>last path segment is the Healthwise article ID</strong> — no <code class="code-inline">?articleID=</code> query.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">CDN routes the article path to the function</div>
+            <p><code class="code-inline">cdn.yaml</code> matches <code class="code-inline">…/article/&lt;id&gt;</code> and selects the <code class="code-inline">kp-article</code> edge function (<code class="code-inline">skipCache</code>). It <strong>excludes</strong> <code class="code-inline">…/article/default</code> — that exclusion is the <strong>loop guard</strong> and lets <code class="code-inline">/default</code> serve the shell template.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Parallel fetch: shell + article</div>
+            <p>The function fetches the EDS <strong>page shell</strong> (the <code class="code-inline">/default</code> doc) and the <strong>Healthwise RHTML</strong> (<code class="code-inline">ixbapi.healthwise.net/KnowledgeContent/&lt;id&gt;?hw.key=…&amp;hw.format=rhtml</code>) at the same time.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Extract · sanitize · inject</div>
+            <p>It pulls the Healthwise <code class="code-inline">&lt;body&gt;</code>, strips <code class="code-inline">&lt;script&gt;</code>/<code class="code-inline">&lt;iframe&gt;</code>/<code class="code-inline">on*</code> handlers (regex — there's no DOM at the edge), wraps it as <code class="code-inline">&lt;article class="hea-content"&gt;</code>, and injects it as the first section inside the shell's <code class="code-inline">&lt;main&gt;</code>.</p>
+          </div></li>
+          <li class="step"><div class="step-num"></div><div class="step-body">
+            <div class="step-title">Per-article SEO metadata</div>
+            <p>Title (<code class="code-inline">consumertitle</code>) and description are read from the RHTML head and rewritten into the shell, so each folder-mapped URL gets its own <code class="code-inline">&lt;title&gt;</code>/<code class="code-inline">meta description</code> instead of sharing the <code class="code-inline">/default</code> doc's.</p>
+          </div></li>
+        </ol>
+
+        <h3>Environment resolution</h3>
+        <p>The shell origin is chosen at runtime — <strong>nothing to flip or revert before a PR</strong>. <code class="code-inline">FASTLY_HOSTNAME === 'localhost'</code> means the local runtime; otherwise the request host decides. Each origin has its own declared <strong>backend</strong> (the backend, not the URL, decides where the connection goes), enforcing an SSRF allow-list.</p>
+        <table class="spec-table">
+          <thead><tr><th>Environment</th><th>Shell origin</th><th>Backend</th></tr></thead>
+          <tbody>
+            <tr><td>Local (<code class="code-inline">fastly compute serve</code>)</td><td><code class="code-inline">http://localhost:3000</code> (your <code class="code-inline">aem up</code>)</td><td><code class="code-inline">eds-local</code> · <code class="code-inline">fastly.toml</code></td></tr>
+            <tr><td>Preview (<code class="code-inline">*.aem.page</code>)</td><td><code class="code-inline">main--kp-hw--adobedrago.aem.page</code></td><td><code class="code-inline">eds-preview</code> · <code class="code-inline">edgeFunctions.yaml</code></td></tr>
+            <tr><td>Production</td><td><code class="code-inline">main--kp-hw--adobedrago.aem.live</code></td><td><code class="code-inline">eds-prod</code> · <code class="code-inline">edgeFunctions.yaml</code></td></tr>
+          </tbody>
+        </table>
+        <p>The Healthwise key (<code class="code-inline">HW_KEY</code>) is read via the Fastly <strong>Secret Store</strong> — bundled-JSON format in the cloud, falling back to a per-key lookup locally. Production defines the secret in <strong>Cloud Manager</strong> (<code class="code-inline">edgeFunctions.yaml</code> references it); local dev reads a <strong>gitignored</strong> <code class="code-inline">hw_key.local</code> file (never committed).</p>
+
+        <div class="notice tip">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg>
+          <span><strong>Local preview is complete.</strong> In dev the function proxies every <em>non-article</em> request (scripts, styles, templates, fragments, images) to the shell origin, so <code class="code-inline">:7676</code> is a full local preview. In production the CDN only routes the article path to the function, so that proxy branch is never hit.</span>
+        </div>
+
+        <h3>What's built vs. planned</h3>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Edge function renders a Healthwise article into the EDS shell</div>
+              <div class="check-note"><code class="code-inline">aem-edge-functions/src/health-encyclopedia-article-handler.js</code> — parallel shell + RHTML fetch, body extract/sanitize, inject into <code class="code-inline">&lt;main&gt;</code>.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Folder-mapped path + per-article SEO metadata</div>
+              <div class="check-note">Article ID from the last path segment; <code class="code-inline">/default</code> shell excluded as the loop guard. Title/description rewritten per article.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Env-aware origins + secret handling</div>
+              <div class="check-note">Local / preview / prod origins resolved at runtime with per-origin backends (SSRF allow-list); <code class="code-inline">HW_KEY</code> via Secret Store / Cloud Manager, gitignored locally.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Production rollout — CDN routing + secret provisioning</div>
+              <div class="check-note">Deploy the function, wire <code class="code-inline">cdn.yaml</code>/<code class="code-inline">edgeFunctions.yaml</code> on the live service, and provision <code class="code-inline">HW_KEY</code> in Cloud Manager.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Encyclopedia listing / search + article styling</div>
+              <div class="check-note">A browse/search entry into the encyclopedia, and CSS for <code class="code-inline">.hea-content</code> to match production. Optional edge caching (<code class="code-inline">kvs</code>) for rendered articles.</div>
+            </div>
+          </li>
         </ul>
+
+        <h3>Run it</h3>
+        <div class="code-block"><span class="cmt"># 1) Local EDS shell (serves the /default template + assets)</span>
+<span class="kw">aem</span> up                          <span class="cmt"># http://localhost:3000</span>
+
+<span class="cmt"># 2) Healthwise key for local dev (gitignored, never committed)</span>
+<span class="kw">cp</span> hw_key.local.example hw_key.local   <span class="cmt"># paste your hw.key</span>
+
+<span class="cmt"># 3) Run the edge function locally (Fastly Viceroy)</span>
+<span class="kw">cd</span> aem-edge-functions &amp;&amp; fastly compute serve   <span class="cmt"># http://localhost:7676</span></div>
+
+        <div class="notice info">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
+          <span>Open <code class="code-inline">http://localhost:7676/northern-california/health-wellness/health-encyclopedia/article/&lt;articleID&gt;</code> to see a real Healthwise article rendered into the local shell.</span>
+        </div>
       </section>
 
       <!-- SCENARIO 4 -->
-      <section class="doc-section scenario-stub" id="scenario-4">
+      <section class="doc-section" id="scenario-4">
         <h2>
           <span class="section-icon icon-purple">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-1.5 2.5-4 4.5-4 7a4 4 0 008 0c0-2.5-2.5-4.5-4-7z"/></svg>
           </span>
           Scenario 4 — Diabetes Landing Page
-          <span class="status-badge sb-planned">Planned</span>
+          <span class="status-badge sb-done">Complete</span>
         </h2>
         <div class="section-rule"></div>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes</a></p>
-        <p>Requirements (not yet started):</p>
-        <ul class="req-list">
-          <li>Trigger <strong>Lucid Search API</strong> for diabetes articles.</li>
-          <li>Render results dynamically.</li>
-          <li>Use content selectors for article rendering.</li>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-done">complete</span></p>
+        <p>All three Scenario 4 requirements are met by the <code class="code-inline">article-collection</code> block, which fetches Diabetes health articles from KP Lucid Search and renders them as a dynamic, filterable grid with a detail view.</p>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Trigger Lucid Search for diabetes articles</div>
+              <div class="check-note">The block queries the article source (<code class="code-inline">v:project=kp-consumernet</code>, <code class="code-inline">v:sources=kp-aem-dho-articles</code>) for the Diabetes topic through the same <code class="code-inline">cors-proxy</code> App Builder action, with region and language defaults.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Render results dynamically</div>
+              <div class="check-note">A responsive article grid with featured (column-spanning) cards, a sort dropdown (Default / Newest / A–Z), a category filter modal with active chips, and pagination — all driven from the Lucid Search response.</div>
+            </div>
+          </li>
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title">Render article content from the selected item</div>
+              <div class="check-note">Each card maps the response fields (title, category, teaser, image, link) to KP-hosted content; selecting an article opens its detail view.</div>
+            </div>
+          </li>
+        </ul>
+        <h3>Block delivered</h3>
+        <ul class="checklist">
+          <li class="check-item">
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
+            <div class="check-body">
+              <div class="check-title"><code class="code-inline">article-collection</code> — Diabetes article grid</div>
+              <div class="check-note">Topic + region/language defaults, sort, category filters with chips, pagination, featured-card hover zoom, and a detail modal. Shares the <code class="code-inline">utils/kp-api.js</code> proxy layer with Scenario 2.</div>
+            </div>
+          </li>
         </ul>
       </section>
 

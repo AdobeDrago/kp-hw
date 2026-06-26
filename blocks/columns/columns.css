@@ -112,3 +112,112 @@
     }
   }
 }
+
+/* ── Related articles section header ──────────────────────────────────────── */
+
+.related-articles .columns .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+}
+
+/* Left col: icon (picture/img) + text node inline */
+.related-articles .columns .col:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--heading-font-size-m, 1.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1b3055;
+}
+
+/* Constrain icon — overrides the default full-width img rule above */
+.related-articles .columns .col:first-child picture {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.related-articles .columns .col:first-child img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.related-articles .columns .col:last-child {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.related-articles .columns .col:last-child a {
+  display: inline-block;
+  border: 1.5px solid #1b3055;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: var(--body-font-size-s, 0.875rem);
+  font-weight: 600;
+  color: #1b3055;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.related-articles .columns .col:last-child a:hover {
+  background: #1b3055;
+  color: #fff;
+}
+
+/* ── Topics variant: links render as pill buttons with a show-more toggle ──── */
+
+.columns.topics .topic-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.columns.topics .topic-pills a:any-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-blue);
+  border-radius: 24px;
+  padding: 11px 24px;
+  background-color: #fff;
+  color: var(--color-blue);
+  font-size: var(--body-font-size-m, 1rem);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.columns.topics .topic-pills a:any-link:hover {
+  background-color: var(--color-blue);
+  color: #fff;
+  text-decoration: none;
+}
+
+.columns.topics .topic-pill--hidden {
+  display: none;
+}
+
+.columns.topics .topic-pills-toggle {
+  margin-top: 1rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--color-blue);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.columns.topics .topic-pills-toggle:hover {
+  color: var(--color-link-hover, #005a87);
+}

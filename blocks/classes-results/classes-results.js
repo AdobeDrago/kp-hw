@@ -1,10 +1,8 @@
-// Adobe AppBuilder (kp-search) proxy — the same one classes-search uses to get
-// around CORS on the KP search API.
-const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-search';
-const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
+import {
+  DEFAULT_ROP, zipToRop, latToRop, fetchTopics, fetchResults,
+} from '../../utils/kp-api.js';
 
-const DEFAULT_ROP = 'SCA';
-const DISTANCE_OPTIONS = [5, 10, 25, 50, 75, 100]; // miles (hardcoded)
+const DISTANCE_OPTIONS = [5, 10, 25, 50, 75, 100];
 const DEFAULT_DISTANCE = 50;
 const FACET_VISIBLE = 6; // facet options shown before "Show More"
 const FEE_TOKEN = 'fee_required==No';
@@ -17,71 +15,10 @@ const FILTER_GROUPS = [
   { key: 'language', bsId: 'languages', label: 'Language' },
 ];
 
-function zipToRop(zip) {
-  const n = parseInt(zip, 10);
-  if (Number.isNaN(n)) return DEFAULT_ROP;
-  // NorCal ZIPs are roughly 94000–96199; SoCal 90000–93599.
-  return n >= 94000 ? 'NCA' : 'SCA';
-}
-
-function latToRop(lat) {
-  // Rough CA split near 35.8°N.
-  return lat >= 35.8 ? 'NCA' : 'SCA';
-}
-
 // "distance_label" arrives as "50" or "Within 50 miles" — pull the mileage out.
 function parseDistance(distanceLabel) {
   const n = parseInt((String(distanceLabel || '').match(/\d+/) || [])[0], 10);
   return DISTANCE_OPTIONS.includes(n) ? n : DEFAULT_DISTANCE;
-}
-
-// Builds the KP search URL.
-// - The base binning-state carries distance + topic, newline-joined as "%0A"
-//   (a literal "\n" gets stripped by the proxy's URL parser; "%0A" survives).
-// - Each active sidebar filter is its OWN extra `binning-state` query param.
-function buildKpSearchUrl({
-  rop, zip = '', lat = '', lon = '', miles = DEFAULT_DISTANCE,
-  topicLabel = '', listShow = 0, vstate = '', filterTokens = [],
-}) {
-  const base = [`distance=0:${miles}`];
-  if (topicLabel) base.push(`health_topic==${topicLabel}`);
-  const params = [
-    'v:sources=kp-health-classes-proximity',
-    'v:project=kp-classes-project',
-    'query=',
-    `rop=${rop}`,
-    `user_zip=${zip}`,
-    `binning-state=${base.join('%0A')}`,
-    `user_lat=${lat}`,
-    `user_lon=${lon}`,
-    'locale=en-us',
-    'render.function=json-feed-display-document',
-    'content-type=application-json',
-    `render.list-show=${listShow}`,
-  ];
-  if (vstate) params.push(`v:state=${vstate}`);
-  filterTokens.forEach((t) => params.push(`binning-state=${t}`));
-  return `${KP_SEARCH_BASE}?${params.join('&')}`;
-}
-
-async function callProxy(kpUrl) {
-  const res = await fetch(`${PROXY_ENDPOINT}?url=${encodeURIComponent(kpUrl)}`);
-  if (!res.ok) throw new Error(`proxy request failed: ${res.status}`);
-  return res.json();
-}
-
-// Topic facets only (for the Topic dropdown) — no topic in binning-state.
-async function fetchTopics(opts) {
-  const data = await callProxy(buildKpSearchUrl({ ...opts, listShow: 0 }));
-  const set = (data.binning?.['binning-set'] || []).find((s) => s['bs-id'] === 'health_topic');
-  return (set?.bins || []).map((b) => ({ label: b.label, token: b.token }));
-}
-
-// The filtered listing (10 per page) + facets + navigation.
-async function fetchResults(opts) {
-  return callProxy(buildKpSearchUrl({
-    ...opts, listShow: 10, vstate: `root|root-${opts.offset || 0}-10`,
-  }));
 }
 
 // --- HTML helpers (pure) -------------------------------------------------
@@ -98,9 +35,18 @@ function regionLabel(rop) {
 }
 
 function cleanAttendee(arr) {
-  return (arr || []).join(' ').replace(/\s+/g, ' ').trim();
+  if (Array.isArray(arr)) return arr.join(' ').replace(/\s+/g, ' ').trim();
+  return String(arr || '').replace(/\s+/g, ' ').trim();
 }
 
+function joinLangs(langs) {
+  if (Array.isArray(langs)) return langs.join(', ');
+  return langs || '';
+}
+
+// Group offerings that share a title into one program section. The topic-first
+// API no longer returns per-location address/distance, so each entry is a
+// facility + how to reach it.
 function groupByTitle(docs) {
   const map = new Map();
   docs.forEach((doc) => {
@@ -110,20 +56,22 @@ function groupByTitle(docs) {
       map.set(key, {
         title: c.title || '',
         format: c.format_label || '',
+        description: c.class_description || '',
         attendee: cleanAttendee(c.attendee),
         fee: c.fee || '',
-        language: c.languages || (c.kp_language || []).join(', '),
+        language: joinLangs(c.languages),
+        referral: c.referral || '',
         locations: [],
       });
     }
-    map.get(key).locations.push({
+    const group = map.get(key);
+    // Fill in any meta missing on the first offering from later ones.
+    if (!group.description && c.class_description) group.description = c.class_description;
+    if (!group.fee && c.fee) group.fee = c.fee;
+    group.locations.push({
       facility: c.facility || '',
-      distance: c.fac_distance || '',
-      address1: c.address_line_1 || '',
-      city: c.city || '',
-      state: c.state || '',
-      zip: c.zipcode || '',
-      phone: c.alternate_phone_number || '',
+      city: c.city && c.city !== 'None' ? c.city : '',
+      phone: c.phone_number || '',
       detailsUrl: c.p_url || c.url || '',
     });
   });
@@ -131,23 +79,21 @@ function groupByTitle(docs) {
 }
 
 function buildCountHtml(ctx) {
-  const where = ctx.zip ? `<strong>${esc(ctx.zip)}</strong>` : '<strong>your location</strong>';
-  return `${esc(ctx.num)} results for <strong>${esc(ctx.topicLabel)}</strong> `
-    + `within <strong>${esc(ctx.miles)} miles</strong> of ${where} `
-    + `in <strong>${esc(regionLabel(ctx.rop))}</strong>`;
+  const region = ctx.region ? ` in <strong>${esc(ctx.region)}</strong>` : '';
+  return `${esc(ctx.num)} results for <strong>${esc(ctx.topicLabel)}</strong>${region}`;
 }
 
 function buildLocationHtml(loc) {
-  const cityLine = [loc.city, loc.state].filter(Boolean).join(', ') + (loc.zip ? ` ${loc.zip}` : '');
-  const addressLines = [esc(loc.address1), esc(cityLine), loc.phone ? esc(loc.phone) : '']
-    .filter(Boolean).join('<br>');
+  if (!loc.facility && !loc.phone && !loc.detailsUrl) return '';
+  const lines = [
+    loc.city ? esc(loc.city) : '',
+    loc.phone ? esc(loc.phone) : '',
+  ].filter(Boolean).join('<br>');
   return `
     <div class="cr-loc">
       <div class="cr-loc-info">
-        <p class="cr-loc-head">
-          <span class="cr-facility">${esc(loc.facility)}</span>${loc.distance ? `<span class="cr-distance">${esc(loc.distance)} miles</span>` : ''}
-        </p>
-        <p class="cr-loc-address">${addressLines}</p>
+        ${loc.facility ? `<p class="cr-loc-head"><span class="cr-facility">${esc(loc.facility)}</span></p>` : ''}
+        ${lines ? `<p class="cr-loc-address">${lines}</p>` : ''}
         ${loc.detailsUrl ? `<a class="cr-loc-link" href="${esc(loc.detailsUrl)}">More program details for this location</a>` : ''}
       </div>
       <div class="cr-loc-dates">
@@ -162,11 +108,13 @@ function buildSectionHtml(group) {
     group.attendee ? `<p><strong>Who can attend:</strong> ${esc(group.attendee)}</p>` : '',
     group.fee ? `<p><strong>Fee(s):</strong> ${esc(group.fee)}</p>` : '',
     group.language ? `<p><strong>Language:</strong> ${esc(group.language)}</p>` : '',
+    group.referral ? `<p><strong>Referral:</strong> ${esc(group.referral)}</p>` : '',
   ].join('');
   return `
     <section class="cr-program">
       <h3 class="cr-program-title">${esc(group.title)}</h3>
       <p class="cr-program-type">${esc(group.format)}</p>
+      ${group.description ? `<p class="cr-program-desc">${esc(group.description)}</p>` : ''}
       <div class="cr-program-meta">${meta}</div>
       <div class="cr-locations">${group.locations.map(buildLocationHtml).join('')}</div>
     </section>`;
@@ -190,7 +138,7 @@ export default function init(el) {
 
   el.textContent = '';
 
-  // --- Search controls (top bar) -----------------------------------------
+  // --- Search controls (top bar): location + distance + topic ------------
   const form = document.createElement('form');
   form.className = 'cr-form';
   form.noValidate = true;
@@ -275,7 +223,9 @@ export default function init(el) {
 
   // --- State --------------------------------------------------------------
   let state = {
-    zip: initialZip, lat: initialLat, lon: initialLon,
+    zip: initialZip,
+    lat: initialLat,
+    lon: initialLon,
     rop: initialZip ? zipToRop(initialZip) : DEFAULT_ROP,
   };
   let reqToken = 0;
@@ -284,7 +234,9 @@ export default function init(el) {
   let lastBinningSet = [];
 
   // Sidebar filter state: each group holds the selected token (or null); fee is bool.
-  const filters = { facility: null, format: null, language: null, fee: false };
+  const filters = {
+    facility: null, format: null, language: null, fee: false,
+  };
   const expanded = { facility: false, format: false, language: false };
   const showAll = { facility: false, format: false, language: false };
 
@@ -310,7 +262,7 @@ export default function init(el) {
     topicSelect.innerHTML = '<option value="">Select topic</option>';
     topics.forEach((t) => {
       const opt = document.createElement('option');
-      opt.value = t.token;
+      opt.value = t.label;
       opt.textContent = t.label;
       if (preselectLabel && t.label === preselectLabel) opt.selected = true;
       topicSelect.append(opt);
@@ -319,18 +271,13 @@ export default function init(el) {
   }
 
   async function loadTopics() {
-    if (!state.zip && !(state.lat && state.lon)) { resetTopics(); return; }
-    const current = topicSelect.value ? (topicSelect.selectedOptions[0]?.textContent || '') : '';
-    const preselect = current || initialTopic;
+    const current = topicSelect.value || initialTopic;
     const token = ++reqToken;
-    const miles = Number(distSelect.value) || DEFAULT_DISTANCE;
     showTopicsLoading();
     try {
-      const topics = await fetchTopics({
-        rop: state.rop, zip: state.zip, lat: state.lat, lon: state.lon, miles,
-      });
+      const topics = await fetchTopics({ rop: state.rop });
       if (token !== reqToken) return;
-      renderTopics(topics, preselect);
+      renderTopics(topics, current);
     } catch (err) {
       if (token !== reqToken) return;
       // eslint-disable-next-line no-console
@@ -339,10 +286,9 @@ export default function init(el) {
     }
   }
 
-  // ===================== Sidebar filters =====================
-  const currentTopicLabel = () => (topicSelect.value
-    ? (topicSelect.selectedOptions[0]?.textContent || '') : initialTopic);
+  const currentTopicLabel = () => topicSelect.value || initialTopic;
 
+  // ===================== Sidebar filters =====================
   function activeFilterTokens() {
     const tokens = [];
     FILTER_GROUPS.forEach((g) => { if (filters[g.key]) tokens.push(filters[g.key]); });
@@ -369,6 +315,10 @@ export default function init(el) {
     const body = group.querySelector('.cr-group-body');
     const set = lastBinningSet.find((s) => s['bs-id'] === g.bsId);
     const bins = set?.bins || [];
+    // Hide a filter group entirely when the current search has no options for it
+    // (e.g. Facility for online-only topics).
+    group.hidden = bins.length === 0;
+    if (!bins.length) { body.innerHTML = ''; return; }
     const selected = filters[g.key] || '';
     // Auto-expand the list if the selected option is hidden behind "Show More".
     const selIdx = bins.findIndex((b) => b.token === selected);
@@ -383,7 +333,7 @@ export default function init(el) {
       </label>`;
 
     let html = radio('', allLabel, selected === '');
-    html += visible.map((b) => radio(b.token, `${b.label}(${b.ndocs})`, selected === b.token)).join('');
+    html += visible.map((b) => radio(b.token, `${b.label} (${b.ndocs})`, selected === b.token)).join('');
     if (bins.length > FACET_VISIBLE) {
       html += showAll[g.key]
         ? '<button type="button" class="cr-show-more">Show Less</button>'
@@ -413,7 +363,7 @@ export default function init(el) {
     const head = e.target.closest('.cr-group-head');
     if (head) {
       const group = head.closest('.cr-group');
-      const key = group.dataset.key;
+      const { key } = group.dataset;
       expanded[key] = !expanded[key];
       head.setAttribute('aria-expanded', String(expanded[key]));
       group.querySelector('.cr-group-icon').textContent = expanded[key] ? '−' : '+';
@@ -422,7 +372,7 @@ export default function init(el) {
     }
     const showMore = e.target.closest('.cr-show-more');
     if (showMore) {
-      const key = showMore.closest('.cr-group').dataset.key;
+      const { key } = showMore.closest('.cr-group').dataset;
       showAll[key] = !showAll[key];
       renderGroup(FILTER_GROUPS.find((g) => g.key === key));
     }
@@ -432,7 +382,7 @@ export default function init(el) {
   groupsEl.addEventListener('change', (e) => {
     const radio = e.target.closest('input[type="radio"]');
     if (!radio) return;
-    const key = radio.closest('.cr-group').dataset.key;
+    const { key } = radio.closest('.cr-group').dataset;
     filters[key] = radio.value || null;
     loadResults();
   });
@@ -478,8 +428,7 @@ export default function init(el) {
   // ===================== Results listing =====================
   async function loadResults({ append = false } = {}) {
     const topicLabel = currentTopicLabel();
-    if ((!state.zip && !(state.lat && state.lon)) || !topicLabel) return;
-    const miles = Number(distSelect.value) || DEFAULT_DISTANCE;
+    if (!topicLabel) return;
     const offset = append ? resultsState.docs.length : 0;
     const token = ++resultsToken;
 
@@ -495,10 +444,6 @@ export default function init(el) {
     try {
       const data = await fetchResults({
         rop: state.rop,
-        zip: state.zip,
-        lat: state.lat,
-        lon: state.lon,
-        miles,
         topicLabel,
         offset,
         filterTokens: activeFilterTokens(),
@@ -508,10 +453,7 @@ export default function init(el) {
       const num = Number(data.list?.num || data['added-sources']?.[0]?.['total-results'] || 0);
       resultsState.docs = append ? resultsState.docs.concat(docs) : docs;
       resultsState.num = num;
-      const ctx = {
-        num, topicLabel, miles, zip: state.zip, rop: state.rop,
-      };
-      countEl.innerHTML = buildCountHtml(ctx);
+      countEl.innerHTML = buildCountHtml({ num, topicLabel, region: regionLabel(state.rop) });
       listingEl.innerHTML = buildListingHtml(resultsState.docs);
       viewMoreBtn.hidden = resultsState.docs.length >= num;
       if (!append) {
@@ -539,15 +481,17 @@ export default function init(el) {
     if (zip !== input.value) input.value = zip;
     clearTimeout(debounce);
     if (zip.length === 5) {
-      state = { zip, lat: '', lon: '', rop: zipToRop(zip) };
+      state = {
+        zip, lat: '', lon: '', rop: zipToRop(zip),
+      };
       debounce = setTimeout(loadTopics, 400);
     } else {
-      state = { zip: '', lat: '', lon: '', rop: DEFAULT_ROP };
+      state = {
+        zip: '', lat: '', lon: '', rop: DEFAULT_ROP,
+      };
       resetTopics();
     }
   });
-
-  distSelect.addEventListener('change', loadTopics);
 
   geoBtn.addEventListener('click', () => {
     if (!navigator.geolocation) return;
@@ -565,9 +509,13 @@ export default function init(el) {
 
       if (/^\d{5}$/.test(zip)) {
         input.value = zip;
-        state = { zip, lat: '', lon: '', rop: zipToRop(zip) };
+        state = {
+          zip, lat: '', lon: '', rop: zipToRop(zip),
+        };
       } else {
-        state = { zip: '', lat: latitude, lon: longitude, rop: latToRop(latitude) };
+        state = {
+          zip: '', lat: latitude, lon: longitude, rop: latToRop(latitude),
+        };
       }
       loadTopics();
     }, (err) => {
@@ -586,13 +534,12 @@ export default function init(el) {
       parts.push(`user_lon=${encodeURIComponent(state.lon)}`);
     }
     parts.push(`distance_label=${encodeURIComponent(`Within ${distSelect.value} miles`)}`);
-    parts.push(`health_topic=${encodeURIComponent(topicSelect.selectedOptions[0]?.textContent || '')}`);
+    parts.push(`health_topic=${encodeURIComponent(topicSelect.value)}`);
     return `${window.location.origin}${window.location.pathname}?${parts.join('&')}`;
   }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!state.zip && !(state.lat && state.lon)) { input.focus(); return; }
     if (!topicSelect.value) { topicSelect.focus(); return; }
     // A new base search resets the sidebar filters.
     FILTER_GROUPS.forEach((g) => { filters[g.key] = null; });
@@ -603,8 +550,6 @@ export default function init(el) {
   });
 
   // --- Initial load (prefilled from the incoming URL) ---------------------
-  if (state.zip || (state.lat && state.lon)) {
-    loadTopics();
-    loadResults();
-  }
+  loadTopics();
+  if (initialTopic) loadResults();
 }

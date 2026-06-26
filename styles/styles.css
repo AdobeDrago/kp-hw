@@ -259,7 +259,7 @@
   --body-line-height: 1.6;
 
   /* misc */
-  --header-height: 60px;  /* mobile: logo bar only */
+  --header-height: 80px;  /* mobile: logo/search bar */
   --breadcrumb-height: 24px;
 
   /* KP brand colors */
@@ -727,11 +727,20 @@ aem-sidekick {
 @media (width >= 900px) {
   :root {
     --heading-font-size-xxl: 40px;
-    --header-height: 90px; /* desktop: vessel .ds-header single bar */
+    --header-height: 90px; /* condensed desktop bar (900–1151px) */
   }
 
   .section > .default-content {
     padding: 0;
+  }
+}
+
+/* At ≥1152px the kp-header shows its full layout (utility bar + pushdown nav),
+   ~220px tall. Reserve that height so the header doesn't grow on load and
+   shove main down (the dominant CLS source on this page). */
+@media (width >= 1152px) {
+  :root {
+    --header-height: 220px;
   }
 }
 
@@ -946,10 +955,43 @@ main .section.pale-blue {
   background-color: var(--color-pale-blue);
 }
 
-/* style: light / highlight — soft grey background */
-main .section.light,
-main .section.highlight {
+/* style: light — soft grey background */
+main .section.light {
   background-color: var(--color-grey-light);
+}
+
+/* style: highlight — pale blue background (matches the live KP site) */
+main .section.highlight {
+  background-color: var(--color-pale-blue);
+}
+
+/* style: inner-nav — "Jump to section" links render as pill buttons */
+main .section.inner-nav .default-content-wrapper p,
+main .section.inner-nav p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+main .section.inner-nav a:any-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-blue);
+  border-radius: 24px;
+  padding: 11px 24px;
+  background-color: #fff;
+  color: var(--color-blue);
+  font-size: var(--body-font-size-m, 1rem);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+main .section.inner-nav a:any-link:hover {
+  background-color: var(--color-blue);
+  color: #fff;
+  text-decoration: none;
 }
 
 /* style: dark-blue — ensures links remain legible on dark backgrounds */
@@ -1021,4 +1063,66 @@ main .section.footnotes p:first-child {
 body.library-template header,
 body.library-template footer {
   display: none;
+}
+
+/* ==========================================================================
+   SECTION NAV
+   ============================================================================
+   style: section-nav — "Jump to section" anchor pill row.
+   Author a heading followed by a list of in-page anchor links; each link
+   renders as an outlined pill button.
+
+   Example document content:
+     ## Jump to section
+     - [Healthy living spotlight](#healthy-living-spotlight)
+     - [Managing your health](#managing-your-health)
+   ========================================================================== */
+
+main .section.section-nav {
+  padding: var(--spacing-l) 0;
+}
+
+main .section.section-nav .default-content h2,
+main .section.section-nav .default-content h3 {
+  font-size: var(--heading-font-size-xs);
+  font-family: var(--heading-font-family);
+  font-weight: 700;
+  color: var(--color-navy);
+  margin: 0 0 var(--spacing-s);
+  letter-spacing: 0;
+}
+
+main .section.section-nav .default-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-s);
+}
+
+main .section.section-nav .default-content ul li {
+  margin: 0;
+}
+
+main .section.section-nav .default-content ul li a:any-link {
+  display: inline-block;
+  padding: 10px 20px;
+  border: 1.5px solid var(--color-navy);
+  border-radius: 100px;
+  font-family: var(--heading-font-family);
+  font-size: var(--body-font-size-m);
+  font-weight: 500;
+  color: var(--color-navy);
+  text-decoration: none;
+  background: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  word-break: normal;
+}
+
+main .section.section-nav .default-content ul li a:hover,
+main .section.section-nav .default-content ul li a:focus {
+  background-color: var(--color-navy);
+  color: var(--color-white);
+  text-decoration: none;
 }

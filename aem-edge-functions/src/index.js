@@ -1,0 +1,46 @@
+/*
+Copyright 2025 Adobe. All rights reserved.
+This file is licensed to you under the Apache License, Version 2.0 (the 'License');
+you may not use this file except in compliance with the License. You may obtain a copy
+of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an 'AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
+OF ANY KIND, either express or implied. See the License for the specific language
+governing permissions and limitations under the License.
+*/
+
+/// <reference types="@fastly/js-compute" />
+
+import * as response from './lib/response.js';
+import { log } from './lib/log.js';
+import { articleHandler, proxyToShell, getArticleId } from './health-encyclopedia-article-handler.js';
+
+addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
+
+async function handleRequest(event) {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  let finalResponse;
+
+  try {
+    // Route matching: /…/article/<articleID> (not /default) → render the article.
+    if (getArticleId(url.pathname) && req.method === 'GET') {
+      finalResponse = await articleHandler(req);
+    } else {
+      // DEV ONLY: proxy everything else (assets, scripts, fragments) to the
+      // shell origin so :7676 is a complete local preview. Not hit in prod.
+      finalResponse = await proxyToShell(req);
+    }
+  } catch (err) {
+    console.log(err);
+    finalResponse = response.error();
+  }
+
+  // Log the request and response
+  log(req, finalResponse);
+
+  return finalResponse;
+}
+
