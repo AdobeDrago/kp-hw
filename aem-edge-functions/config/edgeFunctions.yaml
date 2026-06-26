@@ -12,10 +12,13 @@ data:
           domain: main--kp-hw--adobedrago.aem.live
         - name: eds-preview
           domain: main--kp-hw--adobedrago.aem.page
-  # hw.key — define the underlying secret in Cloud Manager first, then this
-  # references it. Read in code via SecretStoreManager.getSecret('HW_KEY').
-  secrets:
-    - key: HW_KEY
-      value: ${{HW_KEY_SECRET}}
+  # hw.key — secret store is NOT provisioned on sandbox programs, so the
+  # secrets block is disabled for the sandbox PoC. The Healthwise key is
+  # injected at build time via the local-secrets fallback in src/lib/config.js.
+  # On a non-sandbox env, re-enable this (define HW_KEY_SECRET in Cloud Manager
+  # first) and drop the local-secrets fallback.
+  # secrets:
+  #   - key: HW_KEY
+  #     value: ${{HW_KEY_SECRET}}
   # Enable later to cache rendered articles at the edge (kv_default).
   # kvs: true

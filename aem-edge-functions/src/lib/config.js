@@ -13,6 +13,7 @@ governing permissions and limitations under the License.
 /// <reference types="@fastly/js-compute" />
 
 import { SecretStore } from 'fastly:secret-store';
+import { LOCAL_SECRETS } from './local-secrets.js';
 
 export class SecretStoreManager {
   static instance = null;
@@ -31,8 +32,18 @@ export class SecretStoreManager {
   }
 
   async getSecret(key) {
+    // Sandbox PoC fallback: secret store isn't provisioned on sandbox programs,
+    // so use the build-time injected value if present.
+    if (LOCAL_SECRETS && key in LOCAL_SECRETS && LOCAL_SECRETS[key]) {
+      return LOCAL_SECRETS[key];
+    }
+
     if (!this.store) {
-      this.store = new SecretStore('secret_default');
+      try {
+        this.store = new SecretStore('secret_default');
+      } catch (e) {
+        throw new Error(`Secret store unavailable and no local fallback for '${key}': ${e.message}`);
+      }
     }
 
     // Try cloud format first: all secrets bundled as JSON under "secrets" key
