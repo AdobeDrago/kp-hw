@@ -587,12 +587,12 @@
 
         <h3>The four scenarios</h3>
         <table class="spec-table">
-          <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th></tr></thead>
+          <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th><th>Live URL</th></tr></thead>
           <tbody>
-            <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
-            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-done">Complete</span></td></tr>
-            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Health Encyclopedia</a></td><td>Edge Function (Fastly Compute) · Healthwise RHTML · server-side render into the EDS shell</td><td><span class="nav-status ns-progress">In progress</span></td></tr>
-            <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic article grid · filters &amp; modal</td><td><span class="nav-status ns-done">Complete</span></td></tr>
+            <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></td></tr>
+            <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-wellness/classes-programs</a></td></tr>
+            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Health Encyclopedia</a></td><td>Edge Function (Fastly Compute) · Healthwise RHTML · server-side render into the EDS shell</td><td><span class="nav-status ns-progress">In progress</span></td><td><a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></td></tr>
+            <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic article grid · filters &amp; modal</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness/diabetes</a></td></tr>
           </tbody>
         </table>
 
@@ -670,39 +670,49 @@
             <div class="url-card-url">main--kp-hw--adobedrago.aem.live</div>
             <div class="url-card-desc">Published EDS content (CDN)</div>
           </a>
+          <a class="url-card" href="https://kp.pbyb.live/" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-green"></span>Production domain</div>
+            <div class="url-card-title">kp.pbyb.live</div>
+            <div class="url-card-url">kp.pbyb.live</div>
+            <div class="url-card-desc">Custom domain on Adobe Managed CDN (Let's Encrypt TLS) — routes to <code class="code-inline">main--kp-hw--adobedrago.aem.live</code>. Per-scenario URLs use this host.</div>
+          </a>
         </div>
 
         <h3>Migration map · live → building</h3>
         <p>Each pilot scenario migrates a production AEM MS page to its EDS equivalent. The EDS target paths mirror the production URLs; most are not authored yet (404 until built).</p>
         <table class="spec-table">
-          <thead><tr><th>Scenario</th><th>Live (production)</th><th>Building (EDS preview)</th></tr></thead>
+          <thead><tr><th>Scenario</th><th>Live (production)</th><th>Building (EDS preview)</th><th>Live URL (kp.pbyb.live)</th></tr></thead>
           <tbody>
             <tr>
               <td>1 · Landing</td>
               <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a></td>
               <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></td>
+              <td><a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></td>
             </tr>
             <tr>
               <td>2 · Class Directory</td>
               <td><a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a></td>
               <td><a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a> <span class="nav-status ns-done">complete</span></td>
+              <td><a href="https://kp.pbyb.live/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-wellness/classes-programs</a></td>
             </tr>
             <tr>
               <td>3 · Health Encyclopedia</td>
               <td><a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/health-encyclopedia</a></td>
               <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span></td>
+              <td><a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></td>
             </tr>
             <tr>
               <td>4 · Diabetes</td>
               <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a></td>
               <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-done">complete</span></td>
+              <td><a href="https://kp.pbyb.live/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness/diabetes</a></td>
             </tr>
           </tbody>
         </table>
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span>The query index targets the path <code class="code-inline">/northern-california/health-wellness/**</code> — the same URL shape as production. Article documents themselves are authored in DA, not committed to this repo. The EDS URL pattern is <code class="code-inline">{branch}--kp-hw--adobedrago.aem.page</code> (preview) / <code class="code-inline">.aem.live</code> (published).</span>
+          <span>The query index targets the path <code class="code-inline">/northern-california/health-wellness/**</code> — the same URL shape as production. Article documents themselves are authored in DA, not committed to this repo. The EDS URL pattern is <code class="code-inline">{branch}--kp-hw--adobedrago.aem.page</code> (preview) / <code class="code-inline">.aem.live</code> (published). The public production host is <code class="code-inline">kp.pbyb.live</code> (Adobe Managed CDN), which serves the same content as <code class="code-inline">main--kp-hw--adobedrago.aem.live</code>; scenarios still <span class="nav-status ns-progress">building</span> will 404 on that host until authored.</span>
         </div>
       </section>
 
@@ -718,7 +728,8 @@
         <div class="section-rule"></div>
         <p>Progress against the four Scenario 1 requirements from the pilot requirements. The 9 June work covered the EDS article rendering and the article index; the backend-driven pieces (Content Hub, content selectors) are still to do.</p>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></p>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span><br>
+        <strong>Live URL:</strong> <a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></p>
         <ul class="checklist">
           <li class="check-item">
             <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
@@ -956,7 +967,8 @@
         </h2>
         <div class="section-rule"></div>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/classes-programs</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a> <span class="nav-status ns-done">complete</span></p>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/health-wellness/classes-programs</a> <span class="nav-status ns-done">complete</span><br>
+        <strong>Live URL:</strong> <a href="https://kp.pbyb.live/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-wellness/classes-programs</a></p>
         <p>All three Scenario 2 requirements are met. Two blocks drive the KP Lucid Search end to end — a <strong>topic-first</strong> flow (search → dynamic, filterable results → AEM-backed detail page). KP moved the API to a topic-first model (no proximity), so location now selects <strong>region</strong> (NCA/SCA) rather than a distance radius.</p>
         <ul class="checklist">
           <li class="check-item">
@@ -1011,7 +1023,8 @@
         </h2>
         <div class="section-rule"></div>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/health-encyclopedia</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span></p>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span><br>
+        <strong>Live URL:</strong> <a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></p>
 
         <p>Health Encyclopedia articles are sourced from <strong>Healthwise</strong>. Rather than a client-side block, each article is <strong>server-side rendered at the edge</strong> by a <strong>Fastly Compute</strong> function (the AEM <strong>Edge Functions</strong> boilerplate, in <code class="code-inline">aem-edge-functions/</code>) and injected into the published EDS page shell — so the article is present in the initial HTML (SEO, no layout shift, works without JS). The earlier <code class="code-inline">health-encyclopedia-article</code> block was removed in favor of this <strong>template + edge function</strong> approach.</p>
 
@@ -1122,7 +1135,8 @@
         </h2>
         <div class="section-rule"></div>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness/diabetes</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-done">complete</span></p>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/diabetes</a> <span class="nav-status ns-done">complete</span><br>
+        <strong>Live URL:</strong> <a href="https://kp.pbyb.live/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness/diabetes</a></p>
         <p>All three Scenario 4 requirements are met by the <code class="code-inline">article-collection</code> block, which fetches Diabetes health articles from KP Lucid Search and renders them as a dynamic, filterable grid with a detail view.</p>
         <ul class="checklist">
           <li class="check-item">
