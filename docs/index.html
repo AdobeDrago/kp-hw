@@ -483,7 +483,7 @@
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Scenario 1 · Landing Page <span class="nav-status ns-progress">In progress</span></div>
+      <div class="sidebar-label">Scenario 1 · Landing Page <span class="nav-status ns-done">Complete</span></div>
       <a class="sidebar-link" href="#s1-progress">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg>
         Progress
@@ -589,7 +589,7 @@
         <table class="spec-table">
           <thead><tr><th>Scenario</th><th>Validates</th><th>Status</th><th>Live URL</th></tr></thead>
           <tbody>
-            <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-progress">In progress</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></td></tr>
+            <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></td></tr>
             <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-wellness/classes-programs</a></td></tr>
             <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Health Encyclopedia</a></td><td>Edge Function (Fastly Compute) · Healthwise RHTML · server-side render into the EDS shell</td><td><span class="nav-status ns-progress">In progress</span></td><td><a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></td></tr>
             <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic article grid · filters &amp; modal</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness/diabetes</a></td></tr>
@@ -598,7 +598,7 @@
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>Progress to date.</strong> Work is focused on <strong>Scenario 1</strong>: the EDS article template and <code class="code-inline">healtharticles</code> query index landed 9 June (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> is <strong>complete</strong> — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks drive the KP Lucid Search end to end (topic-first) through the <code class="code-inline">cors-proxy</code> App Builder action (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2</a>). <strong>Scenario 4</strong> is also <strong>complete</strong> — the <code class="code-inline">article-collection</code> block renders the Diabetes article grid from Lucid Search with filters and a detail modal (see <a href="#scenario-4" style="color:#0d51b5;">Scenario 4</a>). <strong>Scenario 3</strong> is underway — Health Encyclopedia articles now render <strong>server-side at the edge</strong> via a Fastly Compute function that injects Healthwise content into the EDS page shell (see <a href="#scenario-3" style="color:#0d51b5;">Scenario 3 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Remaining work centers on <strong>Scenario 1</strong>'s Content Hub integration and Scenario 3's production rollout.</span>
+          <span><strong>Progress to date.</strong> <strong>Scenario 1</strong> is <strong>complete</strong> — the EDS article template and <code class="code-inline">healtharticles</code> query index (landed 9 June), the Content Hub fragment integration, the content selector, and the dynamic <code class="code-inline">related-articles-lucid</code> block (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> is <strong>complete</strong> — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks drive the KP Lucid Search end to end (topic-first) through the <code class="code-inline">cors-proxy</code> App Builder action (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2</a>). <strong>Scenario 4</strong> is also <strong>complete</strong> — the <code class="code-inline">article-collection</code> block renders the Diabetes article grid from Lucid Search with filters and a detail modal (see <a href="#scenario-4" style="color:#0d51b5;">Scenario 4</a>). <strong>Scenario 3</strong> is underway — Health Encyclopedia articles now render <strong>server-side at the edge</strong> via a Fastly Compute function that injects Healthwise content into the EDS page shell (see <a href="#scenario-3" style="color:#0d51b5;">Scenario 3 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Remaining work centers on <strong>Scenario 3</strong>'s production rollout.</span>
         </div>
 
         <table class="spec-table" style="margin-top:16px;">
@@ -680,7 +680,7 @@
             <tr>
               <td>1 · Landing</td>
               <td><a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a></td>
-              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a> <span class="nav-status ns-done">complete</span></td>
               <td><a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></td>
             </tr>
             <tr>
@@ -717,40 +717,40 @@
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg>
           </span>
           Scenario 1 — Health &amp; Wellness Landing Page
-          <span class="status-badge sb-progress">In progress</span>
+          <span class="status-badge sb-done">Complete</span>
         </h2>
         <div class="section-rule"></div>
-        <p>Progress against the four Scenario 1 requirements from the pilot requirements. The 9 June work covered the EDS article rendering and the article index; the backend-driven pieces (Content Hub, content selectors) are still to do.</p>
+        <p>All four Scenario 1 requirements from the pilot requirements are met: EDS article rendering and the article index (delivered 9 June) plus the backend-driven pieces — Content Hub fragment fetching, the content selector, and the dynamic related-articles block.</p>
         <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/northern-california/health-wellness</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-progress">building</span><br>
+        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">main--kp-hw--adobedrago.aem.page/northern-california/health-wellness</a> <span class="nav-status ns-done">complete</span><br>
         <strong>Live URL:</strong> <a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></p>
         <ul class="checklist">
           <li class="check-item">
-            <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Load page using EDS rendering</div>
-              <div class="check-note">Article pages render through the EDS pipeline via the new <code class="code-inline">article</code> template. The landing page itself (<code class="code-inline">/northern-california/health-wellness</code>) is not yet authored/built.</div>
+              <div class="check-note">The landing page and article pages render through the EDS pipeline via the <code class="code-inline">article</code> template.</div>
             </div>
           </li>
           <li class="check-item">
-            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Trigger Content Hub API call to fetch content fragments</div>
-              <div class="check-note">Not started — no Content Hub service layer yet.</div>
+              <div class="check-note">Content Hub fragments are fetched and rendered into the landing page.</div>
             </div>
           </li>
           <li class="check-item">
-            <span class="check-mark cm-partial"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 3.5a.75.75 0 01.75.75v3.5h3.5a.75.75 0 010 1.5h-3.5v3.5a.75.75 0 01-1.5 0v-3.5h-3.5a.75.75 0 010-1.5h3.5v-3.5A.75.75 0 018 3.5z"/></svg></span>
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Render related articles dynamically</div>
-              <div class="check-note">Data source exists — the <code class="code-inline">healtharticles</code> <code class="code-inline">query-index.json</code> provides the article feed. A block to fetch and render that feed dynamically still needs building.</div>
+              <div class="check-note">The <code class="code-inline">related-articles-lucid</code> block fetches the article feed and renders it dynamically (sourced from the <code class="code-inline">healtharticles</code> <code class="code-inline">query-index.json</code>).</div>
             </div>
           </li>
           <li class="check-item">
-            <span class="check-mark cm-todo"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="3"/></svg></span>
+            <span class="check-mark cm-done"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06l2.72 2.72 6.72-6.72a.75.75 0 011.06 0z"/></svg></span>
             <div class="check-body">
               <div class="check-title">Use content selector to fetch and render article content</div>
-              <div class="check-note">Not started — depends on the Content Hub integration above.</div>
+              <div class="check-note">The content selector fetches and renders article content via the Content Hub integration.</div>
             </div>
           </li>
         </ul>
