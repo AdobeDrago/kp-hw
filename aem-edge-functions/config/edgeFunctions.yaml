@@ -1,0 +1,21 @@
+kind: "EdgeFunctions"
+version: "1"
+data:
+  functions:
+    - name: kp-article
+      # Restrict outbound fetches to these hosts (pair with
+      # enforceExplicitBackends() in code for SSRF hardening).
+      origins:
+        - name: healthwise
+          domain: ixbapi.healthwise.net
+        - name: eds-prod
+          domain: main--kp-hw--adobedrago.aem.live
+        - name: eds-preview
+          domain: main--kp-hw--adobedrago.aem.page
+  # hw.key — define the underlying secret in Cloud Manager first, then this
+  # references it. Read in code via SecretStoreManager.getSecret('HW_KEY').
+  secrets:
+    - key: HW_KEY
+      value: ${{HW_KEY_SECRET}}
+  # Enable later to cache rendered articles at the edge (kv_default).
+  # kvs: true

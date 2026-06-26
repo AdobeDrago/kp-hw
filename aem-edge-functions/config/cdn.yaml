@@ -1,0 +1,19 @@
+kind: 'CDN'
+version: '1'
+data:
+  originSelectors:
+    rules:
+      # Route /…/article/<articleID> to the edge function. Excludes
+      # /…/article/default — that's the folder-mapped shell the function fetches,
+      # so excluding it is the loop guard (and lets /default serve the template).
+      - name: route-health-encyclopedia-article-to-edge-function
+        when:
+          allOf:
+            - reqProperty: path
+              matches: "^/northern-california/health-wellness/health-encyclopedia/article/[^/]+$"
+            - reqProperty: path
+              doesNotEqual: "/northern-california/health-wellness/health-encyclopedia/article/default"
+        action:
+          type: selectAemOrigin
+          originName: edgefunction-kp-article
+          skipCache: true
