@@ -6,6 +6,11 @@
 import { env } from 'fastly:env';
 import { parse } from 'node-html-parser';
 import { SecretStoreManager } from './lib/config.js';
+// Build-time-injected Healthwise key, used ONLY as a fallback when the secret
+// store is absent (Sandbox programs don't provision it). Generated — and
+// gitignored — from hw_key.local by scripts/gen-hw-key.mjs; never committed,
+// and empty on real (non-sandbox) environments where the store is used instead.
+import { HW_KEY_FALLBACK } from './hw-key.generated.js';
 
 // Folder-mapped article path: the page is authored at <ARTICLE_BASE>/default and
 // every <ARTICLE_BASE>/<articleID> URL renders it (commerce drop-in pattern).
@@ -199,7 +204,15 @@ export async function articleHandler(req) {
   const id = getArticleId(new URL(req.url).pathname);
   if (!id) return new Response('Missing article ID', { status: 400 });
 
-  const key = (await SecretStoreManager.getSecret('HW_KEY')).trim();
+  // Prefer the managed secret store (real environments). Sandbox programs don't
+  // provision the store, so getSecret() throws — fall back to the build-time key.
+  let key;
+  try {
+    key = (await SecretStoreManager.getSecret('HW_KEY')).trim();
+  } catch (err) {
+    key = (HW_KEY_FALLBACK || '').trim();
+    if (!key) throw err;
+  }
 
   // Parallel fetches. The shell is the /default doc — a different path than the
   // request — so fetching it from the origin won't re-enter this function (loop guard).
