@@ -1,5 +1,7 @@
 # Local secrets (never commit the real Healthwise key)
 hw_key.local
+# Build-time-injected key for the Sandbox fallback (generated from hw_key.local)
+src/hw-key.generated.js
 
 # Legacy tools
 deploy
