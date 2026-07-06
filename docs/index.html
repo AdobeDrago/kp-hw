@@ -1036,7 +1036,7 @@
           </div></li>
           <li class="step"><div class="step-num"></div><div class="step-body">
             <div class="step-title">CDN routes the article path to the function</div>
-            <p><code class="code-inline">cdn.yaml</code> matches <code class="code-inline">…/article/&lt;id&gt;</code> and selects the <code class="code-inline">kp-article</code> edge function (<code class="code-inline">skipCache</code>). It <strong>excludes</strong> <code class="code-inline">…/article/default</code> — that exclusion is the <strong>loop guard</strong> and lets <code class="code-inline">/default</code> serve the shell template.</p>
+            <p><code class="code-inline">cdn.yaml</code> matches <code class="code-inline">…/article/&lt;id&gt;</code> and selects the <code class="code-inline">kp-health-encyclopedia-article</code> edge function (<code class="code-inline">skipCache</code>). It <strong>excludes</strong> <code class="code-inline">…/article/default</code> — that exclusion is the <strong>loop guard</strong> and lets <code class="code-inline">/default</code> serve the shell template.</p>
           </div></li>
           <li class="step"><div class="step-num"></div><div class="step-body">
             <div class="step-title">Parallel fetch: shell + article</div>

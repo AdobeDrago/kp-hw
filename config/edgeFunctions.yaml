@@ -2,7 +2,7 @@ kind: "EdgeFunctions"
 version: "1"
 data:
   functions:
-    - name: kp-article
+    - name: kp-health-encyclopedia-article
       # Restrict outbound fetches to these hosts (pair with
       # enforceExplicitBackends() in code for SSRF hardening).
       origins:
