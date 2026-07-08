@@ -15,5 +15,5 @@ data:
               doesNotEqual: "/northern-california/health-wellness/health-encyclopedia/article/default"
         action:
           type: selectAemOrigin
-          originName: edgefunction-kp-article
+          originName: edgefunction-kp-health-encyclopedia-article
           skipCache: true
