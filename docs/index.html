@@ -513,7 +513,7 @@
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Scenario 3 · Health Encyclopedia <span class="nav-status ns-progress">In progress</span></div>
+      <div class="sidebar-label">Scenario 3 · Health Encyclopedia <span class="nav-status ns-done">Complete</span></div>
       <a class="sidebar-link" href="#scenario-3">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
         Health Encyclopedia
@@ -527,7 +527,7 @@
       </a>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Design system <span class="nav-status ns-progress">In progress</span></div>
+      <div class="sidebar-label">Design system <span class="nav-status ns-done">Complete</span></div>
       <a class="sidebar-link" href="#storybook">
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zm8.4 1.3l-.1 1.6a.2.2 0 00.32.17l.55-.42.47.36a.2.2 0 00.32-.17l-.13-2.03h.8v11.4H4.4V2.3h6.5z"/></svg>
         Storybook → EDS
@@ -591,14 +591,14 @@
           <tbody>
             <tr><td><a href="#s1-progress" style="color:var(--kp-blue);">1 · Health &amp; Wellness Landing</a></td><td>EDS rendering · Content Hub fragments · dynamic related articles</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness</a></td></tr>
             <tr><td><a href="#scenario-2" style="color:var(--kp-blue);">2 · Health Class Directory</a></td><td>Lucid Search · dynamic results · AEM-backed detail pages</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/health-wellness/classes-programs" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-wellness/classes-programs</a></td></tr>
-            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Health Encyclopedia</a></td><td>Edge Function (Fastly Compute) · Healthwise RHTML · server-side render into the EDS shell</td><td><span class="nav-status ns-progress">In progress</span></td><td><a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></td></tr>
+            <tr><td><a href="#scenario-3" style="color:var(--kp-blue);">3 · Health Encyclopedia</a></td><td>Edge Function (Fastly Compute) · Healthwise RHTML · server-side render into the EDS shell</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness/health-encyclopedia/article/acn8821" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/…/health-encyclopedia/article/acn8821</a></td></tr>
             <tr><td><a href="#scenario-4" style="color:var(--kp-blue);">4 · Diabetes Landing</a></td><td>Lucid Search · dynamic article grid · filters &amp; modal</td><td><span class="nav-status ns-done">Complete</span></td><td><a href="https://kp.pbyb.live/northern-california/health-wellness/diabetes" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/northern-california/health-wellness/diabetes</a></td></tr>
           </tbody>
         </table>
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span><strong>Progress to date.</strong> <strong>Scenario 1</strong> is <strong>complete</strong> — the EDS article template and <code class="code-inline">healtharticles</code> query index (landed 9 June), the Content Hub fragment integration, the content selector, and the dynamic <code class="code-inline">related-articles-lucid</code> block (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> is <strong>complete</strong> — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks drive the KP Lucid Search end to end (topic-first) through the <code class="code-inline">cors-proxy</code> App Builder action (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2</a>). <strong>Scenario 4</strong> is also <strong>complete</strong> — the <code class="code-inline">article-collection</code> block renders the Diabetes article grid from Lucid Search with filters and a detail modal (see <a href="#scenario-4" style="color:#0d51b5;">Scenario 4</a>). <strong>Scenario 3</strong> is underway — Health Encyclopedia articles now render <strong>server-side at the edge</strong> via a Fastly Compute function that injects Healthwise content into the EDS page shell (see <a href="#scenario-3" style="color:#0d51b5;">Scenario 3 progress</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios. Remaining work centers on <strong>Scenario 3</strong>'s production rollout.</span>
+          <span><strong>Progress to date.</strong> All four pilot scenarios are <strong>complete</strong>. <strong>Scenario 1</strong> — the EDS article template and <code class="code-inline">healtharticles</code> query index (landed 9 June), the Content Hub fragment integration, the content selector, and the dynamic <code class="code-inline">related-articles-lucid</code> block (see <a href="#s1-progress" style="color:#0d51b5;">Scenario 1 progress</a>). <strong>Scenario 2</strong> — the <code class="code-inline">classes-search</code> and <code class="code-inline">classes-results</code> blocks drive the KP Lucid Search end to end (topic-first) through the <code class="code-inline">cors-proxy</code> App Builder action (see <a href="#scenario-2" style="color:#0d51b5;">Scenario 2</a>). <strong>Scenario 3</strong> — Health Encyclopedia articles render <strong>server-side at the edge</strong> via a Fastly Compute function that injects Healthwise content into the EDS page shell (see <a href="#scenario-3" style="color:#0d51b5;">Scenario 3</a>). <strong>Scenario 4</strong> — the <code class="code-inline">article-collection</code> block renders the Diabetes article grid from Lucid Search with filters and a detail modal (see <a href="#scenario-4" style="color:#0d51b5;">Scenario 4</a>). In parallel, the <a href="#storybook" style="color:#0d51b5;">Storybook design-system</a> effort builds the immutable Global Library that feeds blocks across all scenarios.</span>
         </div>
 
         <table class="spec-table" style="margin-top:16px;">
@@ -678,6 +678,41 @@
           </a>
         </div>
 
+        <h3>Authoring (DA) — where content is edited</h3>
+        <p>Content for every scenario is authored in <strong>Document Authoring (DA)</strong> at <a href="https://da.live/#/adobedrago/kp-hw" target="_blank" rel="noopener" style="color:var(--kp-blue);">da.live/#/adobedrago/kp-hw</a>. Edit a page in DA, then <strong>Preview</strong>/<strong>Publish</strong> to push it to the EDS preview and live environments above. The DA path mirrors the page path.</p>
+        <div class="url-grid">
+          <a class="url-card" href="https://da.live/#/adobedrago/kp-hw" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Author root</div>
+            <div class="url-card-title">DA — kp-hw</div>
+            <div class="url-card-url">da.live/#/adobedrago/kp-hw</div>
+            <div class="url-card-desc">Top of the authoring tree for the project</div>
+          </a>
+          <a class="url-card" href="https://da.live/#/adobedrago/kp-hw/northern-california/health-wellness" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 1 · Landing</div>
+            <div class="url-card-title">Health &amp; Wellness landing</div>
+            <div class="url-card-url">…/northern-california/health-wellness</div>
+            <div class="url-card-desc">Landing page + healtharticle documents</div>
+          </a>
+          <a class="url-card" href="https://da.live/#/adobedrago/kp-hw/health-wellness/classes-programs" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 2 · Class Directory</div>
+            <div class="url-card-title">Classes &amp; programs</div>
+            <div class="url-card-url">…/health-wellness/classes-programs</div>
+            <div class="url-card-desc">Search/results page shell</div>
+          </a>
+          <a class="url-card" href="https://da.live/#/adobedrago/kp-hw/northern-california/health-wellness/health-encyclopedia/article/default" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 3 · Encyclopedia</div>
+            <div class="url-card-title">Article shell (default)</div>
+            <div class="url-card-url">…/health-encyclopedia/article/default</div>
+            <div class="url-card-desc">The folder-mapped shell the edge function injects Healthwise content into</div>
+          </a>
+          <a class="url-card" href="https://da.live/#/adobedrago/kp-hw/northern-california/health-wellness/diabetes" target="_blank" rel="noopener">
+            <div class="url-card-label"><span class="dot dot-navy"></span>Scenario 4 · Diabetes</div>
+            <div class="url-card-title">Diabetes landing</div>
+            <div class="url-card-url">…/northern-california/health-wellness/diabetes</div>
+            <div class="url-card-desc">Article-grid landing page</div>
+          </a>
+        </div>
+
         <h3>Migration map · live → building</h3>
         <p>Each pilot scenario migrates a production AEM MS page to its EDS equivalent. The EDS target paths mirror the production URLs; most are not authored yet (404 until built).</p>
         <table class="spec-table">
@@ -698,8 +733,8 @@
             <tr>
               <td>3 · Health Encyclopedia</td>
               <td><a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/health-encyclopedia</a></td>
-              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span></td>
-              <td><a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></td>
+              <td><a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/acn8821" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-done">complete</span></td>
+              <td><a href="https://kp.pbyb.live/northern-california/health-wellness/health-encyclopedia/article/acn8821" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/…/health-encyclopedia/article/acn8821</a></td>
             </tr>
             <tr>
               <td>4 · Diabetes</td>
@@ -1019,12 +1054,11 @@
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
           </span>
           Scenario 3 — Health Encyclopedia
-          <span class="status-badge sb-progress">In progress</span>
+          <span class="status-badge sb-done">Complete</span>
         </h2>
         <div class="section-rule"></div>
-        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-wellness/health-encyclopedia</a><br>
-        <strong>Building (EDS):</strong> <a href="https://main--kp-hw--adobedrago.aem.page/northern-california/health-wellness/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/article/&lt;articleID&gt;</a> <span class="nav-status ns-progress">building</span><br>
-        <strong>Live URL:</strong> <a href="https://kp.pbyb.live/health-encyclopedia/article/" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/health-encyclopedia/article/&lt;articleID&gt;</a></p>
+        <p><strong>Live (production):</strong> <a href="https://healthy.kaiserpermanente.org/health-wellness/health-encyclopedia/he.acn8821" target="_blank" rel="noopener" style="color:var(--kp-blue);">…/health-encyclopedia/he.acn8821</a> <span class="nav-status ns-done">live</span><br>
+        <strong>EDS (edge function):</strong> <a href="https://kp.pbyb.live/northern-california/health-wellness/health-encyclopedia/article/acn8821" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/…/article/acn8821</a> <span class="nav-status ns-done">live</span></p>
 
         <p>Health Encyclopedia articles are sourced from <strong>Healthwise</strong>. Rather than a client-side block, each article is <strong>server-side rendered at the edge</strong> by a <strong>Fastly Compute</strong> function (the AEM <strong>Edge Functions</strong> boilerplate, in <code class="code-inline">aem-edge-functions/</code>) and injected into the published EDS page shell — so the article is present in the initial HTML (SEO, no layout shift, works without JS). The earlier <code class="code-inline">health-encyclopedia-article</code> block was removed in favor of this <strong>template + edge function</strong> approach.</p>
 
@@ -1120,7 +1154,7 @@
 
         <div class="notice info">
           <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm6.5-.25A.75.75 0 017.25 7h1a.75.75 0 01.75.75v2.75h.25a.75.75 0 010 1.5h-2a.75.75 0 010-1.5h.25v-2h-.25a.75.75 0 01-.75-.75zM8 6a1 1 0 100-2 1 1 0 000 2z"/></svg>
-          <span>Open <code class="code-inline">http://localhost:7676/northern-california/health-wellness/health-encyclopedia/article/&lt;articleID&gt;</code> to see a real Healthwise article rendered into the local shell.</span>
+          <span>Open <code class="code-inline">http://localhost:7676/northern-california/health-wellness/health-encyclopedia/article/&lt;articleID&gt;</code> to see a real Healthwise article rendered into the local shell. Or try the live edge function directly: <a href="https://kp.pbyb.live/northern-california/health-wellness/health-encyclopedia/article/acn8821" target="_blank" rel="noopener" style="color:var(--kp-blue);">kp.pbyb.live/…/article/acn8821</a>.</span>
         </div>
       </section>
 
@@ -1180,7 +1214,7 @@
             <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M2.5 1A1.5 1.5 0 001 2.5v11A1.5 1.5 0 002.5 15h11a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0013.5 1h-11zm8.4 1.3l-.1 1.6a.2.2 0 00.32.17l.55-.42.47.36a.2.2 0 00.32-.17l-.13-2.03h.8v11.4H4.4V2.3h6.5z"/></svg>
           </span>
           Storybook Design System
-          <span class="status-badge sb-progress">In progress</span>
+          <span class="status-badge sb-done">Complete</span>
         </h2>
         <div class="section-rule"></div>
         <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, with <strong>Storybook as the design source of truth</strong>. This is the high-level workflow and recommended architecture; the detailed decisions, tooling, and status follow below.</p>

@@ -18,6 +18,84 @@ For projects that want a few more batteries. Built by the team who brought you d
 1. Open the `{repo}` folder in your favorite code editor and buil something.
 1. **Recommended:** Install common npm packages like linting and testing: `npm i`.
 
+## Deployment (CI/CD)
+
+Edge Delivery Services has no build step and no deploy step. AEM Code Sync watches the GitHub repo and serves code directly from branches.
+
+- Pushing to a branch deploys to that branch's preview environment.
+- Merging to `main` deploys to production.
+- Content and code deploy independently: authors publish content, developers push code.
+
+![How deployment works in Edge Delivery Services](docs/eds-deploy-model.svg)
+
+### Environments
+
+| Environment | URL | Updated by |
+|---|---|---|
+| Local | `http://localhost:3000` (`aem up`) | Your local code, with content proxied from the preview environment (`.aem.page`) |
+| Feature preview | `https://{branch}--kp-hw--AdobeDrago.aem.page/` | Push to that branch |
+| Production preview | `https://main--kp-hw--AdobeDrago.aem.page/` | Merge to `main` |
+| Production live | `https://main--kp-hw--AdobeDrago.aem.live/` | Author publish in DA |
+
+Content is authored in Document Authoring: https://da.live/#/AdobeDrago/kp-hw
+
+### Daily workflow
+
+1. **Branch** — create a slash-free branch name (slashes break the preview URL hostname).
+2. **Develop** — run `aem up` and iterate against `http://localhost:3000`.
+3. **Lint** — run `npm run lint` before pushing (auto-fix with `npx eslint . --fix` and `npx stylelint --fix`). No pre-commit hook enforces this, so it's on you.
+4. **Test** — run `npm test` if you touched block logic or utilities.
+5. **Push** — AEM Code Sync auto-publishes your branch to its feature preview.
+6. **Open a PR** to `main` and include a feature-preview link to a page that demonstrates the change.
+7. **Verify checks** with `gh pr checks`, then request review.
+
+### PR gates
+
+- **AEM Code Sync** — confirms the branch published cleanly; this status must be green.
+- **PageSpeed Insights** — run against the feature preview URL and aim for a score of 100.
+- **Lint** — `npm run lint` must pass. Run it locally; it is not enforced by a git hook.
+
+### Linting
+
+`npm run lint` runs two linters in sequence — run either on its own while iterating:
+
+- `npm run lint:js` — ESLint over the whole repo, using [`@adobe/eslint-config-helix`](https://github.com/adobe/helix-eslint-config) (Airbnb-based). Config: [`eslint.config.js`](eslint.config.js).
+- `npm run lint:css` — Stylelint over `blocks/**/*.css` and `styles/*.css`, using `stylelint-config-standard`. Config: [`.stylelintrc.json`](.stylelintrc.json).
+
+There is no `lint:fix` script — auto-fix with the linters directly:
+
+```sh
+npx eslint . --fix
+npx stylelint "blocks/**/*.css" "styles/*.css" --fix
+```
+
+Notes:
+- `deps/` and the Storybook build output (`tools/storybook/dist`, `tools/storybook/storybook-static`) are ignored by ESLint; `blocks/header/header.css` and `header.overrides.css` are ignored by Stylelint (see `.stylelintignore`).
+- No pre-commit hook runs lint, so run it yourself before pushing. A failing lint will not block Code Sync from publishing your branch, but reviewers will expect it green.
+
+### Performance (PageSpeed Insights)
+
+Edge Delivery ships fast by default, so the goal is to avoid regressing it. Target a PSI score of 100 across all four categories (Performance, Accessibility, Best Practices, SEO).
+
+1. Push your branch so it publishes to its feature preview.
+2. Run PSI against the preview URL: `https://pagespeed.web.dev/analysis?url={feature-preview-url}` — test the **mobile** tab, which is the stricter score.
+3. Fix regressions before opening the PR.
+
+Most regressions come from a small set of causes:
+- Unoptimized committed assets — pre-optimize anything in `img/`, `icons/`, `fonts/`. Author-uploaded images are optimized automatically; committed ones are not.
+- Render-blocking or oversized JavaScript loaded eagerly — defer non-critical work to `scripts/delayed.js`.
+- Layout shift (CLS) from images without dimensions or late-loading fonts.
+- CSS that isn't needed for LCP loaded in `styles/styles.css` instead of `styles/lazy-styles.css`.
+
+See [Keeping it 100](https://www.aem.live/developer/keeping-it-100) for the full performance guide.
+
+### Gotchas
+
+- The feature preview needs a push — uncommitted local code is only visible at `localhost:3000`.
+- Never modify `scripts/aem.js`.
+- Committed assets (images, fonts, icons) must be pre-optimized — nothing optimizes them for you, unlike author-uploaded images.
+- Production content goes live only when an author publishes in DA, not when code merges to `main`.
+
 ## Features
 
 ### Localization & globalization
@@ -194,3 +272,6 @@ const data = await fetchResults({
 ```json
 { "url": "<full-kp-search-url>" }
 ```
+
+<!-- demo PR: no-op change to exercise the branch/PR workflow -->
+
