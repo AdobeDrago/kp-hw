@@ -1,0 +1,121 @@
+import { expect } from '@esm-bundle/chai';
+import {
+  buildListUrl,
+  toSiteRelativePath,
+  stripHtmlExt,
+  buildFragmentPath,
+  toItems,
+  buildBreadcrumbs,
+  escapeHtml,
+  buildInsertHtml,
+} from '../../../tools/fragments/fragment-utils.js';
+
+describe('fragment-utils.js', () => {
+  describe('buildListUrl', () => {
+    it('builds the DA admin list URL for a path', () => {
+      const url = buildListUrl('adobedrago', 'kp-hw', '/fragments/nav');
+      expect(url).to.equal('https://admin.da.live/list/adobedrago/kp-hw/fragments/nav');
+    });
+  });
+
+  describe('toSiteRelativePath', () => {
+    it('strips the org/repo prefix from a DA-absolute path', () => {
+      const result = toSiteRelativePath('/adobedrago/kp-hw/fragments/nav', 'adobedrago', 'kp-hw');
+      expect(result).to.equal('/fragments/nav');
+    });
+
+    it('returns the path unchanged when the prefix does not match', () => {
+      const result = toSiteRelativePath('/other/path', 'adobedrago', 'kp-hw');
+      expect(result).to.equal('/other/path');
+    });
+  });
+
+  describe('stripHtmlExt', () => {
+    it('removes a trailing .html extension', () => {
+      expect(stripHtmlExt('/fragments/404.html')).to.equal('/fragments/404');
+    });
+
+    it('leaves paths without .html unchanged', () => {
+      expect(stripHtmlExt('/fragments/nav')).to.equal('/fragments/nav');
+    });
+  });
+
+  describe('buildFragmentPath', () => {
+    it('strips both the org/repo prefix and the .html extension', () => {
+      const result = buildFragmentPath('/adobedrago/kp-hw/fragments/nav/main-nav.html', 'adobedrago', 'kp-hw');
+      expect(result).to.equal('/fragments/nav/main-nav');
+    });
+  });
+
+  describe('toItems', () => {
+    const daItems = [
+      {
+        path: '/adobedrago/kp-hw/fragments/404.html', name: '404', ext: 'html', lastModified: 1,
+      },
+      { path: '/adobedrago/kp-hw/fragments/promos', name: 'promos' },
+      { path: '/adobedrago/kp-hw/fragments/nav', name: 'nav' },
+      {
+        path: '/adobedrago/kp-hw/fragments/tabs-example.html', name: 'tabs-example', ext: 'html', lastModified: 2,
+      },
+      {
+        path: '/adobedrago/kp-hw/fragments/config.json', name: 'config', ext: 'json', lastModified: 3,
+      },
+    ];
+
+    it('sorts folders first (alphabetically), then files (alphabetically)', () => {
+      const items = toItems(daItems, 'adobedrago', 'kp-hw');
+      expect(items.map((item) => item.name)).to.deep.equal(['nav', 'promos', '404', 'tabs-example']);
+    });
+
+    it('marks folders and files with the correct type', () => {
+      const items = toItems(daItems, 'adobedrago', 'kp-hw');
+      expect(items.find((item) => item.name === 'nav').type).to.equal('folder');
+      expect(items.find((item) => item.name === '404').type).to.equal('file');
+    });
+
+    it('filters out items with a non-html extension', () => {
+      const items = toItems(daItems, 'adobedrago', 'kp-hw');
+      expect(items.some((item) => item.name === 'config')).to.equal(false);
+    });
+
+    it('converts folder paths to site-relative form', () => {
+      const items = toItems(daItems, 'adobedrago', 'kp-hw');
+      expect(items.find((item) => item.name === 'nav').path).to.equal('/fragments/nav');
+    });
+
+    it('converts file paths to site-relative form without the .html extension', () => {
+      const items = toItems(daItems, 'adobedrago', 'kp-hw');
+      expect(items.find((item) => item.name === '404').path).to.equal('/fragments/404');
+    });
+  });
+
+  describe('buildBreadcrumbs', () => {
+    it('returns a single root crumb for the fragments root', () => {
+      expect(buildBreadcrumbs('/fragments')).to.deep.equal([
+        { label: 'Fragments', path: '/fragments' },
+      ]);
+    });
+
+    it('returns one crumb per path segment below the root', () => {
+      const crumbs = buildBreadcrumbs('/fragments/nav/deep');
+      expect(crumbs).to.deep.equal([
+        { label: 'Fragments', path: '/fragments' },
+        { label: 'nav', path: '/fragments/nav' },
+        { label: 'deep', path: '/fragments/nav/deep' },
+      ]);
+    });
+  });
+
+  describe('escapeHtml', () => {
+    it('escapes HTML-significant characters', () => {
+      expect(escapeHtml('<a>&"</a>')).to.equal('&lt;a&gt;&amp;&quot;&lt;/a&gt;');
+    });
+  });
+
+  describe('buildInsertHtml', () => {
+    it('builds a fragment link with the path as both href and text', () => {
+      const html = buildInsertHtml('/fragments/nav/main-nav');
+      expect(html).to.equal('<a href="/fragments/nav/main-nav">/fragments/nav/main-nav</a>');
+    });
+  });
+});
