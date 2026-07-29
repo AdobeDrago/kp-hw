@@ -8,6 +8,7 @@ import {
   buildBreadcrumbs,
   escapeHtml,
   buildInsertHtml,
+  buildPreviewUrl,
 } from '../../../tools/fragments/fragment-utils.js';
 
 describe('fragment-utils.js', () => {
@@ -116,6 +117,18 @@ describe('fragment-utils.js', () => {
     it('builds a fragment link with the path as both href and text', () => {
       const html = buildInsertHtml('/fragments/nav/main-nav');
       expect(html).to.equal('<a href="/fragments/nav/main-nav">/fragments/nav/main-nav</a>');
+    });
+  });
+
+  describe('buildPreviewUrl', () => {
+    it('builds an aem.page preview URL for the given ref/repo/org', () => {
+      const url = buildPreviewUrl('/fragments/nav/main-nav', 'adobedrago', 'kp-hw', 'main');
+      expect(url).to.equal('https://main--kp-hw--adobedrago.aem.page/fragments/nav/main-nav');
+    });
+
+    it('defaults to the main ref when none is given', () => {
+      const url = buildPreviewUrl('/fragments/404', 'adobedrago', 'kp-hw');
+      expect(url).to.equal('https://main--kp-hw--adobedrago.aem.page/fragments/404');
     });
   });
 });

@@ -66,3 +66,7 @@ export function buildInsertHtml(fragmentPath) {
   const safe = escapeHtml(fragmentPath);
   return `<a href="${safe}">${safe}</a>`;
 }
+
+export function buildPreviewUrl(fragmentPath, org, repo, ref = 'main') {
+  return `https://${ref}--${repo}--${org}.aem.page${fragmentPath}`;
+}

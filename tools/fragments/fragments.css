@@ -35,8 +35,24 @@
 
 .fragments-app {
   display: flex;
-  flex-direction: column;
   height: 100%;
+}
+
+.pane-left {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid rgb(222 222 222);
+  overflow: hidden;
+}
+
+.pane-right {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  background: #f7f7f7;
 }
 
 .breadcrumbs {
@@ -95,6 +111,10 @@
   background: #efefef;
 }
 
+.item-btn.is-selected {
+  background: #e8e6fd;
+}
+
 .item-icon {
   font-size: 16px;
 }
@@ -111,4 +131,46 @@
   color: #fff;
   font-weight: 700;
   cursor: pointer;
+}
+
+.preview-placeholder {
+  margin: auto;
+  color: #666;
+  font-size: 14px;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #fff;
+  border-bottom: 1px solid rgb(222 222 222);
+}
+
+.preview-path {
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  color: #333;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-insert {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 18px;
+  background-image: linear-gradient(95.85deg, #b539c8 0%, #7155fa 66%, #3b63fb 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.preview-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
 }

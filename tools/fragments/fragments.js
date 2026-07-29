@@ -2,7 +2,7 @@ import DA_SDK from 'https://da.live/nx/utils/sdk.js';
 import { LitElement, html } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
 import {
-  buildListUrl, toItems, buildBreadcrumbs, buildInsertHtml,
+  buildListUrl, toItems, buildBreadcrumbs, buildInsertHtml, buildPreviewUrl,
 } from './fragment-utils.js';
 
 const styles = await loadStyle(import.meta.url);
@@ -15,9 +15,11 @@ class FragmentPicker extends LitElement {
     org: { attribute: false },
     repo: { attribute: false },
     token: { attribute: false },
+    ref: { attribute: false },
     _currentPath: { state: true },
     _items: { state: true },
     _status: { state: true },
+    _selected: { state: true },
   };
 
   connectedCallback() {
@@ -27,6 +29,7 @@ class FragmentPicker extends LitElement {
     this._items = [];
     this._requestId = 0;
     this._status = 'loading';
+    this._selected = null;
     this.loadItems();
   }
 
@@ -53,17 +56,24 @@ class FragmentPicker extends LitElement {
 
   handleCrumbClick(path) {
     this._currentPath = path;
+    this._selected = null;
     this.loadItems();
   }
 
   handleItemClick(item) {
     if (item.type === 'folder') {
       this._currentPath = item.path;
+      this._selected = null;
       this.loadItems();
       return;
     }
+    this._selected = item;
+  }
+
+  handleInsertClick() {
+    if (!this._selected) return;
     this.dispatchEvent(new CustomEvent('fragment-select', {
-      detail: { insertHtml: buildInsertHtml(item.path) },
+      detail: { insertHtml: buildInsertHtml(this._selected.path) },
       bubbles: true,
       composed: true,
     }));
@@ -101,7 +111,9 @@ class FragmentPicker extends LitElement {
       <ul class="item-list">
         ${this._items.map((item) => html`
           <li class="item item-${item.type}">
-            <button class="item-btn" @click=${() => this.handleItemClick(item)}>
+            <button
+              class="item-btn ${this._selected === item ? 'is-selected' : ''}"
+              @click=${() => this.handleItemClick(item)}>
               <span class="item-icon" aria-hidden="true">${item.type === 'folder' ? '📁' : '📄'}</span>
               <span class="item-name">${item.name}</span>
             </button>
@@ -111,11 +123,42 @@ class FragmentPicker extends LitElement {
     `;
   }
 
+  renderLeftPane() {
+    return html`
+      <div class="pane-left">
+        ${this.renderCrumbs()}
+        ${this._status === 'ready' ? this.renderItems() : this.renderStatus()}
+      </div>
+    `;
+  }
+
+  renderRightPane() {
+    if (!this._selected) {
+      return html`
+        <div class="pane-right">
+          <p class="preview-placeholder">Select a fragment to see a preview.</p>
+        </div>
+      `;
+    }
+
+    const previewUrl = buildPreviewUrl(this._selected.path, this.org, this.repo, this.ref);
+
+    return html`
+      <div class="pane-right">
+        <div class="preview-header">
+          <p class="preview-path">${this._selected.path}</p>
+          <button class="btn-insert" @click=${() => this.handleInsertClick()}>Insert</button>
+        </div>
+        <iframe class="preview-frame" src=${previewUrl} title="${this._selected.name} preview"></iframe>
+      </div>
+    `;
+  }
+
   render() {
     return html`
       <div class="fragments-app">
-        ${this.renderCrumbs()}
-        ${this._status === 'ready' ? this.renderItems() : this.renderStatus()}
+        ${this.renderLeftPane()}
+        ${this.renderRightPane()}
       </div>
     `;
   }
@@ -129,6 +172,7 @@ customElements.define(EL_NAME, FragmentPicker);
   const picker = document.createElement(EL_NAME);
   picker.org = context.org;
   picker.repo = context.repo;
+  picker.ref = context.ref;
   picker.token = token;
 
   picker.addEventListener('fragment-select', (e) => {
