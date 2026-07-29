@@ -64,7 +64,7 @@ export function escapeHtml(value) {
 
 export function buildInsertHtml(fragmentPath) {
   const safe = escapeHtml(fragmentPath);
-  return `<a href="${safe}">${safe}</a>`;
+  return `<p><a href="${safe}">${safe}</a></p>`;
 }
 
 export function buildPreviewUrl(fragmentPath, org, repo, ref = 'main') {
