@@ -1,3 +1,38 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.status-container {
+  display: flex;
+  place-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 20px;
+  height: 90%;
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+.status-container .status {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+}
+
+
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 .fragments-app {
   display: flex;
   flex-direction: column;
