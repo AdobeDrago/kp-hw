@@ -114,9 +114,9 @@ describe('fragment-utils.js', () => {
   });
 
   describe('buildInsertHtml', () => {
-    it('wraps a fragment link in its own paragraph, path as both href and text', () => {
+    it('builds a Fragment block table with the path as both href and link text', () => {
       const html = buildInsertHtml('/fragments/nav/main-nav');
-      expect(html).to.equal('<p><a href="/fragments/nav/main-nav">/fragments/nav/main-nav</a></p>');
+      expect(html).to.equal('<table><tr><td>Fragment</td></tr><tr><td><a href="/fragments/nav/main-nav">/fragments/nav/main-nav</a></td></tr></table>');
     });
   });
 

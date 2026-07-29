@@ -94,18 +94,25 @@ function getRequestPath(a) {
   return a.href;
 }
 
-export default async function init(a) {
+export default async function init(el) {
+  // Supports two invocations: an anchor directly (the existing auto-block
+  // path from scripts/ak.js decorateLink()), or a real "Fragment" block div
+  // (e.g. authored as a table, or inserted by the fragments library plugin)
+  // whose content cell wraps the link.
+  const a = el.tagName === 'A' ? el : el.querySelector('a[href]');
+  if (!a) return;
+
   const path = getRequestPath(a);
 
   const fragment = await loadFragment(path);
   if (fragment) {
-    const elToReplace = getReplaceEl(a);
+    const elToReplace = getReplaceEl(el);
     const sections = fragment.querySelectorAll(':scope > .section');
     const children = sections.length === 1
       ? fragment.querySelectorAll(':scope > *')
       : [fragment];
     for (const [idx, child] of children.entries()) {
-      // If relative, create a unique ID to help fragments be identified after being inserted into the page
+      // If relative, create a unique ID to help identify fragments once inserted into the page
       if (path.startsWith('/')) child.id = btoa(encodeURIComponent(`${path}/${idx + 1}`));
       elToReplace.insertAdjacentElement('afterend', child);
     }
