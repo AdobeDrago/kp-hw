@@ -42,8 +42,10 @@ class FragmentPicker extends LitElement {
       if (requestId !== this._requestId) return;
       this._items = toItems(json, this.org, this.repo);
       this._status = this._items.length ? 'ready' : 'empty';
-    } catch {
+    } catch (error) {
       if (requestId !== this._requestId) return;
+      // eslint-disable-next-line no-console
+      console.error('Failed to load fragments', error);
       this._items = [];
       this._status = 'error';
     }
