@@ -55,7 +55,7 @@
   font-weight: 300;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #000;
+  color: var(--cr-navy);
   line-height: 1;
 }
 

@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #FFFFFF;
+  background: var(--ds-color-white);
   border-radius: 16px;
 }
 
@@ -206,7 +206,7 @@
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #FFFFFF;
+  background: var(--ds-color-white);
   border-radius: 16px;
   border-radius: 16px;
 }
@@ -473,7 +473,7 @@
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #FFFFFF;
+  background: var(--ds-color-white);
   border-radius: 16px;
   flex-direction: row;
   padding: 1rem;
@@ -635,7 +635,7 @@
   display: flex;
   flex-direction: column;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #FFFFFF;
+  background: var(--ds-color-white);
   border-radius: 1rem;
 }
 
@@ -890,7 +890,7 @@
   padding: 0 0.25rem;
   background-color: #0D1C3D;
   font-size: 0.875rem;
-  color: #ffffff;
+  color: var(--ds-color-white);
   border-radius: 0.25rem;
 }
 
