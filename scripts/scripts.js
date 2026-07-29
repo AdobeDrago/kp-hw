@@ -21,6 +21,25 @@ const linkBlocks = [
 // Blocks with self-managed styles
 const components = ['fragment', 'schedule'];
 
+function setMetaOverride(name, content) {
+  let meta = document.head.querySelector(`meta[name="${name}"]`);
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = name;
+    document.head.append(meta);
+  }
+  meta.content = content;
+}
+
+// Fragments are meant to be embedded (fragment.js pulls out `main > div`
+// sections only), so header/footer chrome is never wanted when one is
+// loaded standalone, e.g. the fragments library plugin's live preview.
+export function suppressFragmentChrome() {
+  if (!window.location.pathname.startsWith('/fragments')) return;
+  setMetaOverride('header', 'off');
+  setMetaOverride('footer', 'off');
+}
+
 // How to decorate an area before loading it
 const decorateArea = ({ area = document }) => {
   const eagerLoad = (parent, selector) => {
@@ -79,6 +98,7 @@ async function loadTemplateJS() {
 
 export async function loadPage() {
   setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
+  suppressFragmentChrome();
   await loadArea();
   await loadTemplateJS();
 }
