@@ -1,5 +1,17 @@
-export const PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-api';
+import { getSiteConfig } from './site-config.js';
+
+// Fallback proxy endpoint, used only when the `site-config` sheet is
+// unreachable (e.g. unit tests / Storybook). In the browser the effective
+// endpoint comes from site-config's `lucidSearchAPI` key for the current env.
+export const DEFAULT_PROXY_ENDPOINT = 'https://1394629-808magentadolphin-stage.adobeio-static.net/api/v1/web/example/kp-api';
 export const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';
+
+// Resolve the proxy endpoint for the current environment, falling back to the
+// hardcoded default if site-config doesn't provide one.
+async function getProxyEndpoint() {
+  const cfg = await getSiteConfig();
+  return cfg.lucidSearchAPI || DEFAULT_PROXY_ENDPOINT;
+}
 
 // Region of practice. Derived from the user's location; defaults to
 // N. California (the region KP's sample calls use) when none is given.
@@ -55,8 +67,9 @@ export function buildKpSearchUrl({
 // CORS headers on any origin, so the browser can never reach it directly —
 // there's no host (main, branch preview, or localhost) where a direct call works.
 export async function callProxy(kpUrl, body) {
+  const endpoint = await getProxyEndpoint();
   const payload = body ? { url: kpUrl, body } : { url: kpUrl };
-  const res = await fetch(PROXY_ENDPOINT, {
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

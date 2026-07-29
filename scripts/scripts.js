@@ -1,6 +1,39 @@
 import { loadArea, setConfig, getConfig } from './ak.js';
 
+// The site-config loader lives in a standalone module (no page-bootstrap side
+// effects) so blocks/utils can import it freely; re-exported here for convenience.
+export { getSiteConfig } from '../utils/site-config.js';
+
 const hostnames = ['authorkit.dev'];
+
+// Production hostnames — the ONLY hosts that resolve to the `prod` site-config
+// tab. Add real production domain(s) here; anything not listed can never be
+// `prod`, so a stray branch preview can't accidentally read production config.
+const PROD_HOSTS = ['kp.pbyb.live'];
+
+/**
+ * Decide which environment the current page is running in, mapping the hostname
+ * to a `site-config` sheet tab. The resolved value is stored on the app config
+ * (see loadPage) so utils/blocks pick the right `site-config.json?sheet=<env>`.
+ * @returns {'dev'|'qa'|'stage'|'prod'}
+ */
+export function getEnv() {
+  const { hostname } = window.location;
+
+  // Explicit production domains.
+  if (PROD_HOSTS.includes(hostname)) return 'prod';
+
+  // EDS URLs look like <branch>--<repo>--<owner>.aem.(page|live). A branch
+  // literally named for an environment wins, e.g. qa--… or stage--….
+  const branch = hostname.split('--')[0];
+  if (branch === 'qa' || branch === 'stage') return branch;
+
+  // Live edge (.aem.live / .hlx.live) with no env branch → stage.
+  if (hostname.endsWith('.aem.live') || hostname.endsWith('.hlx.live')) return 'stage';
+
+  // localhost + preview (.aem.page / .hlx.page) → dev.
+  return 'dev';
+}
 
 const locales = {
   '': { lang: 'en' },
@@ -97,7 +130,9 @@ async function loadTemplateJS() {
 }
 
 export async function loadPage() {
-  setConfig({ hostnames, locales, linkBlocks, components, decorateArea });
+  setConfig({
+    hostnames, locales, linkBlocks, components, decorateArea, env: getEnv(),
+  });
   suppressFragmentChrome();
   await loadArea();
   await loadTemplateJS();
