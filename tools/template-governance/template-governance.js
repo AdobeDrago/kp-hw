@@ -2,7 +2,7 @@ import DA_SDK from 'https://da.live/nx/utils/sdk.js';
 import { LitElement, html } from '../../deps/lit/dist/index.js';
 import loadStyle from '../../scripts/utils/styles.js';
 import {
-  buildPreviewUrl,
+  buildSourceUrl,
   resolveTemplateFromHtml,
   parseContentDaUrl,
   findTemplateEntry,
@@ -16,27 +16,27 @@ const styles = await loadStyle(import.meta.url);
 const EL_NAME = 'template-governance-report';
 const TEMPLATES_JSON_PATH = '/docs/library/templates.json';
 
-async function fetchText(url) {
-  const resp = await fetch(url);
+async function fetchText(url, token) {
+  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+  const resp = await fetch(url, { headers });
   if (!resp.ok) throw new Error(`Request failed: ${resp.status}`);
   return resp.text();
 }
 
-async function fetchReferenceHtml(templatesJsonUrl, templateName) {
-  const json = JSON.parse(await fetchText(templatesJsonUrl));
+async function fetchReferenceHtml(templatesJsonUrl, templateName, token) {
+  const json = JSON.parse(await fetchText(templatesJsonUrl, token));
   const entry = findTemplateEntry(json.data || [], templateName);
   if (!entry || typeof entry.value !== 'string') return null;
-  const parsed = parseContentDaUrl(entry.value);
-  if (!parsed) return null;
-  return fetchText(buildPreviewUrl(parsed.path, parsed.org, parsed.repo, 'main'));
+  if (!parseContentDaUrl(entry.value)) return null;
+  return fetchText(entry.value, token);
 }
 
-async function buildReport(org, repo, ref, currentHtml) {
+async function buildReport(org, repo, currentHtml, token) {
   const templateName = resolveTemplateFromHtml(currentHtml);
   if (!templateName) return { status: 'no-template' };
 
-  const templatesJsonUrl = buildPreviewUrl(TEMPLATES_JSON_PATH, org, repo, ref);
-  const referenceHtml = await fetchReferenceHtml(templatesJsonUrl, templateName);
+  const templatesJsonUrl = buildSourceUrl(TEMPLATES_JSON_PATH, org, repo);
+  const referenceHtml = await fetchReferenceHtml(templatesJsonUrl, templateName, token);
   if (!referenceHtml) return { status: 'no-reference', template: templateName };
 
   const blockDiff = diffSets(extractBlockNames(currentHtml), extractBlockNames(referenceHtml));
@@ -63,8 +63,8 @@ class TemplateGovernanceReport extends LitElement {
   static properties = {
     org: { attribute: false },
     repo: { attribute: false },
-    ref: { attribute: false },
     path: { attribute: false },
+    token: { attribute: false },
     _status: { state: true },
     _report: { state: true },
   };
@@ -83,9 +83,9 @@ class TemplateGovernanceReport extends LitElement {
     const requestId = this._requestId;
     this._status = 'loading';
     try {
-      const previewUrl = buildPreviewUrl(this.path, this.org, this.repo, this.ref);
-      const currentHtml = await fetchText(previewUrl);
-      const report = await buildReport(this.org, this.repo, this.ref, currentHtml);
+      const sourceUrl = buildSourceUrl(this.path, this.org, this.repo);
+      const currentHtml = await fetchText(sourceUrl, this.token);
+      const report = await buildReport(this.org, this.repo, currentHtml, this.token);
       if (requestId !== this._requestId) return;
       this._report = report;
       this._status = report.status;
@@ -152,13 +152,13 @@ class TemplateGovernanceReport extends LitElement {
 customElements.define(EL_NAME, TemplateGovernanceReport);
 
 (async function init() {
-  const { context } = await DA_SDK;
+  const { context, token } = await DA_SDK;
 
   const report = document.createElement(EL_NAME);
   report.org = context.org;
   report.repo = context.repo;
-  report.ref = context.ref;
   report.path = context.path;
+  report.token = token;
 
   document.body.append(report);
 }());

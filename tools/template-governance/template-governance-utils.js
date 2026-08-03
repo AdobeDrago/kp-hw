@@ -1,15 +1,34 @@
-export function buildPreviewUrl(path, org, repo, ref = 'main') {
-  return `https://${ref}--${repo}--${org}.aem.page${path}`;
+const CONTENT_DA_ORIGIN = 'https://content.da.live';
+const STRUCTURAL_BLOCK_NAMES = new Set(['section-metadata', 'metadata']);
+
+export function buildSourceUrl(path, org, repo) {
+  return `${CONTENT_DA_ORIGIN}/${org}/${repo}${path}`;
+}
+
+function getMetadataRows(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const metadataBlock = doc.querySelector('.metadata');
+  if (!metadataBlock) return [];
+  return [...metadataBlock.children]
+    .map((row) => {
+      const cells = [...row.children];
+      return { key: cells[0]?.textContent?.trim(), value: cells[1]?.textContent?.trim() };
+    })
+    .filter((row) => row.key);
 }
 
 export function resolveTemplateFromHtml(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const meta = doc.head.querySelector('meta[name="template"]');
-  const value = meta?.content?.trim();
-  return value || null;
+  const templateRow = getMetadataRows(html).find((row) => row.key.toLowerCase() === 'template');
+  return templateRow?.value || null;
 }
 
-const CONTENT_DA_ORIGIN = 'https://content.da.live';
+export function extractMetadataFields(html) {
+  const names = [];
+  getMetadataRows(html).forEach((row) => {
+    if (!names.includes(row.key)) names.push(row.key);
+  });
+  return names;
+}
 
 export function parseContentDaUrl(url) {
   if (!url.startsWith(`${CONTENT_DA_ORIGIN}/`)) return null;
@@ -30,17 +49,7 @@ export function extractBlockNames(html) {
   const names = [];
   main.querySelectorAll(':scope > div > div[class]').forEach((block) => {
     const [name] = block.classList;
-    if (name && !names.includes(name)) names.push(name);
-  });
-  return names;
-}
-
-export function extractMetadataFields(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const names = [];
-  doc.head.querySelectorAll('meta[name], meta[property]').forEach((meta) => {
-    const key = meta.getAttribute('name') || meta.getAttribute('property');
-    if (key && !names.includes(key)) names.push(key);
+    if (name && !STRUCTURAL_BLOCK_NAMES.has(name) && !names.includes(name)) names.push(name);
   });
   return names;
 }

@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import {
-  buildPreviewUrl,
+  buildSourceUrl,
   resolveTemplateFromHtml,
   parseContentDaUrl,
   findTemplateEntry,
@@ -10,29 +10,48 @@ import {
 } from '../../../tools/template-governance/template-governance-utils.js';
 
 describe('template-governance-utils.js', () => {
-  describe('buildPreviewUrl', () => {
-    it('builds a preview URL for a path', () => {
-      const url = buildPreviewUrl('/docs/library/templates/homepage', 'adobedrago', 'ak-kaiserpermanente', 'main');
-      expect(url).to.equal('https://main--ak-kaiserpermanente--adobedrago.aem.page/docs/library/templates/homepage');
-    });
-
-    it('defaults ref to main', () => {
-      expect(buildPreviewUrl('/foo', 'adobedrago', 'kp-hw')).to.equal('https://main--kp-hw--adobedrago.aem.page/foo');
+  describe('buildSourceUrl', () => {
+    it('builds a DA source URL for a path', () => {
+      expect(buildSourceUrl('/index-copy', 'adobedrago', 'kp-hw')).to.equal('https://content.da.live/adobedrago/kp-hw/index-copy');
     });
   });
 
   describe('resolveTemplateFromHtml', () => {
-    it('reads the template name from the meta tag', () => {
-      const html = '<html><head><meta name="template" content="Homepage"></head><body></body></html>';
+    it('reads the template name from the .metadata block', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+            <div><div><p>template</p></div><div><p>Homepage</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
       expect(resolveTemplateFromHtml(html)).to.equal('Homepage');
     });
 
-    it('returns null when the meta tag is absent', () => {
-      expect(resolveTemplateFromHtml('<html><head></head><body></body></html>')).to.equal(null);
+    it('matches the template row key case-insensitively', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>Template</p></div><div><p>Homepage</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(resolveTemplateFromHtml(html)).to.equal('Homepage');
     });
 
-    it('returns null when the meta tag is present but empty', () => {
-      const html = '<html><head><meta name="template" content=""></head><body></body></html>';
+    it('returns null when there is no .metadata block', () => {
+      expect(resolveTemplateFromHtml('<html><body><main></main></body></html>')).to.equal(null);
+    });
+
+    it('returns null when the .metadata block has no template row', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
       expect(resolveTemplateFromHtml(html)).to.equal(null);
     });
   });
@@ -96,22 +115,40 @@ describe('template-governance-utils.js', () => {
       `;
       expect(extractBlockNames(html)).to.deep.equal(['hero']);
     });
+
+    it('excludes structural pseudo-blocks (section-metadata, metadata)', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+          </div>
+          <div>
+            <div class="hero"><div>content</div></div>
+          </div>
+          <div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractBlockNames(html)).to.deep.equal(['hero']);
+    });
   });
 
   describe('extractMetadataFields', () => {
-    it('extracts meta name and property keys', () => {
+    it('extracts the key from each row of the .metadata block', () => {
       const html = `
-        <html><head>
-          <meta name="template" content="Homepage">
-          <meta property="og:title" content="Hello">
-          <meta charset="utf-8">
-        </head><body></body></html>
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+            <div><div><p>template</p></div><div><p>Homepage</p></div></div>
+          </div>
+        </div></main></body></html>
       `;
-      expect(extractMetadataFields(html)).to.deep.equal(['template', 'og:title']);
+      expect(extractMetadataFields(html)).to.deep.equal(['title', 'template']);
     });
 
-    it('returns an empty array when there are no matching meta tags', () => {
-      expect(extractMetadataFields('<html><head></head><body></body></html>')).to.deep.equal([]);
+    it('returns an empty array when there is no .metadata block', () => {
+      expect(extractMetadataFields('<html><body><main></main></body></html>')).to.deep.equal([]);
     });
   });
 
