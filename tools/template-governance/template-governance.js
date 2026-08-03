@@ -25,7 +25,7 @@ async function fetchText(url) {
 async function fetchReferenceHtml(templatesJsonUrl, templateName) {
   const json = JSON.parse(await fetchText(templatesJsonUrl));
   const entry = findTemplateEntry(json.data || [], templateName);
-  if (!entry) return null;
+  if (!entry || typeof entry.value !== 'string') return null;
   const parsed = parseContentDaUrl(entry.value);
   if (!parsed) return null;
   return fetchText(buildPreviewUrl(parsed.path, parsed.org, parsed.repo, 'main'));
@@ -97,9 +97,9 @@ class TemplateGovernanceReport extends LitElement {
     }
   }
 
-  renderFindingList(title, findings, emptyText) {
+  renderFindingList(title, findings, emptyText, variant) {
     return html`
-      <div class="report-section">
+      <div class="report-section report-section-${variant}">
         <p class="report-section-title">${title}</p>
         ${findings.length ? html`
           <ul class="finding-list">
@@ -142,8 +142,8 @@ class TemplateGovernanceReport extends LitElement {
           <p class="report-title">${this._report.template}</p>
           <button class="btn-recheck" @click=${() => this.load()}>Recheck</button>
         </div>
-        ${this.renderFindingList('Missing', this._report.missing, 'None — looks consistent with its template.')}
-        ${this.renderFindingList('Added', this._report.added, 'No content beyond the base template.')}
+        ${this.renderFindingList('Missing', this._report.missing, 'None — looks consistent with its template.', 'missing')}
+        ${this.renderFindingList('Added', this._report.added, 'No content beyond the base template.', 'added')}
       </div>
     `;
   }

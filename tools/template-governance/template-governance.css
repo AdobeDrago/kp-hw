@@ -67,12 +67,40 @@
 
 .report-section {
   padding: 12px 20px;
+  border-left: 3px solid transparent;
+}
+
+.report-section-missing {
+  border-left-color: #d83b01;
+}
+
+.report-section-added {
+  border-left-color: rgb(222 222 222);
 }
 
 .report-section-title {
   margin: 0 0 8px;
   font-size: 13px;
   font-weight: 700;
+}
+
+.report-section-missing .report-section-title {
+  color: #d83b01;
+}
+
+.report-section-added .report-section-title {
+  color: #666;
+  font-weight: 600;
+}
+
+.report-section-missing .finding-type {
+  color: #d83b01;
+  font-weight: 700;
+}
+
+.report-section-added .finding-type {
+  color: #999;
+  font-weight: 400;
 }
 
 .finding-list {
