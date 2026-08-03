@@ -13,7 +13,8 @@
 - This plugin is **read-only** — no calls to `actions.sendHTML`, `actions.sendText`, or any other document-mutating SDK action.
 - The reference for a template is the single document named by `docs/library/templates.json` — no statistical sampling, no crawling the DA content tree, no `sessionStorage` caching (both fetches involved are cheap, so a "Recheck" button just re-runs the pipeline).
 - "Added" (page has it, reference doesn't) is **informational, not a violation** — rendered in a separate, neutrally-styled section from "Missing". Rationale: `templates.json` entries are starting layouts, not exhaustive schemas; real pages are expected to have more content than the bare template.
-- All fetches in this plugin go through the ordinary `.aem.page` preview origin (`buildPreviewUrl`) — confirmed unauthenticated and reachable for both the current page and `docs/library/templates.json` / its referenced reference documents. No `Authorization` header, no DA admin/content API calls, unlike Fragments.
+- **Revised after manual verification (Task 4 below):** the plugin does not use `.aem.page` preview fetches. All fetches go through DA's raw source, `https://content.da.live/{org}/{repo}{path}`, authenticated with an `Authorization: Bearer {token}` header (the DA SDK's `token`) — because the preview-based approach required every page to have been manually previewed at least once before the panel would work at all, which defeats the point of a pre-publish governance check. Raw DA source has no `<head>`; template/metadata resolution reads the `.metadata` block instead (see Task 4).
+- `context.ref` is not used anywhere in this plugin — DA source has no branch/ref concept. Only `context.org`, `context.repo`, `context.path`, and the SDK's `token` are read.
 - Import Lit via `../../deps/lit/dist/index.js` (relative path), matching `tools/scheduler/scheduler.js:1` — not a bare `da-lit` specifier.
 - Style the shadow root via `loadStyle(import.meta.url)` from `scripts/utils/styles.js`, matching `tools/scheduler/scheduler.js:6,19` and `tools/fragments/fragments.js`.
 - The DA config "library" sheet registration (`https://da.live/config#/adobedrago/kp-hw/`) is an external, shared-config change. It is **not** performed by any task below — the final task ends with the exact row to propose to the user, who must confirm it themselves, same pattern as the Fragments plugin's rollout.
@@ -631,67 +632,511 @@ git commit -m "feat: build template-governance report component and DA SDK glue"
 
 ---
 
-### Task 4: Manual verification and registration hand-off
+### Task 4: Rework template/metadata resolution to use DA source instead of preview
 
-This task has no code changes beyond a temporary debug line (removed again in Step 1) and temporary test-page metadata (removed again in Step 5). It confirms a load-bearing assumption from the design spec, then confirms the plugin works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+**Why this task exists:** manual verification (this plan's former Task 4, now Task 5) found that fetching the current page via `.aem.page` preview requires the page to have been manually previewed at least once — confirmed directly: a freshly-edited test page 404'd on preview immediately after a metadata edit, and only worked after an explicit Preview action. This defeats the point of a pre-publish governance check. The fix is to read everything from DA's raw source (`content.da.live`) instead, authenticated with the DA SDK's `token`. This uncovered a second, deeper issue: DA's raw source has no `<head>` at all — page metadata lives in a `<div class="metadata">` block inside `<body>` instead — so template/metadata resolution has to change from reading `<head>` meta tags to reading that block, and block extraction needs to exclude that same `.metadata` block (and its sibling `section-metadata` style-directive blocks) as pseudo-blocks, since both get consumed and removed by the rendering pipeline and would otherwise show up as spurious "Added" findings. See the design spec's Background section for the full investigation (raw source vs. preview HTML dumps, confirmed empirically).
+
+Also confirmed during that same manual verification: `context.path` **is** present on the DA SDK's `context` (`{ org: "adobedrago", repo: "kp-hw", path: "/index-copy", ref: "main", view: "canvas" }`) — the design spec's one open risk is resolved, no further spike needed. `context.ref` is dropped entirely by this task — DA source has no branch/ref concept, so it's unused going forward.
+
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — full-file replacement (not an append — several Task 1/2 functions change behavior, one is removed, one is added)
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — full-file replacement to match
+- Modify: `tools/template-governance/template-governance.js` — fetch mechanism, token threading, drop `ref`
+
+**Interfaces:**
+- Removes: `buildPreviewUrl` (no longer used anywhere in this plugin — everything is a DA source fetch now)
+- Adds: `buildSourceUrl(path: string, org: string, repo: string): string` — `https://content.da.live/{org}/{repo}{path}`
+- Changes behavior (same names/signatures, different implementation): `resolveTemplateFromHtml(html: string): string | null` — now reads the `.metadata` block's `template` row instead of `<head> meta[name="template"]`; `extractMetadataFields(html: string): string[]` — now reads the `.metadata` block's row keys instead of `<head>` meta tags; `extractBlockNames(html: string): string[]` — same shape, now excludes `section-metadata` and `metadata` as structural pseudo-blocks
+- Unchanged: `parseContentDaUrl`, `findTemplateEntry`, `diffSets`
+
+- [ ] **Step 1: Replace the test file with the rewritten test suite (RED)**
+
+Replace the entire contents of `test/tools/template-governance/template-governance-utils.test.js`:
+
+```js
+import { expect } from '@esm-bundle/chai';
+import {
+  buildSourceUrl,
+  resolveTemplateFromHtml,
+  parseContentDaUrl,
+  findTemplateEntry,
+  extractBlockNames,
+  extractMetadataFields,
+  diffSets,
+} from '../../../tools/template-governance/template-governance-utils.js';
+
+describe('template-governance-utils.js', () => {
+  describe('buildSourceUrl', () => {
+    it('builds a DA source URL for a path', () => {
+      expect(buildSourceUrl('/index-copy', 'adobedrago', 'kp-hw')).to.equal('https://content.da.live/adobedrago/kp-hw/index-copy');
+    });
+  });
+
+  describe('resolveTemplateFromHtml', () => {
+    it('reads the template name from the .metadata block', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+            <div><div><p>template</p></div><div><p>Homepage</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(resolveTemplateFromHtml(html)).to.equal('Homepage');
+    });
+
+    it('matches the template row key case-insensitively', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>Template</p></div><div><p>Homepage</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(resolveTemplateFromHtml(html)).to.equal('Homepage');
+    });
+
+    it('returns null when there is no .metadata block', () => {
+      expect(resolveTemplateFromHtml('<html><body><main></main></body></html>')).to.equal(null);
+    });
+
+    it('returns null when the .metadata block has no template row', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(resolveTemplateFromHtml(html)).to.equal(null);
+    });
+  });
+
+  describe('parseContentDaUrl', () => {
+    it('parses org, repo, and path from a content.da.live URL', () => {
+      const result = parseContentDaUrl('https://content.da.live/adobedrago/ak-kaiserpermanente/docs/library/templates/homepage');
+      expect(result).to.deep.equal({
+        org: 'adobedrago',
+        repo: 'ak-kaiserpermanente',
+        path: '/docs/library/templates/homepage',
+      });
+    });
+
+    it('returns null for a URL that is not a content.da.live URL', () => {
+      expect(parseContentDaUrl('https://example.com/adobedrago/kp-hw/foo')).to.equal(null);
+    });
+  });
+
+  describe('findTemplateEntry', () => {
+    const entries = [
+      { key: 'Homepage', value: 'https://content.da.live/adobedrago/ak-kaiserpermanente/docs/library/templates/homepage' },
+      { key: 'Support', value: 'https://content.da.live/adobedrago/ak-kaiserpermanente/docs/library/templates/support' },
+    ];
+
+    it('finds an entry by key, case-insensitively', () => {
+      expect(findTemplateEntry(entries, 'homepage')).to.deep.equal(entries[0]);
+    });
+
+    it('returns null when no entry matches', () => {
+      expect(findTemplateEntry(entries, 'article')).to.equal(null);
+    });
+  });
+
+  describe('extractBlockNames', () => {
+    it('extracts the block name (first class) from each section-level block div', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="hero landing"><div>content</div></div>
+          </div>
+          <div>
+            <div class="columns two-up"><div>a</div><div>b</div></div>
+            <p>default content, not a block</p>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractBlockNames(html)).to.deep.equal(['hero', 'columns']);
+    });
+
+    it('returns an empty array when there is no main element', () => {
+      expect(extractBlockNames('<html><body></body></html>')).to.deep.equal([]);
+    });
+
+    it('deduplicates repeated block names', () => {
+      const html = `
+        <html><body><main>
+          <div><div class="hero"><div>a</div></div></div>
+          <div><div class="hero"><div>b</div></div></div>
+        </main></body></html>
+      `;
+      expect(extractBlockNames(html)).to.deep.equal(['hero']);
+    });
+
+    it('excludes structural pseudo-blocks (section-metadata, metadata)', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+          </div>
+          <div>
+            <div class="hero"><div>content</div></div>
+          </div>
+          <div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractBlockNames(html)).to.deep.equal(['hero']);
+    });
+  });
+
+  describe('extractMetadataFields', () => {
+    it('extracts the key from each row of the .metadata block', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+            <div><div><p>template</p></div><div><p>Homepage</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(extractMetadataFields(html)).to.deep.equal(['title', 'template']);
+    });
+
+    it('returns an empty array when there is no .metadata block', () => {
+      expect(extractMetadataFields('<html><body><main></main></body></html>')).to.deep.equal([]);
+    });
+  });
+
+  describe('diffSets', () => {
+    it('reports reference names missing from the current set', () => {
+      const { missing } = diffSets(['hero'], ['hero', 'columns']);
+      expect(missing).to.deep.equal(['columns']);
+    });
+
+    it('reports current names not present in the reference set', () => {
+      const { added } = diffSets(['hero', 'extra-block'], ['hero']);
+      expect(added).to.deep.equal(['extra-block']);
+    });
+
+    it('reports no findings when the sets match exactly', () => {
+      expect(diffSets(['hero'], ['hero'])).to.deep.equal({ missing: [], added: [] });
+    });
+  });
+});
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: FAIL — `buildSourceUrl` doesn't exist yet, and `resolveTemplateFromHtml`/`extractMetadataFields`/`extractBlockNames` still implement the old `<head>`-based behavior, so their new test cases fail against the old implementation.
+
+- [ ] **Step 3: Replace the implementation file (GREEN)**
+
+Replace the entire contents of `tools/template-governance/template-governance-utils.js`:
+
+```js
+const CONTENT_DA_ORIGIN = 'https://content.da.live';
+const STRUCTURAL_BLOCK_NAMES = new Set(['section-metadata', 'metadata']);
+
+export function buildSourceUrl(path, org, repo) {
+  return `${CONTENT_DA_ORIGIN}/${org}/${repo}${path}`;
+}
+
+function getMetadataRows(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const metadataBlock = doc.querySelector('.metadata');
+  if (!metadataBlock) return [];
+  return [...metadataBlock.children]
+    .map((row) => {
+      const cells = [...row.children];
+      return { key: cells[0]?.textContent?.trim(), value: cells[1]?.textContent?.trim() };
+    })
+    .filter((row) => row.key);
+}
+
+export function resolveTemplateFromHtml(html) {
+  const templateRow = getMetadataRows(html).find((row) => row.key.toLowerCase() === 'template');
+  return templateRow?.value || null;
+}
+
+export function extractMetadataFields(html) {
+  const names = [];
+  getMetadataRows(html).forEach((row) => {
+    if (!names.includes(row.key)) names.push(row.key);
+  });
+  return names;
+}
+
+export function parseContentDaUrl(url) {
+  if (!url.startsWith(`${CONTENT_DA_ORIGIN}/`)) return null;
+  const [org, repo, ...pathParts] = url.slice(CONTENT_DA_ORIGIN.length + 1).split('/');
+  if (!org || !repo || !pathParts.length) return null;
+  return { org, repo, path: `/${pathParts.join('/')}` };
+}
+
+export function findTemplateEntry(entries, templateName) {
+  const target = templateName.trim().toLowerCase();
+  return entries.find((entry) => entry.key?.trim().toLowerCase() === target) || null;
+}
+
+export function extractBlockNames(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return [];
+  const names = [];
+  main.querySelectorAll(':scope > div > div[class]').forEach((block) => {
+    const [name] = block.classList;
+    if (name && !STRUCTURAL_BLOCK_NAMES.has(name) && !names.includes(name)) names.push(name);
+  });
+  return names;
+}
+
+export function diffSets(currentSet, referenceSet) {
+  const missing = referenceSet.filter((name) => !currentSet.includes(name));
+  const added = currentSet.filter((name) => !referenceSet.includes(name));
+  return { missing, added };
+}
+```
+
+- [ ] **Step 4: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS — all `describe` blocks green.
+
+- [ ] **Step 5: Update `template-governance.js` to fetch via DA source with the token**
+
+Replace the entire contents of `tools/template-governance/template-governance.js`:
+
+```js
+import DA_SDK from 'https://da.live/nx/utils/sdk.js';
+import { LitElement, html } from '../../deps/lit/dist/index.js';
+import loadStyle from '../../scripts/utils/styles.js';
+import {
+  buildSourceUrl,
+  resolveTemplateFromHtml,
+  parseContentDaUrl,
+  findTemplateEntry,
+  extractBlockNames,
+  extractMetadataFields,
+  diffSets,
+} from './template-governance-utils.js';
+
+const styles = await loadStyle(import.meta.url);
+
+const EL_NAME = 'template-governance-report';
+const TEMPLATES_JSON_PATH = '/docs/library/templates.json';
+
+async function fetchText(url, token) {
+  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+  const resp = await fetch(url, { headers });
+  if (!resp.ok) throw new Error(`Request failed: ${resp.status}`);
+  return resp.text();
+}
+
+async function fetchReferenceHtml(templatesJsonUrl, templateName, token) {
+  const json = JSON.parse(await fetchText(templatesJsonUrl, token));
+  const entry = findTemplateEntry(json.data || [], templateName);
+  if (!entry || typeof entry.value !== 'string') return null;
+  if (!parseContentDaUrl(entry.value)) return null;
+  return fetchText(entry.value, token);
+}
+
+async function buildReport(org, repo, currentHtml, token) {
+  const templateName = resolveTemplateFromHtml(currentHtml);
+  if (!templateName) return { status: 'no-template' };
+
+  const templatesJsonUrl = buildSourceUrl(TEMPLATES_JSON_PATH, org, repo);
+  const referenceHtml = await fetchReferenceHtml(templatesJsonUrl, templateName, token);
+  if (!referenceHtml) return { status: 'no-reference', template: templateName };
+
+  const blockDiff = diffSets(extractBlockNames(currentHtml), extractBlockNames(referenceHtml));
+  const metaDiff = diffSets(
+    extractMetadataFields(currentHtml),
+    extractMetadataFields(referenceHtml),
+  );
+
+  return {
+    status: 'ready',
+    template: templateName,
+    missing: [
+      ...blockDiff.missing.map((name) => ({ type: 'block', name })),
+      ...metaDiff.missing.map((name) => ({ type: 'metadata', name })),
+    ],
+    added: [
+      ...blockDiff.added.map((name) => ({ type: 'block', name })),
+      ...metaDiff.added.map((name) => ({ type: 'metadata', name })),
+    ],
+  };
+}
+
+class TemplateGovernanceReport extends LitElement {
+  static properties = {
+    org: { attribute: false },
+    repo: { attribute: false },
+    path: { attribute: false },
+    token: { attribute: false },
+    _status: { state: true },
+    _report: { state: true },
+  };
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.shadowRoot.adoptedStyleSheets = [styles];
+    this._status = 'loading';
+    this._report = null;
+    this._requestId = 0;
+    this.load();
+  }
+
+  async load() {
+    this._requestId += 1;
+    const requestId = this._requestId;
+    this._status = 'loading';
+    try {
+      const sourceUrl = buildSourceUrl(this.path, this.org, this.repo);
+      const currentHtml = await fetchText(sourceUrl, this.token);
+      const report = await buildReport(this.org, this.repo, currentHtml, this.token);
+      if (requestId !== this._requestId) return;
+      this._report = report;
+      this._status = report.status;
+    } catch (error) {
+      if (requestId !== this._requestId) return;
+      // eslint-disable-next-line no-console
+      console.error('Failed to build template governance report', error);
+      this._status = 'error';
+    }
+  }
+
+  renderFindingList(title, findings, emptyText, variant) {
+    return html`
+      <div class="report-section report-section-${variant}">
+        <p class="report-section-title">${title}</p>
+        ${findings.length ? html`
+          <ul class="finding-list">
+            ${findings.map((finding) => html`
+              <li class="finding-item">
+                <span class="finding-type">${finding.type}</span>
+                <span class="finding-name">${finding.name}</span>
+              </li>
+            `)}
+          </ul>
+        ` : html`<p class="finding-empty">${emptyText}</p>`}
+      </div>
+    `;
+  }
+
+  renderStatus() {
+    if (this._status === 'loading') {
+      return html`<div class="status-container"><p class="status">Checking against its template…</p></div>`;
+    }
+    if (this._status === 'no-template') {
+      return html`<div class="status-container"><p class="status">This page doesn't declare a template — nothing to check.</p></div>`;
+    }
+    if (this._status === 'no-reference') {
+      return html`<div class="status-container"><p class="status">Template "${this._report.template}" isn't in this site's template library — can't compare against it.</p></div>`;
+    }
+    return html`
+      <div class="status-container">
+        <p class="status">Couldn't build the governance report.</p>
+        <button class="btn-retry" @click=${() => this.load()}>Retry</button>
+      </div>
+    `;
+  }
+
+  render() {
+    if (this._status !== 'ready') return this.renderStatus();
+
+    return html`
+      <div class="governance-app">
+        <div class="report-header">
+          <p class="report-title">${this._report.template}</p>
+          <button class="btn-recheck" @click=${() => this.load()}>Recheck</button>
+        </div>
+        ${this.renderFindingList('Missing', this._report.missing, 'None — looks consistent with its template.', 'missing')}
+        ${this.renderFindingList('Added', this._report.added, 'No content beyond the base template.', 'added')}
+      </div>
+    `;
+  }
+}
+
+customElements.define(EL_NAME, TemplateGovernanceReport);
+
+(async function init() {
+  const { context, token } = await DA_SDK;
+
+  const report = document.createElement(EL_NAME);
+  report.org = context.org;
+  report.repo = context.repo;
+  report.path = context.path;
+  report.token = token;
+
+  document.body.append(report);
+}());
+```
+
+Note: this also removes the temporary `console.log('template-governance context:', context)` debug line that was added during Task 5's (then-Task-4's) manual verification — `context.path` is now confirmed present, so the debug line is no longer needed.
+
+- [ ] **Step 6: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance.js tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js`
+Expected: no errors.
+
+- [ ] **Step 7: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass, including the rewritten `template-governance-utils.test.js` suite.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add tools/template-governance/template-governance.js tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js
+git commit -m "fix: read template-governance content from DA source instead of preview"
+```
+
+---
+
+### Task 5: Manual verification and registration hand-off
+
+This task has no code changes. It confirms the reworked plugin (Task 4) works against real content without requiring a prior Preview, and hands off the one remaining step (site config registration) that requires the user's own action.
 
 **Files:** none committed.
 
-- [ ] **Step 1: Confirm `context.path` is actually available from the DA SDK**
-
-The design spec flags this as unconfirmed: Fragments never reads the currently-open document's path from `DA_SDK`'s `context`, so this plugin's core assumption — that it can know which page it was opened from — has not been checked against a real payload.
-
-Temporarily add a log line at the top of the `init()` function in `tools/template-governance/template-governance.js`:
-
-```js
-(async function init() {
-  const { context } = await DA_SDK;
-  // eslint-disable-next-line no-console
-  console.log('template-governance context:', context);
-  ...
-```
-
-This must be exercised inside the real DA editor (requires being logged into `https://da.live` as a user with access to `adobedrago/kp-hw`), so it must be done by the user (Lamont), not automated. Steps 2–3 below get the local server running first; come back to check devtools console output once the plugin is loaded inside DA per Step 5.
-
-- **If a path field is present** (expected name `path`, matching the property name already used for `report.path = context.path` in the component): remove the temporary `console.log` line and proceed.
-- **If it's absent or named differently:** update `report.path = context.path` in `template-governance.js` to use the correct field name before proceeding to Step 5, then remove the temporary `console.log` line. If there's no usable field at all, stop and report back — the pipeline has no other way to identify the current document, and the design would need to be revisited.
-
-- [ ] **Step 2: Start the local dev server**
+- [ ] **Step 1: Start the local dev server**
 
 Run: `aem up`
-Expected: serves the site at `http://localhost:3000`.
+Expected: serves the site locally. Note the port it reports — it's usually `3000`, but running inside a git worktree (as this branch does) picks a different per-branch port automatically; use whatever port the server actually printed, not a hardcoded assumption.
 
-- [ ] **Step 3: Sanity-check the file loads without syntax/import errors**
+- [ ] **Step 2: Sanity-check the file loads without syntax/import errors**
 
-Open `http://localhost:3000/tools/template-governance/template-governance.html` directly in a browser and check the devtools console.
+Open `http://localhost:<port>/tools/template-governance/template-governance.html` directly in a browser and check the devtools console.
 Expected: no red console errors about failed module resolution. The page will otherwise appear blank/stuck — expected outside DA's iframe, since `await DA_SDK` never resolves without DA's `postMessage` handshake.
 
-- [ ] **Step 4: Add a temporary local DA library config row**
+- [ ] **Step 3: Add a temporary local DA library config row**
 
-Go to `https://da.live/config#/adobedrago/kp-hw/` and add a temporary row to the **library** tab: `title: Template Governance (local)`, `path: http://localhost:3000/tools/template-governance/template-governance.html`, `icon: <any placeholder .png URL>`, `format: dialog`.
+Go to `https://da.live/config#/adobedrago/kp-hw/` and add a temporary row to the **library** tab: `title: Template Governance (local)`, `path: http://localhost:<port>/tools/template-governance/template-governance.html`, `icon: <any placeholder .png URL>`, `format: dialog`.
 
-- [ ] **Step 5: Test inside the real DA editor**
+- [ ] **Step 4: Test inside the real DA editor**
 
-1. No page in `kp-hw` currently declares `<meta name="template">` matching `Homepage`/`Support`, so first pick (or create) a draft/test page and temporarily set its page metadata's `template` field to `Homepage` (via DA's page metadata sheet, matching the `docs/library/templates.json` key) — this is a temporary edit for testing, to be reverted in this step's last part.
+1. No page in `kp-hw` currently declares a `template` metadata value matching `Homepage`/`Support`, so first pick (or create) a draft/test page and temporarily set its page metadata's `template` field to `Homepage` (via DA's page metadata sheet, matching the `docs/library/templates.json` key) — this is a temporary edit for testing, to be reverted in this step's last part. **Do not click Preview on this page** — the whole point of Task 4's rework is that this should work without it.
 2. Open that document for editing in `https://da.live/edit#/adobedrago/kp-hw/...`.
 3. Open the Library panel and select the "Template Governance (local)" tab.
-4. Do Step 1's `context.path` check here (see above) before evaluating anything else.
-5. Confirm the report renders: resolved template name (`Homepage`), and Missing/Added lists. Since a fresh/mostly-empty test page will be missing nearly everything the real `Homepage` reference has (`hero`, `columns`, `columns-media`, `tabs`, etc.), expect a substantial Missing list — that's the expected, correct behavior for an unpopulated page.
-6. Click "Recheck" and confirm it re-runs the fetch/diff (e.g. visible via a brief loading state).
-7. Change the test page's `template` metadata to something not in the library (e.g. `Bogus`) and confirm the "isn't in this site's template library" state renders.
-8. Clear the test page's `template` metadata entirely and confirm the "doesn't declare a template" state renders.
-9. Force the error state (e.g. via devtools, block the current page's own preview fetch) and confirm the error message with a working Retry button renders.
-10. Revert the test page's metadata back to its original state, and remove the temporary "Template Governance (local)" row from the config sheet.
+4. Confirm the report renders **without requiring a Preview**: resolved template name (`Homepage`), and Missing/Added lists. Since a fresh/mostly-empty test page will be missing nearly everything the real `Homepage` reference has (`hero`, `columns`, `columns-media`, `tabs`, etc.), expect a substantial Missing list — that's the expected, correct behavior for an unpopulated page. Confirm the Missing list does NOT include `section-metadata` or `metadata` as spurious entries.
+5. Click "Recheck" and confirm it re-runs the fetch/diff (e.g. visible via a brief loading state).
+6. Change the test page's `template` metadata to something not in the library (e.g. `Bogus`) and confirm the "isn't in this site's template library" state renders.
+7. Clear the test page's `template` metadata entirely and confirm the "doesn't declare a template" state renders.
+8. Force the error state (e.g. via devtools, block the current page's own source fetch) and confirm the error message with a working Retry button renders.
+9. Revert the test page's metadata back to its original state, and remove the temporary "Template Governance (local)" row from the config sheet.
 
-- [ ] **Step 6: Propose permanent registration**
+- [ ] **Step 5: Propose permanent registration**
 
-Once Step 5 passes, propose this row for the **library** tab of `https://da.live/config#/adobedrago/kp-hw/` (do not add it without the user's explicit go-ahead):
+Once Step 4 passes, propose this row for the **library** tab of `https://da.live/config#/adobedrago/kp-hw/` (do not add it without the user's explicit go-ahead):
 
 | title | path | icon | format |
 |---|---|---|---|
 | Template Governance | `https://main--kp-hw--adobedrago.aem.live/tools/template-governance/template-governance.html` | *(needs a hosted `.png` icon — none exists in the repo yet; ask the user to supply one or approve a placeholder)* | dialog |
 
-- [ ] **Step 7: Run the full test and lint suite one more time**
+- [ ] **Step 6: Run the full test and lint suite one more time**
 
 Run: `npm test`
 Run: `npm run lint`

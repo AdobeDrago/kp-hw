@@ -61,26 +61,72 @@ inference over whatever pages happen to exist.
   adoption of the meta tag is still ahead of this task, not behind it. The plugin
   handles this the same way it handles any untagged page: a neutral "nothing to
   check" state, not an error.
-- Both `templates.json` and the reference documents it points to are fetchable
-  through the ordinary `.aem.page` preview origin, unauthenticated — confirmed
-  directly:
-  `https://main--kp-hw--adobedrago.aem.page/docs/library/templates.json` → 200,
-  `https://main--ak-kaiserpermanente--adobedrago.aem.page/docs/library/templates/homepage`
-  → 200. No new fetch/auth mechanism is needed beyond `buildPreviewUrl`, already used
-  for the current page itself.
-- Block structure is identifiable straight from raw fetched HTML, without executing
-  any JS: authored EDS markup already has each block as a `<div>` whose class is the
-  block name (e.g. `<div class="hero landing">` → block name `hero`), as a direct
-  child of a section `<div>` under `<main>`. This still holds for reading both the
-  current page and a reference template document.
+- **Revised during manual verification (superseding what follows in this bullet
+  originally): the plugin does not use `.aem.page` preview fetches at all.** The
+  first working version fetched the current page via `buildPreviewUrl` (unauthenticated
+  `.aem.page`), which requires the page to have been previewed at least once — a real
+  page being actively edited (e.g. a brand-new draft) 404s until an author manually
+  clicks Preview. Confirmed directly: a freshly-edited test page 404'd on
+  `.aem.page` immediately after a metadata edit, and started working only after an
+  explicit Preview action. This defeats the point of a governance check meant to run
+  *before* publishing. The fix: fetch the current page (and everything else) from
+  **DA's raw source** instead — `https://content.da.live/{org}/{repo}{path}`,
+  authenticated with the DA SDK's `token` (a `Bearer` header) — which reflects the
+  last-saved DA content regardless of preview state. Confirmed directly: the same
+  test page 404'd on `.aem.page` but returned 200 immediately from
+  `content.da.live` with the token.
+- **DA's raw source has no `<head>` at all — this changes how template/metadata are
+  read.** Fetching `https://content.da.live/adobedrago/kp-hw/index-copy` returns only
+  a `<body>`; there is no `<head>`, no `<meta>` tags. Page metadata (title,
+  description, template, etc.) instead lives in a `<div class="metadata">` block
+  **inside** `<body>` — the same key/value table shape as any other block:
+  ```html
+  <div class="metadata">
+    <div><div><p>title</p></div><div><p>Home</p></div></div>
+    <div><div><p>template</p></div><div><p>homepage</p></div></div>
+  </div>
+  ```
+  Confirmed by comparing the same document's raw source against its `.aem.page`
+  preview render side-by-side: the preview's `<head>` has `<meta name="template"
+  content="homepage">` plus a dozen more auto-generated tags (`og:title`,
+  `og:description`, `twitter:*`, `viewport`, etc., synthesized from the `.metadata`
+  block's `title`/`description` plus page content) that **do not exist** in the raw
+  source at all. This means `resolveTemplateFromHtml` and `extractMetadataFields`
+  must read the `.metadata` block, not `<head>` — and, critically, **both the
+  current page and the reference document must be read via the same mechanism**
+  (both source, or both preview) or the metadata diff becomes meaningless: a
+  source-fetched page's handful of author-entered keys compared against a
+  preview-fetched page's dozen synthesized keys would report nearly everything as
+  "Missing" every time, regardless of the page's actual content.
+- **Raw source also contains structural pseudo-blocks that must be filtered out of
+  block extraction.** `<div class="section-metadata">` (a section's style directive)
+  and `<div class="metadata">` (the page metadata block itself) both match the same
+  "direct child of a section `<div>`, has a class" shape as a real content block —
+  confirmed directly in the same raw-source fetch above, where `section-metadata`
+  appears as a sibling of real blocks like `columns`/`hero`. Both get consumed and
+  removed by the rendering pipeline (confirmed: 0 occurrences of `class="metadata"`
+  in the same document's `.aem.page` preview), so a source-fetched page would report
+  both as spurious "Added" findings unless explicitly excluded.
+- Block structure (real content blocks, once the above two names are excluded) is
+  otherwise identifiable straight from raw fetched HTML, without executing any JS:
+  authored EDS markup already has each block as a `<div>` whose class is the block
+  name (e.g. `<div class="hero landing">` → block name `hero`), as a direct child of
+  a section `<div>` under `<main>`. Confirmed the class list matches between a
+  document's raw source and its preview render once `section-metadata`/`metadata`
+  are excluded.
 - The DA App SDK (`https://da.live/nx/utils/sdk.js`, read directly for this design)
   exposes `actions`: `daFetch`, `sendText`, `sendHTML`, `setHref`, `setHash`,
   `closeLibrary`, `getSelection`, `setPrompt`, `showPanel` — no action reads the
-  current document's in-progress (unsaved) content. `context` is whatever the DA
-  parent app posts as `e.data`; `tools/fragments/fragments.js` only reads
-  `context.org`/`context.repo`/`context.ref`. Whether `context.path` (the
-  currently-open document's path) is present is **not confirmed** from the SDK source
-  alone — first-task spike item, unchanged from the original design.
+  current document's in-progress (unsaved) content, which is why this design reads
+  from DA's saved source rather than needing such an action. `context` is whatever
+  the DA parent app posts as `e.data`; `tools/fragments/fragments.js` only reads
+  `context.org`/`context.repo`/`context.ref`. **`context.path` is confirmed present**
+  — verified directly inside the real DA editor via a temporary debug log: for a
+  document open at `/index-copy`, `context` was
+  `{ org: "adobedrago", repo: "kp-hw", path: "/index-copy", ref: "main", view: "canvas" }`.
+  `context.ref` is no longer used by this design at all (DA source has no branch/ref
+  concept — `content.da.live/{org}/{repo}{path}` always serves the current saved
+  content), so only `org`, `repo`, `path`, and the SDK's `token` are read.
 - Library plugins register the same way as Fragments — a row in the **library** tab
   of the site's DA config sheet (`https://da.live/config#/adobedrago/kp-hw/`) with
   `title`, `path`, `icon`, `format`. This is what surfaces the plugin in DA's Library
@@ -135,22 +181,23 @@ tools/template-governance/template-governance.html ──imports──▶ templa
                                                                        │
                                                     DA_SDK → { context, token }
                                                                        │
-                    1. Fetch current page's own preview HTML
-                       (buildPreviewUrl(context.path, org, repo, ref))
-                       → resolve <meta name="template"> value
+                    1. Fetch current page's own DA source
+                       (buildSourceUrl(context.path, org, repo), Bearer token)
+                       → resolve template name from its .metadata block
                                                                        │
                     2. Fetch this site's docs/library/templates.json
-                       (buildPreviewUrl('/docs/library/templates.json', org, repo, ref))
+                       (buildSourceUrl('/docs/library/templates.json', org, repo), Bearer token)
                        → find entry whose key matches the template name
                          (case-insensitive)
                                                                        │
-                    3. Parse the matched entry's `value` URL
-                       (a content.da.live URL — may name a different org/repo)
-                       → build its preview URL (ref defaults to 'main') and fetch it
+                    3. Validate the matched entry's `value` URL is a real
+                       content.da.live URL (parseContentDaUrl), then fetch it
+                       directly (Bearer token) — it may name a different org/repo
                                                                        │
                     4. Extract block-name set + metadata-field set from both the
                        current page's HTML and the reference document's HTML
-                       (raw-markup class names — no JS execution)
+                       (raw-markup class names, .metadata block key/value rows —
+                       no JS execution, structural pseudo-blocks excluded)
                                                                        │
                     5. Diff: missing = reference − current, added = current − reference
                                                                        │
@@ -165,38 +212,47 @@ tools/template-governance/template-governance.html ──imports──▶ templa
   component (`<template-governance-report>`), mirroring `fragments.js`'s structure
   (`connectedCallback` kicks off the pipeline, `_status` state machine for
   loading/no-template/no-reference/error/ready, request-token guard against
-  out-of-order async work).
+  out-of-order async work). Reads `context.org`/`context.repo`/`context.path` and
+  `token` from the DA SDK — no `context.ref` (source fetches have no ref concept).
 - New: `tools/template-governance/template-governance.css` — panel styles, reusing
-  the `.status-container` loading/empty/error convention from `fragments.css`.
+  the `.status-container` loading/empty/error convention from `fragments.css`, plus a
+  modifier per finding-list section so "Missing" (actionable) and "Added"
+  (informational) read as visually distinct.
 - New: `tools/template-governance/template-governance-utils.js` — pure, unit-tested
-  helpers: template-name resolution, preview-URL building, `content.da.live` URL
-  parsing, template-entry lookup, raw-HTML block/metadata extraction, and the diff
-  itself. Mirrors the `fragment-utils.js` split so the core logic is testable without
-  mocking DOM/fetch/SDK.
+  helpers: template-name resolution and metadata-field extraction (both from the
+  `.metadata` block), DA source-URL building, `content.da.live` URL parsing,
+  template-entry lookup, raw-HTML block-name extraction (excluding structural
+  pseudo-blocks), and the diff itself. Mirrors the `fragment-utils.js` split so the
+  core logic is testable without mocking DOM/fetch/SDK.
 
 ## Data flow / behavior
 
-1. **Resolve current page's template.** Fetch the current page's own preview HTML
-   (`buildPreviewUrl(context.path, org, repo, ref)`) and read
-   `head > meta[name="template"]`. If absent or empty, render the "no template
-   declared" state and stop.
+1. **Resolve current page's template.** Fetch the current page's own DA source
+   (`buildSourceUrl(context.path, org, repo)`, with an `Authorization: Bearer
+   {token}` header) and read the template name from its `.metadata` block (the row
+   whose key is `template`, case-insensitively). If there's no `.metadata` block or
+   no `template` row, render the "no template declared" state and stop.
 2. **Look up the reference entry.** Fetch
-   `buildPreviewUrl('/docs/library/templates.json', org, repo, ref)`, parse its
+   `buildSourceUrl('/docs/library/templates.json', org, repo)` (same auth), parse its
    `data` array (`{ key, value }` rows), and find the row whose `key` matches the
    resolved template name case-insensitively. If none matches, render a "no
    reference for this template" state and stop (distinct from "no template
    declared").
-3. **Fetch the reference document.** The matched row's `value` is a
-   `https://content.da.live/{org}/{repo}{path}` URL. Parse it into `{org, repo,
-   path}` and fetch `buildPreviewUrl(path, org, repo, 'main')` — `'main'` because we
-   have no other meaningful ref for a document that may live on an entirely
-   different site than the one being edited.
+3. **Fetch the reference document.** The matched row's `value` is already a
+   `https://content.da.live/{org}/{repo}{path}` URL — validate it with
+   `parseContentDaUrl` (returns `null` for a malformed/unexpected URL, in which case
+   render "no reference for this template" rather than attempt the fetch), then
+   fetch that URL directly with the same auth header. No URL reconstruction needed —
+   `entry.value` is already the exact resource to fetch, which may name a different
+   org/repo than the page being edited.
 4. **Extract.** From both the current page's HTML and the reference document's HTML,
    extract:
    - **Block names** — the class name of each direct-child `<div>` of a section
-     `<div>` under `<main>` in the raw (undecorated) markup, deduplicated.
-   - **Metadata fields** — the `name`/`property` of each `<meta>` tag in `<head>`,
-     deduplicated.
+     `<div>` under `<main>` in the raw (undecorated) markup, deduplicated, excluding
+     the structural pseudo-block names `section-metadata` and `metadata` (both are
+     authoring directives consumed by the rendering pipeline, never real content).
+   - **Metadata fields** — the key (first cell) of each row in the `.metadata` block,
+     deduplicated. (Not `<head>` — raw DA source has no `<head>`.)
 5. **Diff.** `missing` = reference's set minus current page's set (per block names
    and metadata fields, computed separately then combined for display).
    `added` = current page's set minus reference's set.
@@ -241,31 +297,44 @@ supplied or created.
 
 ## Open risks / assumptions to verify early
 
-- **`context.path` availability.** Unchanged from the original design: Fragments
-  never reads the currently-open document's path from `DA_SDK`'s `context`, so this
-  plugin's core assumption is unconfirmed against a real runtime payload. First
-  verification task should log the full `context` object inside the real DA editor
-  and confirm a usable path field exists before trusting the rest of the pipeline.
-- **Preview staleness.** Both the current page and the reference document are read
-  via their `.aem.page` preview render, not DA's live edit buffer. Accepted
-  limitation, same as Fragments.
+- **`context.path` availability — resolved.** Confirmed present during manual
+  verification (see Background above); no longer an open risk.
+- **DA source freshness — improved, not just accepted.** Reading from
+  `content.da.live` rather than `.aem.page` preview means the report reflects the
+  last-*saved* state rather than the last-*previewed* state — strictly fresher than
+  the original design, and removes the "must preview first" limitation entirely.
+  There is still no way to read literally unsaved keystrokes mid-edit (no SDK action
+  exposes that), which remains an accepted limitation.
+- **Metadata-block extraction assumes DA's standard 2-column table shape.** Every
+  `.metadata` row is assumed to be `<div><div>…key…</div><div>…value…</div></div>` —
+  confirmed against a real fetched document, and this is DA's universal block-table
+  convention (the same shape `section-metadata` and every other authored block use),
+  not something specific to this project.
+- **The structural-pseudo-block denylist (`section-metadata`, `metadata`) is a
+  fixed, hardcoded list, not derived.** If DA introduces another block-like
+  authoring directive with the same "consumed during rendering" behavior in the
+  future, it would need to be added to this list manually — not a concern for the
+  two directives that exist today, but worth knowing this isn't self-updating.
 - **`templates.json` growth/maintenance is outside this plugin's control.** As more
-  templates are added to the library (or the cross-site URL situation above gets
-  fixed), the plugin picks them up automatically — no code change needed — but if a
-  template's reference document is deleted or moved without updating
+  templates are added to the library (or the cross-site URL situation noted above
+  gets fixed), the plugin picks them up automatically — no code change needed — but
+  if a template's reference document is deleted or moved without updating
   `templates.json`, the plugin will show the "Error" state.
 
 ## Testing / verification plan
 
-- Unit tests for `template-governance-utils.js` (template-name resolution,
-  `content.da.live` URL parsing, template-entry lookup, raw-HTML block/metadata
-  extraction, and the diff function) — pure functions, no DOM/fetch/SDK mocking,
-  mirroring `test/tools/fragments/fragment-utils.test.js`.
+- Unit tests for `template-governance-utils.js` (template-name resolution and
+  metadata-field extraction from a `.metadata` block, DA source-URL building,
+  `content.da.live` URL parsing, template-entry lookup, raw-HTML block-name
+  extraction including the structural-pseudo-block exclusion, and the diff
+  function) — pure functions, no DOM/fetch/SDK mocking, mirroring
+  `test/tools/fragments/fragment-utils.test.js`.
 - No automated test for `template-governance.js` itself (DOM + `fetch` + DA SDK
   `postMessage` wiring) — consistent with every other `tools/*` DA app in this repo.
-- Manual verification once the `context.path` risk above is resolved: tag a test
-  page with `<meta name="template" content="Homepage">` (or `Support`), confirm the
-  panel finds the matching reference document, confirm Missing/Added lists match a
+- Manual verification (performed live against the real DA editor and real content
+  during this task): tag a test page with a `template` metadata row matching
+  `Homepage` (or `Support`), confirm the panel finds the matching reference
+  document without requiring a prior Preview, confirm Missing/Added lists match a
   manual comparison against the fetched reference HTML, confirm the no-template and
   no-reference states render correctly for pages without/with-an-unrecognized
-  template tag, confirm Recheck re-runs the pipeline.
+  template value, confirm Recheck re-runs the pipeline.
