@@ -151,10 +151,23 @@ inference over whatever pages happen to exist.
 - Works against whatever site/org/repo the plugin is registered on (read from SDK
   context, not hardcoded) for the current page; follows `templates.json`'s own
   `value` URL for the reference document, whatever site it points to.
+- **(v2)** Reflects the template's actual **section structure** — not just a flat
+  block list — including a section's style (from its `section-metadata`), and
+  handles block types that repeat across multiple sections (e.g. `columns`, `hero`)
+  with count-aware "N of M present" reporting rather than a misleading binary per
+  occurrence. See the "v2" section below.
+- **(v2)** Lets the author **add a missing block directly from the panel**, pulled
+  from the reference document's own markup. This reverses the original read-only
+  decision — see Non-goals below and the v2 section for the full design.
+- **(v2)** Refreshes automatically while the panel is open, without a manual click,
+  polling on an interval. See the v2 section below.
 
 ## Non-goals
 
-- **No remediation actions.** Read-only report, no `sendHTML`/`sendText` calls.
+- ~~**No remediation actions.** Read-only report, no `sendHTML`/`sendText` calls.~~
+  **Superseded in v2** — see below. The panel now calls `actions.sendHTML` for the
+  "Add" action. Explicit, deliberate reversal of the original decision, made by the
+  user after seeing the anatomy-view prototype.
 - **No statistical sampling / peer-page crawling.** Superseded by this revision —
   there's a single authoritative reference per template now, so there's nothing to
   infer.
@@ -321,6 +334,194 @@ supplied or created.
   if a template's reference document is deleted or moved without updating
   `templates.json`, the plugin will show the "Error" state.
 
+## v2: Section-aware anatomy, add-to-page action, and auto-refresh
+
+Built after the original (v1) read-only Missing/Added report was implemented,
+reviewed, and manually verified end-to-end. Approved through a round of visual
+prototypes (three layout options compared, then a hybrid of two, then corrected
+against the real `Homepage` template's actual 11-section structure, then recolored
+to Adobe Spectrum 2's official tokens). Supersedes v1's flat block-name diff with a
+richer model; the metadata diff (title/template/description keys) is unchanged from
+v1 — only block-level analysis changes.
+
+### Why the flat block-name model wasn't enough
+
+The real `Homepage` template document has **11 sections**, and several block types
+repeat across multiple sections: `hero` appears twice (section 1, with a `landing`
+style variant, and section 7, plain), and `columns` appears **four** times (sections
+2, 5, 6, 8 — two of them using the `columns align-vertically` variant, which
+collapses to the same base block name `columns` since block identity is the first
+class token only). A flat "is this block name present anywhere on the page"
+check — v1's model — can't distinguish "the page has all 4 `columns` sections the
+template wants" from "the page has just 1 of the 4 `columns` the template wants":
+both look identical to a presence-only diff. Confirmed by parsing the real reference
+document directly (see the section list in the Data flow section below).
+
+### Data model: sections with counts, not a flat set
+
+Block extraction changes from a flat, deduplicated `string[]` to an ordered list of
+sections, each carrying its style (if any) and its (non-deduplicated) block names in
+document order:
+
+```
+extractSections(html): Array<{ style: string | null, blocks: string[] }>
+```
+
+- One entry per direct-child `<div>` of `<main>` (a "section").
+- `style` comes from that section's own `section-metadata` child block's `style`
+  row, or `null` if the section has none.
+- `blocks` is every OTHER direct-child `<div>` with a class, in document order,
+  using the same first-class-token naming as before, still excluding the structural
+  pseudo-block names `section-metadata`/`metadata` — but now **not deduplicated**,
+  and **not flattened across sections** — e.g. the real `Homepage` template's
+  section 10 (three side-by-side `card` blocks) yields `blocks: ['card', 'card',
+  'card']` for that one section.
+
+From this, block-type counts are just a sum:
+
+```
+countBlockOccurrences(sections): Record<string, number>
+```
+
+### Diffing with counts, without false precision
+
+A naive approach would walk the reference's sections in document order and
+"allocate" the current page's block instances to them one-by-one, marking each
+reference section definitively present or missing. **This was considered and
+rejected** — it would report specific section slots as satisfied/missing based on
+an arbitrary allocation order (which of the page's two `columns` sections is "the
+one" satisfying reference section 2 vs. section 5? There's no way to know), which
+reads as false precision the author could reasonably distrust.
+
+Instead:
+
+- **Block types that appear exactly once in the reference** get a clean binary
+  status per section: `present` or `missing`.
+- **Block types that repeat in the reference** get a shared **aggregate** status,
+  shown identically at *every* section position that type occupies: `X of Y
+  present`, where `Y` is the reference's total count for that name and `X` is the
+  current page's total count (capped display-wise at `Y`, since "more than needed"
+  is an "Added" concern, not a per-section one — see below). Status coloring:
+  `missing` (red) if `X = 0`, `partial` (notice/orange) if `0 < X < Y`, plain/neutral
+  if `X >= Y`.
+
+```
+computeSectionStatuses(referenceSections, currentCounts):
+  Array<{ style: string|null, blocks: Array<{
+    name: string,
+    status: 'present' | 'missing' | 'partial',
+    have: number,   // current page's total count for this name
+    total: number,  // reference's total count for this name (>= 1)
+  }> }>
+```
+
+- `status = 'present'` and `total = 1` → render as a plain block chip (no badge),
+  same visual treatment as v1's non-flagged blocks.
+- `status = 'missing'` → dashed red card + an "Add" button (see below).
+- `status = 'partial'` → amber/notice card showing `have of total`, no Add button in
+  v1 of this feature (see Non-goals) — adding one instance of a block that already
+  has some but not all copies is left to the author's judgment about placement.
+- `status = 'present'` with `total > 1` (fully satisfied repeat) → plain block chip,
+  same as the `total = 1` present case — no special badge once fully met.
+
+**Added** blocks (present on the page, absent from the reference by name entirely)
+are computed and shown exactly as in v1 — unchanged, still informational/neutral,
+still not itemized as "beyond quota" for a block type the reference names but at a
+higher count than needed (out of scope — see Non-goals).
+
+### UI: section-grouped anatomy view
+
+Replaces v1's two-list Missing/Added layout (kept only for the Added list, which
+remains a simple list at the bottom) with:
+
+1. A **completeness bar** at the top — one segment per expected block *instance*
+   (not per unique name; the real `Homepage` template has 12 total instances across
+   its 11 sections, once the metadata-only section 11 is excluded), colored neutral
+   gray if present, red if missing. A one-line summary below it: "`X` of `Y` expected
+   block instances present."
+2. One card per reference section, in template order, showing the section's index
+   and style label (if any), and its block(s) with the status treatment described
+   above. A section that itself carries no real content block (like the real
+   template's section 11, which is only `section-metadata` + the page `metadata`
+   block) is not rendered.
+3. A final "Beyond the template" strip listing Added blocks, styled the same
+   neutral way as v1.
+
+Colors are Adobe Spectrum 2's official semantic tokens (pulled directly from the
+`@adobe/spectrum-tokens` npm package, not approximated) — light theme:
+
+| State | Border/text | Background | Spectrum token (resolved) |
+|---|---|---|---|
+| Missing | `#D73220` | `#FFEBE8` | `negative-border-color-default` / `negative-subtle-background-color-default` |
+| Partial | `#D45B00` | `#FFECCF` | `icon-color-notice` / `notice-subtle-background-color-default` |
+| Neutral chrome | `#717171` text, `#E9E9E9` border | `#F3F3F3` | gray scale |
+
+### Add-to-page action
+
+Clicking "Add" on a `missing` (fully-absent, single-occurrence) block:
+
+1. Extracts that block's exact markup from the **already-fetched reference
+   document's HTML** — `findReferenceBlockHtml(referenceHtml, blockName): string |
+   null` locates the first section-level block `<div>` whose name matches and
+   returns its `outerHTML`.
+2. Calls `actions.sendHTML(blockHtml)` — the same DA SDK action Fragments uses to
+   insert content, sending the reference's real markup (images, copy, structure and
+   all), not an empty block skeleton.
+3. **Does not call `actions.closeLibrary()`** afterward, unlike Fragments — this
+   panel is a persistent monitor an author may add several missing pieces from in a
+   row, so it stays open.
+4. Shows a transient "Adding…" state on that item, then schedules an out-of-cycle
+   recheck ~2.5s later (independent of the regular poll interval) to give DA's
+   autosave time to land before re-fetching — since, per the "DA source freshness"
+   risk above, the panel's view of the current page is only as fresh as the last
+   save, adding a block doesn't appear until that save completes.
+
+**Known limitation, not solved here:** `sendHTML` inserts wherever DA's editor
+decides (its current cursor position, or the end of the document) — there is no SDK
+capability to insert "into section N specifically." The author may need to move the
+inserted block into place using DA's normal editing tools. This is a real constraint
+of the DA App SDK, not a gap in this plugin's design.
+
+### Auto-refresh (polling)
+
+Confirmed there is no push/event mechanism for this: the DA App SDK's action set
+(`daFetch`, `sendText`, `sendHTML`, `setHref`, `setHash`, `closeLibrary`,
+`getSelection`, `setPrompt`, `showPanel`) has nothing like an `onChange` or document
+subscription — read directly from `sdk.js`'s source. So "auto-refresh" means polling:
+
+- Every **8 seconds** while the panel is open and the tab is visible, silently
+  re-run the fetch-and-diff pipeline.
+- Pause the interval on `document.visibilitychange` when hidden; resume (and poll
+  once immediately) when visible again — avoids wasted requests while the DA tab
+  isn't in focus.
+- A poll tick that succeeds and produces a **different** report than what's
+  currently shown updates the UI; a poll tick that produces the **same** report is a
+  no-op (no re-render, no flicker, especially important since the author may be
+  mid-read of the list).
+- A poll tick that **fails** (network blip) is silently swallowed and retried next
+  tick — it must never overwrite a good, currently-displayed report with an error
+  state. Only the *initial* load and an explicit manual "Recheck" click surface
+  errors.
+- The manual "Recheck" button from v1 is kept, for an immediate check without
+  waiting for the next tick (e.g. right after the author makes an edit themselves).
+
+### v2 Non-goals
+
+- **No control over where `sendHTML` inserts content** — a real DA SDK limitation,
+  not something this plugin can work around.
+- **No Add action for `partial` (some-but-not-all) block types** — only fully
+  `missing` (0 of N) single-occurrence and repeat-type blocks get an Add button in
+  this version; deciding where a *partial* repeat's next instance should go is a
+  judgment call left to the author.
+- **No handling of "added beyond quota" for a known block type** (e.g. reference
+  wants 2 `columns`, page has 5) — the extra 3 are not itemized separately from a
+  true "Added" (unknown-to-the-template) block; out of scope for this version.
+- **No literal real-time reflection of unsaved keystrokes** — polling reads DA's
+  saved source, same staleness characteristic as v1, just refreshed automatically
+  instead of only on manual Recheck.
+- **No reordering/removal UI** for Added blocks — still purely informational, as in
+  v1.
+
 ## Testing / verification plan
 
 - Unit tests for `template-governance-utils.js` (template-name resolution and
@@ -329,8 +530,13 @@ supplied or created.
   extraction including the structural-pseudo-block exclusion, and the diff
   function) — pure functions, no DOM/fetch/SDK mocking, mirroring
   `test/tools/fragments/fragment-utils.test.js`.
+- Unit tests (v2) for `extractSections`, `countBlockOccurrences`,
+  `computeSectionStatuses` (single-occurrence present/missing, repeat-type
+  present/partial/missing, the "not rendered" case for a block-less section), and
+  `findReferenceBlockHtml` — same pure-function, no-mocking approach.
 - No automated test for `template-governance.js` itself (DOM + `fetch` + DA SDK
-  `postMessage` wiring) — consistent with every other `tools/*` DA app in this repo.
+  `postMessage` wiring, plus now `setInterval`/`visibilitychange` for polling) —
+  consistent with every other `tools/*` DA app in this repo.
 - Manual verification (performed live against the real DA editor and real content
   during this task): tag a test page with a `template` metadata row matching
   `Homepage` (or `Support`), confirm the panel finds the matching reference
@@ -338,3 +544,14 @@ supplied or created.
   manual comparison against the fetched reference HTML, confirm the no-template and
   no-reference states render correctly for pages without/with-an-unrecognized
   template value, confirm Recheck re-runs the pipeline.
+- Manual verification (v2, against the real `Homepage` template and a real test
+  page): confirm the anatomy view renders all real content-bearing sections in the
+  correct order with the correct style labels; confirm single-occurrence blocks show
+  clean present/missing; confirm repeat-type blocks (`hero`, `columns`) show the
+  matching "X of Y" badge at every section slot they occupy, colored correctly for
+  missing (0), partial (some), and satisfied (all); click "Add" on a missing block
+  and confirm the reference's real markup lands in the document (via DA's own
+  editor, since this plugin cannot verify document state itself) and the panel's
+  transient/recheck behavior fires; confirm polling picks up an edit made directly
+  in the DA editor within one interval without clicking Recheck; confirm polling
+  pauses when the browser tab is hidden and resumes on return.
