@@ -1,8 +1,5 @@
-const CONTENT_DA_ORIGIN = 'https://content.da.live';
-const STRUCTURAL_BLOCK_NAMES = new Set(['section-metadata', 'metadata']);
-
 export function buildSourceUrl(path, org, repo) {
-  return `${CONTENT_DA_ORIGIN}/${org}/${repo}${path}`;
+  return `https://content.da.live/${org}/${repo}${path}`;
 }
 
 function getMetadataRows(html) {
@@ -30,6 +27,8 @@ export function extractMetadataFields(html) {
   return names;
 }
 
+const CONTENT_DA_ORIGIN = 'https://content.da.live';
+
 export function parseContentDaUrl(url) {
   if (!url.startsWith(`${CONTENT_DA_ORIGIN}/`)) return null;
   const [org, repo, ...pathParts] = url.slice(CONTENT_DA_ORIGIN.length + 1).split('/');
@@ -42,16 +41,74 @@ export function findTemplateEntry(entries, templateName) {
   return entries.find((entry) => entry.key?.trim().toLowerCase() === target) || null;
 }
 
-export function extractBlockNames(html) {
+const STRUCTURAL_BLOCK_NAMES = new Set(['section-metadata', 'metadata']);
+
+export function extractSections(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const main = doc.querySelector('main');
   if (!main) return [];
-  const names = [];
-  main.querySelectorAll(':scope > div > div[class]').forEach((block) => {
-    const [name] = block.classList;
-    if (name && !STRUCTURAL_BLOCK_NAMES.has(name) && !names.includes(name)) names.push(name);
+  return [...main.children].map((section) => {
+    let style = null;
+    const blocks = [];
+    [...section.children].forEach((child) => {
+      const [name] = child.classList;
+      if (!name) return;
+      if (name === 'section-metadata') {
+        const rows = [...child.querySelectorAll(':scope > div')];
+        const styleRow = rows.find(
+          (row) => row.children[0]?.textContent?.trim().toLowerCase() === 'style',
+        );
+        if (styleRow) style = styleRow.children[1]?.textContent?.trim() || style;
+        return;
+      }
+      if (STRUCTURAL_BLOCK_NAMES.has(name)) return;
+      blocks.push(name);
+    });
+    return { style, blocks };
   });
-  return names;
+}
+
+export function countBlockOccurrences(sections) {
+  const counts = {};
+  sections.forEach((section) => {
+    section.blocks.forEach((name) => {
+      counts[name] = (counts[name] || 0) + 1;
+    });
+  });
+  return counts;
+}
+
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const referenceCounts = countBlockOccurrences(referenceSections);
+  return referenceSections
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
+      style: section.style,
+      blocks: section.blocks.map((name) => {
+        const total = referenceCounts[name] || 0;
+        const have = currentCounts[name] || 0;
+        let status;
+        if (have <= 0) status = 'missing';
+        else if (have < total) status = 'partial';
+        else status = 'present';
+        return {
+          name, status, have, total,
+        };
+      }),
+    }));
+}
+
+export function computeAddedBlocks(currentCounts, referenceCounts) {
+  return Object.keys(currentCounts).filter((name) => !(name in referenceCounts));
+}
+
+export function findReferenceBlockHtml(referenceHtml, blockName) {
+  const doc = new DOMParser().parseFromString(referenceHtml, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return null;
+  const allBlocks = [...main.children].flatMap((section) => [...section.children]);
+  const match = allBlocks.find((child) => child.classList[0] === blockName);
+  return match ? match.outerHTML : null;
 }
 
 export function diffSets(currentSet, referenceSet) {

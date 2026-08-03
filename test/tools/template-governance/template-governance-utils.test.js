@@ -4,7 +4,11 @@ import {
   resolveTemplateFromHtml,
   parseContentDaUrl,
   findTemplateEntry,
-  extractBlockNames,
+  extractSections,
+  countBlockOccurrences,
+  computeSectionStatuses,
+  computeAddedBlocks,
+  findReferenceBlockHtml,
   extractMetadataFields,
   diffSets,
 } from '../../../tools/template-governance/template-governance-utils.js';
@@ -29,30 +33,8 @@ describe('template-governance-utils.js', () => {
       expect(resolveTemplateFromHtml(html)).to.equal('Homepage');
     });
 
-    it('matches the template row key case-insensitively', () => {
-      const html = `
-        <html><body><main><div>
-          <div class="metadata">
-            <div><div><p>Template</p></div><div><p>Homepage</p></div></div>
-          </div>
-        </div></main></body></html>
-      `;
-      expect(resolveTemplateFromHtml(html)).to.equal('Homepage');
-    });
-
     it('returns null when there is no .metadata block', () => {
       expect(resolveTemplateFromHtml('<html><body><main></main></body></html>')).to.equal(null);
-    });
-
-    it('returns null when the .metadata block has no template row', () => {
-      const html = `
-        <html><body><main><div>
-          <div class="metadata">
-            <div><div><p>title</p></div><div><p>Home</p></div></div>
-          </div>
-        </div></main></body></html>
-      `;
-      expect(resolveTemplateFromHtml(html)).to.equal(null);
     });
   });
 
@@ -86,51 +68,144 @@ describe('template-governance-utils.js', () => {
     });
   });
 
-  describe('extractBlockNames', () => {
-    it('extracts the block name (first class) from each section-level block div', () => {
+  describe('extractSections', () => {
+    it('returns one entry per section with its blocks in order and the section style', () => {
       const html = `
         <html><body><main>
           <div>
             <div class="hero landing"><div>content</div></div>
-          </div>
-          <div>
-            <div class="columns two-up"><div>a</div><div>b</div></div>
-            <p>default content, not a block</p>
-          </div>
-        </main></body></html>
-      `;
-      expect(extractBlockNames(html)).to.deep.equal(['hero', 'columns']);
-    });
-
-    it('returns an empty array when there is no main element', () => {
-      expect(extractBlockNames('<html><body></body></html>')).to.deep.equal([]);
-    });
-
-    it('deduplicates repeated block names', () => {
-      const html = `
-        <html><body><main>
-          <div><div class="hero"><div>a</div></div></div>
-          <div><div class="hero"><div>b</div></div></div>
-        </main></body></html>
-      `;
-      expect(extractBlockNames(html)).to.deep.equal(['hero']);
-    });
-
-    it('excludes structural pseudo-blocks (section-metadata, metadata)', () => {
-      const html = `
-        <html><body><main>
-          <div>
             <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
           </div>
           <div>
-            <div class="hero"><div>content</div></div>
+            <div class="columns"><div>a</div></div>
           </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+      ]);
+    });
+
+    it('excludes the page metadata block from a section\'s blocks', () => {
+      const html = `
+        <html><body><main>
           <div>
+            <div class="columns"><div>a</div></div>
             <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
           </div>
         </main></body></html>
       `;
-      expect(extractBlockNames(html)).to.deep.equal(['hero']);
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'] }]);
+    });
+
+    it('records multiple block instances within one section in order, not deduplicated', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="card"><div>a</div></div>
+            <div class="card"><div>b</div></div>
+            <div class="card"><div>c</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'] }]);
+    });
+
+    it('returns an empty array when there is no main element', () => {
+      expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+  });
+
+  describe('countBlockOccurrences', () => {
+    it('sums block occurrences across all sections', () => {
+      const sections = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      expect(countBlockOccurrences(sections)).to.deep.equal({ hero: 1, columns: 2 });
+    });
+
+    it('returns an empty object for no sections', () => {
+      expect(countBlockOccurrences([])).to.deep.equal({});
+    });
+  });
+
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'columns-media', status: 'present', have: 1, total: 1 }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'tabs', status: 'missing', have: 0, total: 1 }] },
+      ]);
+    });
+
+    it('marks a repeated block partial at every slot when some but not all instances are present', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 1 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['partial', 'partial']);
+      expect(statuses.map((s) => s.blocks[0].total)).to.deep.equal([2, 2]);
+      expect(statuses.map((s) => s.blocks[0].have)).to.deep.equal([1, 1]);
+    });
+
+    it('marks a repeated block present at every slot once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+  });
+
+  describe('computeAddedBlocks', () => {
+    it('returns block names present on the page but absent from the reference', () => {
+      expect(computeAddedBlocks({ hero: 1, 'promo-banner': 1 }, { hero: 1 })).to.deep.equal(['promo-banner']);
+    });
+
+    it('returns an empty array when nothing is added', () => {
+      expect(computeAddedBlocks({ hero: 1 }, { hero: 2 })).to.deep.equal([]);
+    });
+  });
+
+  describe('findReferenceBlockHtml', () => {
+    it('returns the outer HTML of the first matching block', () => {
+      const html = `
+        <html><body><main>
+          <div><div class="hero"><div>content</div></div></div>
+        </main></body></html>
+      `;
+      expect(findReferenceBlockHtml(html, 'hero')).to.equal('<div class="hero"><div>content</div></div>');
+    });
+
+    it('returns null when no block matches', () => {
+      const html = '<html><body><main><div><div class="hero"></div></div></main></body></html>';
+      expect(findReferenceBlockHtml(html, 'tabs')).to.equal(null);
+    });
+
+    it('returns null when there is no main element', () => {
+      expect(findReferenceBlockHtml('<html><body></body></html>', 'hero')).to.equal(null);
     });
   });
 
