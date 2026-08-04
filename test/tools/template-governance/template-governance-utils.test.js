@@ -181,7 +181,7 @@ describe('template-governance-utils.js', () => {
       const reference = [{ style: null, blocks: ['columns-media'] }];
       const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+        { style: null, referenceIndex: 0, blocks: [{ name: 'columns-media', status: 'present' }] },
       ]);
     });
 
@@ -189,7 +189,7 @@ describe('template-governance-utils.js', () => {
       const reference = [{ style: null, blocks: ['tabs'] }];
       const statuses = computeSectionStatuses(reference, {});
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+        { style: null, referenceIndex: 0, blocks: [{ name: 'tabs', status: 'missing' }] },
       ]);
     });
 
@@ -234,6 +234,16 @@ describe('template-governance-utils.js', () => {
       ];
       const statuses = computeSectionStatuses(reference, { hero: 1 });
       expect(statuses).to.have.lengthOf(1);
+    });
+
+    it('preserves the original reference index when an earlier section is filtered out', () => {
+      const reference = [
+        { style: 'footnotes', blocks: [] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+      expect(statuses[0].referenceIndex).to.equal(1);
     });
   });
 

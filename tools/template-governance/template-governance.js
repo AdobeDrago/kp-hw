@@ -226,10 +226,11 @@ class TemplateGovernanceReport extends LitElement {
     `;
   }
 
-  renderPageSection(section) {
+  renderPageSection(section, index) {
+    const label = section.style ? `Section ${index + 1} · ${section.style}` : `Section ${index + 1}`;
     return html`
       <div class="section-card">
-        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
+        <p class="section-label">${label}</p>
         ${section.defaultContent.length ? html`
           <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
         ` : ''}
@@ -239,9 +240,12 @@ class TemplateGovernanceReport extends LitElement {
   }
 
   renderMissingSection(section) {
+    const label = section.style
+      ? `Template section ${section.referenceIndex + 1} · ${section.style}`
+      : `Template section ${section.referenceIndex + 1}`;
     return html`
       <div class="section-card">
-        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
+        <p class="section-label">${label}</p>
         ${section.blocks.map((block) => this.renderBlock(block))}
       </div>
     `;
@@ -287,7 +291,7 @@ class TemplateGovernanceReport extends LitElement {
         ${this.renderBar()}
         <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
         <div class="anatomy">
-          ${this._report.currentSections.map((section) => this.renderPageSection(section))}
+          ${this._report.currentSections.map((section, index) => this.renderPageSection(section, index))}
         </div>
         ${this._report.missingSections.length ? html`
           <p class="missing-from-template-label">Missing from template</p>
