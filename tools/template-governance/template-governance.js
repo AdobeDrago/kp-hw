@@ -19,7 +19,7 @@ const styles = await loadStyle(import.meta.url);
 
 const EL_NAME = 'template-governance-report';
 const TEMPLATES_JSON_PATH = '/docs/library/templates.json';
-const POLL_INTERVAL_MS = 8000;
+const POLL_INTERVAL_MS = 3000;
 const ADD_RECHECK_DELAY_MS = 2500;
 
 async function fetchText(url, token) {
@@ -276,6 +276,7 @@ class TemplateGovernanceReport extends LitElement {
           <button class="btn-recheck" @click=${() => this.load()}>Recheck</button>
         </div>
         ${this.renderBar()}
+        <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
         <div class="anatomy">
           ${this._report.sections.map((section, index) => this.renderSection(section, index))}
         </div>

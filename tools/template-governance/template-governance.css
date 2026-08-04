@@ -93,6 +93,13 @@
   color: #717171;
 }
 
+.add-hint {
+  margin: 8px 0 0;
+  padding: 0 20px;
+  font-size: 11px;
+  color: #717171;
+}
+
 .anatomy {
   display: flex;
   flex-direction: column;
