@@ -1,0 +1,258 @@
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.status-container {
+  display: flex;
+  place-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 20px;
+  height: 90%;
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+.status-container .status {
+  width: 100%;
+  text-align: center;
+  margin: 0;
+}
+
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.governance-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #E9E9E9;
+}
+
+.report-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.btn-recheck {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 18px;
+  background-image: linear-gradient(95.85deg, #b539c8 0%, #7155fa 66%, #3b63fb 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.completeness-bar {
+  display: flex;
+  gap: 2px;
+  padding: 12px 20px 0;
+}
+
+.bar-segment {
+  flex: 1;
+  height: 8px;
+  border-radius: 2px;
+  background: #E9E9E9;
+}
+
+.bar-segment-missing {
+  background: #D73220;
+}
+
+.bar-segment-present {
+  background: #079355;
+}
+
+.bar-summary {
+  margin: 6px 0 0;
+  padding: 0 20px;
+  font-size: 12px;
+  color: #717171;
+}
+
+.add-hint {
+  margin: 8px 0 0;
+  padding: 0 20px;
+  font-size: 11px;
+  color: #717171;
+}
+
+.anatomy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 20px;
+}
+
+.section-card {
+  border: 1px solid #E9E9E9;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.section-label {
+  margin: 0 0 6px;
+  font-size: 10px;
+  color: #717171;
+}
+
+.block-chip {
+  background: #F3F3F3;
+  border: 1px solid #E9E9E9;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #292929;
+}
+
+.block-chip + .block-chip {
+  margin-top: 4px;
+}
+
+.block-chip-missing {
+  background: #FFEBE8;
+  border: 1px dashed #D73220;
+  color: #D73220;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.block-chip-added {
+  color: #505050;
+}
+
+.btn-add {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid #D73220;
+  border-radius: 50%;
+  background: #fff;
+  color: #D73220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.block-pending {
+  font-size: 11px;
+  color: #D73220;
+}
+
+.added-strip {
+  padding: 4px 20px 12px;
+  border-bottom: 1px solid #E9E9E9;
+}
+
+.added-label {
+  font-size: 10px;
+  color: #717171;
+  margin: 0 0 6px;
+}
+
+.report-section {
+  padding: 12px 20px;
+  border-left: 3px solid transparent;
+}
+
+.report-section-missing {
+  border-left-color: #D73220;
+}
+
+.report-section-added {
+  border-left-color: #E9E9E9;
+}
+
+.report-section-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.report-section-missing .report-section-title {
+  color: #D73220;
+}
+
+.report-section-added .report-section-title {
+  color: #717171;
+  font-weight: 600;
+}
+
+.report-section-missing .finding-type {
+  color: #D73220;
+  font-weight: 700;
+}
+
+.report-section-added .finding-type {
+  color: #717171;
+  font-weight: 400;
+}
+
+.finding-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finding-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.finding-type {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #717171;
+}
+
+.finding-empty {
+  margin: 0;
+  color: #717171;
+  font-size: 13px;
+}
+
+.btn-retry {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 18px;
+  background-image: linear-gradient(95.85deg, #b539c8 0%, #7155fa 66%, #3b63fb 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.block-chip-default-content {
+  background: #E5F0FE;
+  border: 1px solid #4B75FF;
+  color: #4B75FF;
+}
