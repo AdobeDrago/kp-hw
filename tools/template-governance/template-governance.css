@@ -82,6 +82,10 @@
   background: #D73220;
 }
 
+.bar-segment-present {
+  background: #079355;
+}
+
 .bar-summary {
   margin: 6px 0 0;
   padding: 0 20px;

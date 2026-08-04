@@ -94,7 +94,7 @@ class TemplateGovernanceReport extends LitElement {
     this.shadowRoot.adoptedStyleSheets = [styles];
     this._status = 'loading';
     this._report = null;
-    this._pendingAdd = null;
+    this._pendingAdd = new Set();
     this._requestId = 0;
     this._pollHandle = null;
     this.load();
@@ -154,13 +154,15 @@ class TemplateGovernanceReport extends LitElement {
   }
 
   async handleAdd(blockName) {
-    if (!this._report || this._pendingAdd) return;
+    if (!this._report || this._pendingAdd.has(blockName)) return;
     const blockHtml = findReferenceBlockHtml(this._report.referenceHtml, blockName);
     if (!blockHtml) return;
-    this._pendingAdd = blockName;
+    this._pendingAdd.add(blockName);
+    this._pendingAdd = new Set(this._pendingAdd);
     this.actions.sendHTML(blockHtml);
     setTimeout(() => {
-      this._pendingAdd = null;
+      this._pendingAdd.delete(blockName);
+      this._pendingAdd = new Set(this._pendingAdd);
       this.load({ silent: true });
     }, ADD_RECHECK_DELAY_MS);
   }
@@ -209,7 +211,7 @@ class TemplateGovernanceReport extends LitElement {
       `;
     }
     const label = block.total > 1 ? `${block.name} · ${block.have} of ${block.total}` : block.name;
-    const isPending = this._pendingAdd === block.name;
+    const isPending = this._pendingAdd.has(block.name);
     return html`
       <div class="block-chip block-chip-missing">
         <span>${label}</span>
