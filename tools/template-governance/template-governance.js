@@ -51,7 +51,10 @@ async function buildReport(org, repo, currentHtml, token) {
   const currentCounts = countBlockOccurrences(currentSections);
   const referenceCounts = countBlockOccurrences(referenceSections);
 
-  const sections = computeSectionStatuses(referenceSections, currentCounts, currentSections);
+  const sections = computeSectionStatuses(referenceSections, currentCounts);
+  const missingSections = sections.filter(
+    (section) => section.blocks.some((block) => block.status === 'missing'),
+  );
   const addedBlocks = computeAddedBlocks(currentCounts, referenceCounts);
 
   const totalExpected = Object.values(referenceCounts).reduce((sum, n) => sum + n, 0);
@@ -69,7 +72,8 @@ async function buildReport(org, repo, currentHtml, token) {
     status: 'ready',
     template: templateName,
     referenceHtml,
-    sections,
+    currentSections,
+    missingSections,
     addedBlocks,
     totalExpected,
     totalPresent,
@@ -222,7 +226,7 @@ class TemplateGovernanceReport extends LitElement {
     `;
   }
 
-  renderSection(section, index) {
+  renderPageSection(section, index) {
     const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
     return html`
       <div class="section-card">
@@ -230,6 +234,16 @@ class TemplateGovernanceReport extends LitElement {
         ${section.defaultContent.length ? html`
           <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
         ` : ''}
+        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+      </div>
+    `;
+  }
+
+  renderMissingSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
         ${section.blocks.map((block) => this.renderBlock(block))}
       </div>
     `;
@@ -275,8 +289,14 @@ class TemplateGovernanceReport extends LitElement {
         ${this.renderBar()}
         <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
         <div class="anatomy">
-          ${this._report.sections.map((section, index) => this.renderSection(section, index))}
+          ${this._report.currentSections.map((section, index) => this.renderPageSection(section, index))}
         </div>
+        ${this._report.missingSections.length ? html`
+          <p class="missing-from-template-label">Missing from template</p>
+          <div class="anatomy">
+            ${this._report.missingSections.map((section, index) => this.renderMissingSection(section, index))}
+          </div>
+        ` : ''}
         ${this.renderAdded()}
         ${this.renderFindingList(
           'Missing metadata',

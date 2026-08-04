@@ -82,14 +82,12 @@ export function countBlockOccurrences(sections) {
   return counts;
 }
 
-export function computeSectionStatuses(referenceSections, currentCounts, currentSections = []) {
+export function computeSectionStatuses(referenceSections, currentCounts) {
   const remaining = { ...currentCounts };
   return referenceSections
-    .map((section, index) => ({ section, index }))
-    .filter(({ section }) => section.blocks.length > 0)
-    .map(({ section, index }) => ({
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
       style: section.style,
-      defaultContent: currentSections[index]?.defaultContent || [],
       blocks: section.blocks.map((name) => {
         const available = remaining[name] || 0;
         if (available > 0) {
