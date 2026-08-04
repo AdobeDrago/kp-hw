@@ -457,8 +457,8 @@ Current structure:
    if missing. A one-line summary below it: "`X` of `Y` expected block instances
    present."
 2. **One card per the current page's own actual section** (`currentSections`, from
-   `extractSections(currentHtml)` — the page's real index, real order, real style
-   labels, real content), each showing:
+   `extractSections(currentHtml)` — the page's real order, real content), each
+   showing:
    - a default-content chip (Spectrum 2 informative `#4B75FF`/`#E5F0FE`) when that
      section has content outside any block — same as before, just now describing
      the page's own section directly rather than a reference-paired one (no more
@@ -475,6 +475,19 @@ Current structure:
    an author can still add straight from this list; they do **not** show a
    default-content chip (there's no current-page section to describe — by
    definition, these are things the page doesn't have).
+
+**Card labels: no numeric index — a real name, or nothing.** Both card types
+originally showed a sequential number (`1`, `2`, `3`...) ahead of the section's
+style, if any. The user flagged this as actively misleading on the "Missing from
+template" cards specifically: the numbers there don't correspond to any real
+section — they're just this filtered list's own count — and reading "1", "2", "3"
+invites the (wrong) inference "this is missing from section 1/2/3 of your page" or
+"of the template." Fixed by dropping the numeric index everywhere (both card types,
+for consistency): the label now shows the section's own `style` value when one
+exists (e.g. `pale-blue`), and renders no label at all when it doesn't — never a
+fabricated identifier. In practice, most of the real `Homepage` template's sections
+have no style set, so many "Missing from template" cards now show no label above
+their block chip at all, which is honest: there is no name to give them.
 4. A final "Beyond the template" strip listing Added blocks, styled the same
    neutral way as before — unchanged, kept for the same reason as always: a block
    type the reference never names at all is still worth naming as "beyond it,"

@@ -3970,11 +3970,135 @@ git commit -m "feat: reorient anatomy view around the page's own sections"
 
 ---
 
-### Task 14: Manual verification and registration hand-off
+### Task 14: Replace card index numbers with the section's real name
 
-This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, and the page-oriented anatomy view with trailing "Missing from template" cards from Task 13) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+**Why this task exists:** the user saw "Missing from template" cards numbered `1`, `2`, `3` and reasonably read that as "these are missing from section 1/2/3" — but those numbers were never real section identifiers, just this filtered list's own sequential count. Confirmed as genuinely misleading, not a misunderstanding. Fix: drop the numeric index from both card types (page-oriented and missing-from-template, for consistency) and show only the section's real `style` value when one exists — no label at all when it doesn't, rather than fabricating an identifier. See the design spec's "Card labels: no numeric index — a real name, or nothing" note for the full rationale.
 
-Additionally for this final pass, confirm: the primary anatomy cards are ordered and numbered by the CURRENT PAGE's own real sections (not the template's), each showing that section's actual blocks (plain, no status coloring) plus a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when present; confirm a "Missing from template" label and a second set of cards appears AFTER the page's own sections, only for template sections still missing at least one block, with the usual present/missing coloring and Add buttons on those; confirm a page whose sections fully satisfy the template renders zero "Missing from template" cards (and no label).
+**Files:**
+- Modify: `tools/template-governance/template-governance.js` — targeted changes to `renderPageSection`, `renderMissingSection`, and their two call sites in `render()`
+
+**Interfaces:**
+- `renderPageSection(section)` and `renderMissingSection(section)` — both drop their `index` parameter entirely (no longer used).
+- No changes to any data-producing function (`extractSections`, `computeSectionStatuses`, `buildReport`, etc.) — this is a rendering-only fix, the underlying data already carries `style`.
+
+- [ ] **Step 1: Update `renderPageSection`**
+
+Replace this method:
+
+```js
+  renderPageSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderPageSection(section) {
+    return html`
+      <div class="section-card">
+        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 2: Update `renderMissingSection`**
+
+Replace this method:
+
+```js
+  renderMissingSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderMissingSection(section) {
+    return html`
+      <div class="section-card">
+        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 3: Update the two call sites in `render()`**
+
+Replace this:
+
+```js
+        <div class="anatomy">
+          ${this._report.currentSections.map((section, index) => this.renderPageSection(section, index))}
+        </div>
+        ${this._report.missingSections.length ? html`
+          <p class="missing-from-template-label">Missing from template</p>
+          <div class="anatomy">
+            ${this._report.missingSections.map((section, index) => this.renderMissingSection(section, index))}
+          </div>
+        ` : ''}
+```
+
+with:
+
+```js
+        <div class="anatomy">
+          ${this._report.currentSections.map((section) => this.renderPageSection(section))}
+        </div>
+        ${this._report.missingSections.length ? html`
+          <p class="missing-from-template-label">Missing from template</p>
+          <div class="anatomy">
+            ${this._report.missingSections.map((section) => this.renderMissingSection(section))}
+          </div>
+        ` : ''}
+```
+
+- [ ] **Step 4: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance.js`
+Expected: no errors (in particular, no `no-unused-vars` complaint about a leftover unused `index` parameter — it's fully removed from both method signatures and both call sites).
+
+- [ ] **Step 5: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass (no automated test covers this component, so this just confirms nothing else in the repo regressed).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add tools/template-governance/template-governance.js
+git commit -m "fix: replace misleading card index numbers with the section's real name"
+```
+
+---
+
+### Task 15: Manual verification and registration hand-off
+
+This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, the page-oriented anatomy view with trailing "Missing from template" cards from Task 13, and the card-label fix from Task 14) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+
+Additionally for this final pass, confirm: the primary anatomy cards are ORDERED by the CURRENT PAGE's own real sections (not the template's) but carry NO numeric index — only the section's `style` value if set, or no label at all if not — each showing that section's actual blocks (plain, no status coloring) plus a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when present; confirm a "Missing from template" label and a second set of cards appears AFTER the page's own sections (also with no numeric index, style-or-nothing labels), only for template sections still missing at least one block, with the usual present/missing coloring and Add buttons on those; confirm a page whose sections fully satisfy the template renders zero "Missing from template" cards (and no label).
 
 **Files:** none committed.
 
