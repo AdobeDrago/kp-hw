@@ -464,7 +464,16 @@ Colors are Adobe Spectrum 2's official semantic tokens (pulled directly from the
 | Partial | `#D45B00` | `#FFECCF` | `icon-color-notice` / `notice-subtle-background-color-default` |
 | Neutral chrome | `#717171` text, `#E9E9E9` border | `#F3F3F3` | gray scale |
 
-### Default-content indicator (the page's actual structure)
+### Default-content indicator (the page's actual structure) — built, then removed
+
+**Removed after the user tried it live and didn't like it** (no specific reason
+recorded beyond that — reverted on request, not replaced with an alternative). The
+code (`extractSections`'s `defaultContent` field, `buildReport`'s `currentSections`,
+`renderCurrentStructure()`, and its Spectrum 2 "informative" CSS) was cleanly
+reverted via `git revert` rather than hand-edited back out, so the git history keeps
+both the original implementation and the removal as a clear, invertible pair. The
+description below is kept for the historical record (what was built and why) — it is
+**not** part of the current plugin.
 
 The reference-comparison anatomy above is deliberately aligned to the *reference
 template's* section order — it can't show the current page's own actual section

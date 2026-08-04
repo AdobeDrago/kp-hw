@@ -2568,9 +2568,11 @@ git commit -m "fix: convert reference block markup to a table before sending Add
 
 ---
 
-### Task 11: Default-content indicator for the current page's actual structure
+### Task 11: Default-content indicator for the current page's actual structure — REVERTED
 
-**Why this task exists:** the anatomy cards built so far only show blocks, aligned to the reference template's section order — they say nothing about "default content" (headings, paragraphs, lists authored directly in a section, not wrapped in any block). The user asked for a clearer, separate view of the page's real, actual structure that surfaces this — specifically naming the exact tag types present (e.g. `h2, p`), not a generic "text" label, styled with Adobe Spectrum 2's official "informative" color (`#4B75FF` border/text, `#E5F0FE` background — pulled from `@adobe/spectrum-tokens`, same source as the other status colors). Approved via prototype, placed above the existing reference-comparison anatomy cards.
+**Built, then removed.** The user tried this live in the DA editor and asked to have it removed (no specific reason recorded). Reverted cleanly via `git revert` of this task's commit, rather than by hand-editing the code back out — so the four files this task touched are back to their exact pre-Task-11 state. The task's original rationale is kept below for the historical record; none of it reflects the current plugin.
+
+**Why this task existed:** the anatomy cards built so far only show blocks, aligned to the reference template's section order — they say nothing about "default content" (headings, paragraphs, lists authored directly in a section, not wrapped in any block). The user asked for a clearer, separate view of the page's real, actual structure that surfaces this — specifically naming the exact tag types present (e.g. `h2, p`), not a generic "text" label, styled with Adobe Spectrum 2's official "informative" color (`#4B75FF` border/text, `#E5F0FE` background — pulled from `@adobe/spectrum-tokens`, same source as the other status colors). Approved via prototype, placed above the existing reference-comparison anatomy cards.
 
 **Files:**
 - Modify: `tools/template-governance/template-governance-utils.js` — targeted change to `extractSections` only (adds a `defaultContent` field to its return shape)
