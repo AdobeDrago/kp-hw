@@ -202,19 +202,10 @@ class TemplateGovernanceReport extends LitElement {
     if (block.status === 'present') {
       return html`<div class="block-chip">${block.name}</div>`;
     }
-    if (block.status === 'partial') {
-      return html`
-        <div class="block-chip block-chip-partial">
-          <span>${block.name}</span>
-          <span>${block.have} of ${block.total}</span>
-        </div>
-      `;
-    }
-    const label = block.total > 1 ? `${block.name} · ${block.have} of ${block.total}` : block.name;
     const isPending = this._pendingAdd.has(block.name);
     return html`
       <div class="block-chip block-chip-missing">
-        <span>${label}</span>
+        <span>${block.name}</span>
         ${isPending
           ? html`<span class="block-pending">Adding…</span>`
           : html`

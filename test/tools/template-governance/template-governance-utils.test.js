@@ -137,7 +137,7 @@ describe('template-governance-utils.js', () => {
       const reference = [{ style: null, blocks: ['columns-media'] }];
       const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'columns-media', status: 'present', have: 1, total: 1 }] },
+        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
       ]);
     });
 
@@ -145,28 +145,42 @@ describe('template-governance-utils.js', () => {
       const reference = [{ style: null, blocks: ['tabs'] }];
       const statuses = computeSectionStatuses(reference, {});
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'tabs', status: 'missing', have: 0, total: 1 }] },
+        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
       ]);
     });
 
-    it('marks a repeated block partial at every slot when some but not all instances are present', () => {
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
       const reference = [
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
       ];
-      const statuses = computeSectionStatuses(reference, { columns: 1 });
-      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['partial', 'partial']);
-      expect(statuses.map((s) => s.blocks[0].total)).to.deep.equal([2, 2]);
-      expect(statuses.map((s) => s.blocks[0].have)).to.deep.equal([1, 1]);
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
     });
 
-    it('marks a repeated block present at every slot once fully satisfied', () => {
+    it('marks every slot of a repeated block present once fully satisfied', () => {
       const reference = [
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
       ];
       const statuses = computeSectionStatuses(reference, { columns: 2 });
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
     });
 
     it('omits sections with no real content block', () => {

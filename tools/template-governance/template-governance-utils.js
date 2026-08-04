@@ -78,21 +78,18 @@ export function countBlockOccurrences(sections) {
 }
 
 export function computeSectionStatuses(referenceSections, currentCounts) {
-  const referenceCounts = countBlockOccurrences(referenceSections);
+  const remaining = { ...currentCounts };
   return referenceSections
     .filter((section) => section.blocks.length > 0)
     .map((section) => ({
       style: section.style,
       blocks: section.blocks.map((name) => {
-        const total = referenceCounts[name] || 0;
-        const have = currentCounts[name] || 0;
-        let status;
-        if (have <= 0) status = 'missing';
-        else if (have < total) status = 'partial';
-        else status = 'present';
-        return {
-          name, status, have, total,
-        };
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
       }),
     }));
 }
