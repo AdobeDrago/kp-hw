@@ -83,8 +83,8 @@ describe('template-governance-utils.js', () => {
         </main></body></html>
       `;
       expect(extractSections(html)).to.deep.equal([
-        { style: 'full-width', blocks: ['hero'] },
-        { style: null, blocks: ['columns'] },
+        { style: 'full-width', blocks: ['hero'], defaultContent: [] },
+        { style: null, blocks: ['columns'], defaultContent: [] },
       ]);
     });
 
@@ -97,7 +97,7 @@ describe('template-governance-utils.js', () => {
           </div>
         </main></body></html>
       `;
-      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'] }]);
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'], defaultContent: [] }]);
     });
 
     it('records multiple block instances within one section in order, not deduplicated', () => {
@@ -110,11 +110,54 @@ describe('template-governance-utils.js', () => {
           </div>
         </main></body></html>
       `;
-      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'] }]);
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'], defaultContent: [] }]);
     });
 
     it('returns an empty array when there is no main element', () => {
       expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+
+    it('records the tag names of default (non-block) content, deduplicated and in order', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Heading</h2>
+            <p>First paragraph</p>
+            <p>Second paragraph</p>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: [], defaultContent: ['h2', 'p'] }]);
+    });
+
+    it('records both default content and blocks in the same section', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Intro</h2>
+            <p>Some text</p>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: null, blocks: ['columns'], defaultContent: ['h2', 'p'] },
+      ]);
+    });
+
+    it('does not count section-metadata or the page metadata block as default content', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <p>Some text</p>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: [], defaultContent: ['p'] },
+      ]);
     });
   });
 
@@ -138,7 +181,7 @@ describe('template-governance-utils.js', () => {
       const reference = [{ style: null, blocks: ['columns-media'] }];
       const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+        { style: null, defaultContent: [], blocks: [{ name: 'columns-media', status: 'present' }] },
       ]);
     });
 
@@ -146,7 +189,7 @@ describe('template-governance-utils.js', () => {
       const reference = [{ style: null, blocks: ['tabs'] }];
       const statuses = computeSectionStatuses(reference, {});
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+        { style: null, defaultContent: [], blocks: [{ name: 'tabs', status: 'missing' }] },
       ]);
     });
 
@@ -191,6 +234,45 @@ describe('template-governance-utils.js', () => {
       ];
       const statuses = computeSectionStatuses(reference, { hero: 1 });
       expect(statuses).to.have.lengthOf(1);
+    });
+
+    it('defaults defaultContent to an empty array when no currentSections argument is given', () => {
+      const reference = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses[0].defaultContent).to.deep.equal([]);
+    });
+
+    it('pairs each surviving reference section with the current page section at the same original index', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const current = [
+        { style: null, blocks: ['hero'], defaultContent: ['h1', 'p'] },
+        { style: null, blocks: ['columns'], defaultContent: ['p'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1, columns: 1 }, current);
+      expect(statuses.map((s) => s.defaultContent)).to.deep.equal([['h1', 'p'], ['p']]);
+    });
+
+    it('preserves the original reference index when pairing, even when an earlier section is filtered out', () => {
+      const reference = [
+        { style: 'footnotes', blocks: [] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const current = [
+        { style: null, blocks: [], defaultContent: ['ignored-because-filtered-out'] },
+        { style: null, blocks: ['hero'], defaultContent: ['h2'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 }, current);
+      expect(statuses).to.have.lengthOf(1);
+      expect(statuses[0].defaultContent).to.deep.equal(['h2']);
+    });
+
+    it('defaults to an empty array when there is no current section at the corresponding index', () => {
+      const reference = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, { hero: 1 }, []);
+      expect(statuses[0].defaultContent).to.deep.equal([]);
     });
   });
 

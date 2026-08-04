@@ -250,3 +250,9 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+.block-chip-default-content {
+  background: #E5F0FE;
+  border: 1px solid #4B75FF;
+  color: #4B75FF;
+}

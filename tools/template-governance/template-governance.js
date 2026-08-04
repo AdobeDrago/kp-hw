@@ -51,7 +51,7 @@ async function buildReport(org, repo, currentHtml, token) {
   const currentCounts = countBlockOccurrences(currentSections);
   const referenceCounts = countBlockOccurrences(referenceSections);
 
-  const sections = computeSectionStatuses(referenceSections, currentCounts);
+  const sections = computeSectionStatuses(referenceSections, currentCounts, currentSections);
   const addedBlocks = computeAddedBlocks(currentCounts, referenceCounts);
 
   const totalExpected = Object.values(referenceCounts).reduce((sum, n) => sum + n, 0);
@@ -227,6 +227,9 @@ class TemplateGovernanceReport extends LitElement {
     return html`
       <div class="section-card">
         <p class="section-label">${label}</p>
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
         ${section.blocks.map((block) => this.renderBlock(block))}
       </div>
     `;
