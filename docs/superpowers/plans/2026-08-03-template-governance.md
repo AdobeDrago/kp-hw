@@ -2416,7 +2416,159 @@ git commit -m "fix: switch repeated block types to sequential per-section alloca
 
 ---
 
-### Task 10: Manual verification and registration hand-off
+### Task 10: Convert reference block markup to a table before sending Add
+
+**Why this task exists:** the user reported that clicking "Add" inserts content but not a real, editable block — confirmed by reading DA's actual editor source (`adobe/da-live`). `sendHTML`'s handler (`blocks/edit/da-library/da-library.js`) parses the sent HTML with a generic ProseMirror parser whose node types have no `parseDOM` rule for `div[class]` — only literal tags like `table`, `p`, `img`. The div-shaped block markup (`<div class="columns">...</div>`, what `findReferenceBlockHtml` returns) only becomes an editable block-table via a much larger function, `aem2doc` (in the vendored `da-parser` package), which runs on full-document load, not on a one-off `sendHTML` insert. To make `sendHTML` produce a real block, this plugin must reconstruct the `<table>` shape itself — the reverse of `prose2aem.js`'s save-time `convertBlocks()` (which turns a `.tableWrapper > table` into the stored div form): first row = a single cell with the block's class names as text (first class, plus remaining classes joined `", "` in parens), then one row per block "row" div, one cell per "cell" div within each row, using each cell div's *inner* HTML as the `<td>`'s content. See the design spec's "Why a table, not a div" subsection for the full trace through DA's source.
+
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — add one new function (append, do not touch anything else)
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — add tests for the new function (append)
+- Modify: `tools/template-governance/template-governance.js` — import the new function and use it in `handleAdd` before calling `sendHTML` (targeted change to `handleAdd` and the import list only)
+
+**Interfaces:**
+- Adds: `buildBlockTableHtml(blockOuterHtml: string): string | null` — parses the given block `<div>`'s outer HTML, reconstructs it as a `<table>` matching DA's authoring convention, returns the table's outer HTML as a string, or `null` if the input doesn't parse to an element.
+- Unchanged: every other function in `template-governance-utils.js`.
+- `handleAdd` in `template-governance.js` changes from calling `this.actions.sendHTML(blockHtml)` directly to calling `this.actions.sendHTML(tableHtml)` where `tableHtml = buildBlockTableHtml(blockHtml)`, with a null-check.
+
+- [ ] **Step 1: Write the failing tests**
+
+Append to `test/tools/template-governance/template-governance-utils.test.js` (add `buildBlockTableHtml` to the existing import list):
+
+```js
+describe('buildBlockTableHtml', () => {
+  it('builds a table with a single-cell name row and one row per block row', () => {
+    const blockHtml = '<div class="columns"><div><div>a</div><div>b</div></div><div><div>c</div><div>d</div></div></div>';
+    const table = buildBlockTableHtml(blockHtml);
+    expect(table).to.equal(
+      '<table><tr><td colspan="2">columns</td></tr><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>',
+    );
+  });
+
+  it('joins additional classes into the name row in parens', () => {
+    const blockHtml = '<div class="columns two-up"><div><div>a</div></div></div>';
+    const table = buildBlockTableHtml(blockHtml);
+    expect(table).to.equal('<table><tr><td colspan="1">columns (two-up)</td></tr><tr><td>a</td></tr></table>');
+  });
+
+  it('treats a row with no cell divs as a single cell using the row\'s own inner HTML', () => {
+    const blockHtml = '<div class="hero"><div><h1>Title</h1></div></div>';
+    const table = buildBlockTableHtml(blockHtml);
+    expect(table).to.equal('<table><tr><td colspan="1">hero</td></tr><tr><td><h1>Title</h1></td></tr></table>');
+  });
+
+  it('uses a cell\'s inner HTML as the td content, not the cell div itself', () => {
+    const blockHtml = '<div class="tabs"><div><div><p>Tab content</p></div></div></div>';
+    const table = buildBlockTableHtml(blockHtml);
+    expect(table).to.equal('<table><tr><td colspan="1">tabs</td></tr><tr><td><p>Tab content</p></td></tr></table>');
+  });
+
+  it('returns null when the input has no element to parse', () => {
+    expect(buildBlockTableHtml('')).to.equal(null);
+  });
+});
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: FAIL — `buildBlockTableHtml` doesn't exist yet.
+
+- [ ] **Step 3: Write the implementation**
+
+Append to `tools/template-governance/template-governance-utils.js`:
+
+```js
+export function buildBlockTableHtml(blockOuterHtml) {
+  const doc = new DOMParser().parseFromString(blockOuterHtml, 'text/html');
+  const blockDiv = doc.body.firstElementChild;
+  if (!blockDiv) return null;
+
+  const [name, ...variants] = [...blockDiv.classList];
+  const nameText = variants.length ? `${name} (${variants.join(', ')})` : name;
+
+  const rows = [...blockDiv.children].filter((el) => el.tagName === 'DIV');
+  const rowCells = rows.map(
+    (row) => [...row.children].filter((el) => el.tagName === 'DIV'),
+  );
+  const maxCols = Math.max(1, ...rowCells.map((cells) => cells.length || 1));
+
+  const bodyRowsHtml = rows.map((row, i) => {
+    const cells = rowCells[i];
+    if (!cells.length) return `<tr><td>${row.innerHTML}</td></tr>`;
+    return `<tr>${cells.map((cell) => `<td>${cell.innerHTML}</td>`).join('')}</tr>`;
+  }).join('');
+
+  return `<table><tr><td colspan="${maxCols}">${nameText}</td></tr>${bodyRowsHtml}</table>`;
+}
+```
+
+- [ ] **Step 4: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS.
+
+- [ ] **Step 5: Wire it into `handleAdd`**
+
+In `tools/template-governance/template-governance.js`, add `buildBlockTableHtml` to the existing import from `./template-governance-utils.js` (alongside `findReferenceBlockHtml` etc.).
+
+Replace this method:
+
+```js
+  async handleAdd(blockName) {
+    if (!this._report || this._pendingAdd.has(blockName)) return;
+    const blockHtml = findReferenceBlockHtml(this._report.referenceHtml, blockName);
+    if (!blockHtml) return;
+    this._pendingAdd.add(blockName);
+    this._pendingAdd = new Set(this._pendingAdd);
+    this.actions.sendHTML(blockHtml);
+    setTimeout(() => {
+      this._pendingAdd.delete(blockName);
+      this._pendingAdd = new Set(this._pendingAdd);
+      this.load({ silent: true });
+    }, ADD_RECHECK_DELAY_MS);
+  }
+```
+
+with:
+
+```js
+  async handleAdd(blockName) {
+    if (!this._report || this._pendingAdd.has(blockName)) return;
+    const blockHtml = findReferenceBlockHtml(this._report.referenceHtml, blockName);
+    if (!blockHtml) return;
+    const tableHtml = buildBlockTableHtml(blockHtml);
+    if (!tableHtml) return;
+    this._pendingAdd.add(blockName);
+    this._pendingAdd = new Set(this._pendingAdd);
+    this.actions.sendHTML(tableHtml);
+    setTimeout(() => {
+      this._pendingAdd.delete(blockName);
+      this._pendingAdd = new Set(this._pendingAdd);
+      this.load({ silent: true });
+    }, ADD_RECHECK_DELAY_MS);
+  }
+```
+
+- [ ] **Step 6: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js`
+Expected: no errors.
+
+- [ ] **Step 7: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js
+git commit -m "fix: convert reference block markup to a table before sending Add"
+```
+
+---
+
+### Task 11: Manual verification and registration hand-off
 
 This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, plus v2's section anatomy, add-to-page action, and polling from Tasks 6–7) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
 
@@ -2444,7 +2596,7 @@ Go to `https://da.live/config#/adobedrago/kp-hw/` and add a temporary row to the
 4. Confirm the completeness bar and section anatomy render **without requiring a Preview**: resolved template name (`Homepage`), a bar showing some fraction of the real `Homepage` template's total block instances present, and one card per real content-bearing section (the real template has 11 sections total but one — the footnotes/metadata-only section — has no content block and should not render a card). Confirm section style labels (e.g. `full-width`, `pale-blue`) appear where the reference declares them.
 5. Confirm repeat-type blocks (`hero`, `columns` in the real template) show a definitive `present`/`missing` at every section slot — via sequential, first-come-first-served allocation in template order (Task 9) — not an aggregate `X of Y` badge. Every `missing` slot (single-occurrence or repeated-type) gets the dashed red (`#D73220`) treatment and an Add button.
 6. Confirm the completeness bar's fully-satisfied segments render green (`#079355`), not the neutral default.
-7. Click "Add" on a missing block. Confirm: the button shows an "Adding…" transient state (and that adding a *different* missing block while this one is still pending also works, not silently blocked), the reference's real block markup (not an empty skeleton) lands in the document at the main editor's current cursor position (verify in DA's own editor view — this plugin cannot introspect document state itself; per the panel's hint text, click into the document first to control where it lands), the panel does NOT close, and the panel automatically rechecks a few seconds later reflecting the addition (that block's status should move from `missing` to `present`).
+7. Click "Add" on a missing block. Confirm: the button shows an "Adding…" transient state (and that adding a *different* missing block while this one is still pending also works, not silently blocked), the reference's real content (not an empty skeleton) lands in the document **as a real, editable block table** — a table with the block name in its first row and the reference's actual content in the rows after, not loose paragraphs (this is what Task 10 fixes; confirm it actually renders as DA's native block-table UI, not just text) — at the main editor's current cursor position (verify in DA's own editor view — this plugin cannot introspect document state itself; per the panel's hint text, click into the document first to control where it lands), the panel does NOT close, and the panel automatically rechecks a few seconds later reflecting the addition (that block's status should move from `missing` to `present`). Also confirm that after this lands and the page is saved/previewed, the block actually renders correctly on the live page (round-trips back to the expected `<div class="blockname">` form).
 8. Without clicking Recheck, make a small edit directly in the DA editor (e.g. add another block) and confirm the panel picks it up automatically within about 3 seconds (polling), without a manual click.
 9. Switch to a different browser tab (or minimize) for a few seconds, then switch back; confirm no console errors accumulated and the panel resumes updating (visibility pause/resume).
 10. Change the test page's `template` metadata to something not in the library (e.g. `Bogus`) and confirm the "isn't in this site's template library" state renders.
