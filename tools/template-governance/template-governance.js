@@ -13,6 +13,7 @@ import {
   findReferenceBlockHtml,
   extractMetadataFields,
   diffSets,
+  buildBlockTableHtml,
 } from './template-governance-utils.js';
 
 const styles = await loadStyle(import.meta.url);
@@ -157,9 +158,11 @@ class TemplateGovernanceReport extends LitElement {
     if (!this._report || this._pendingAdd.has(blockName)) return;
     const blockHtml = findReferenceBlockHtml(this._report.referenceHtml, blockName);
     if (!blockHtml) return;
+    const tableHtml = buildBlockTableHtml(blockHtml);
+    if (!tableHtml) return;
     this._pendingAdd.add(blockName);
     this._pendingAdd = new Set(this._pendingAdd);
-    this.actions.sendHTML(blockHtml);
+    this.actions.sendHTML(tableHtml);
     setTimeout(() => {
       this._pendingAdd.delete(blockName);
       this._pendingAdd = new Set(this._pendingAdd);

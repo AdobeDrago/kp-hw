@@ -112,3 +112,26 @@ export function diffSets(currentSet, referenceSet) {
   const added = currentSet.filter((name) => !referenceSet.includes(name));
   return { missing, added };
 }
+
+export function buildBlockTableHtml(blockOuterHtml) {
+  const doc = new DOMParser().parseFromString(blockOuterHtml, 'text/html');
+  const blockDiv = doc.body.firstElementChild;
+  if (!blockDiv) return null;
+
+  const [name, ...variants] = [...blockDiv.classList];
+  const nameText = variants.length ? `${name} (${variants.join(', ')})` : name;
+
+  const rows = [...blockDiv.children].filter((el) => el.tagName === 'DIV');
+  const rowCells = rows.map(
+    (row) => [...row.children].filter((el) => el.tagName === 'DIV'),
+  );
+  const maxCols = Math.max(1, ...rowCells.map((cells) => cells.length || 1));
+
+  const bodyRowsHtml = rows.map((row, i) => {
+    const cells = rowCells[i];
+    if (!cells.length) return `<tr><td>${row.innerHTML}</td></tr>`;
+    return `<tr>${cells.map((cell) => `<td>${cell.innerHTML}</td>`).join('')}</tr>`;
+  }).join('');
+
+  return `<table><tr><td colspan="${maxCols}">${nameText}</td></tr>${bodyRowsHtml}</table>`;
+}

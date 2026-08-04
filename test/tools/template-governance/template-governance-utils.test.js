@@ -11,6 +11,7 @@ import {
   findReferenceBlockHtml,
   extractMetadataFields,
   diffSets,
+  buildBlockTableHtml,
 } from '../../../tools/template-governance/template-governance-utils.js';
 
 describe('template-governance-utils.js', () => {
@@ -254,6 +255,38 @@ describe('template-governance-utils.js', () => {
 
     it('reports no findings when the sets match exactly', () => {
       expect(diffSets(['hero'], ['hero'])).to.deep.equal({ missing: [], added: [] });
+    });
+  });
+
+  describe('buildBlockTableHtml', () => {
+    it('builds a table with a single-cell name row and one row per block row', () => {
+      const blockHtml = '<div class="columns"><div><div>a</div><div>b</div></div><div><div>c</div><div>d</div></div></div>';
+      const table = buildBlockTableHtml(blockHtml);
+      expect(table).to.equal(
+        '<table><tr><td colspan="2">columns</td></tr><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>',
+      );
+    });
+
+    it('joins additional classes into the name row in parens', () => {
+      const blockHtml = '<div class="columns two-up"><div><div>a</div></div></div>';
+      const table = buildBlockTableHtml(blockHtml);
+      expect(table).to.equal('<table><tr><td colspan="1">columns (two-up)</td></tr><tr><td>a</td></tr></table>');
+    });
+
+    it('treats a row with no cell divs as a single cell using the row\'s own inner HTML', () => {
+      const blockHtml = '<div class="hero"><div><h1>Title</h1></div></div>';
+      const table = buildBlockTableHtml(blockHtml);
+      expect(table).to.equal('<table><tr><td colspan="1">hero</td></tr><tr><td><h1>Title</h1></td></tr></table>');
+    });
+
+    it('uses a cell\'s inner HTML as the td content, not the cell div itself', () => {
+      const blockHtml = '<div class="tabs"><div><div><p>Tab content</p></div></div></div>';
+      const table = buildBlockTableHtml(blockHtml);
+      expect(table).to.equal('<table><tr><td colspan="1">tabs</td></tr><tr><td><p>Tab content</p></td></tr></table>');
+    });
+
+    it('returns null when the input has no element to parse', () => {
+      expect(buildBlockTableHtml('')).to.equal(null);
     });
   });
 });
