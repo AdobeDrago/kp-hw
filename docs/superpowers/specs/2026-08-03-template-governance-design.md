@@ -466,28 +466,67 @@ Colors are Adobe Spectrum 2's official semantic tokens (pulled directly from the
 
 ### Add-to-page action
 
-Clicking "Add" on a `missing` (fully-absent, single-occurrence) block:
+Clicking "Add" on a `missing` block:
 
 1. Extracts that block's exact markup from the **already-fetched reference
    document's HTML** — `findReferenceBlockHtml(referenceHtml, blockName): string |
    null` locates the first section-level block `<div>` whose name matches and
    returns its `outerHTML`.
-2. Calls `actions.sendHTML(blockHtml)` — the same DA SDK action Fragments uses to
-   insert content, sending the reference's real markup (images, copy, structure and
+2. **Converts that div-shaped block markup into a `<table>`** —
+   `buildBlockTableHtml(blockOuterHtml): string | null`. See "Why a table, not a
+   div" below; this step was missing from the first implementation and is required
+   for `sendHTML` to actually produce a real, editable block.
+3. Calls `actions.sendHTML(tableHtml)` — the same DA SDK action Fragments uses to
+   insert content, sending the reference's real content (images, copy, structure and
    all), not an empty block skeleton.
-3. **Does not call `actions.closeLibrary()`** afterward, unlike Fragments — this
+4. **Does not call `actions.closeLibrary()`** afterward, unlike Fragments — this
    panel is a persistent monitor an author may add several missing pieces from in a
    row, so it stays open.
-4. Shows a transient "Adding…" state on that item, then schedules an out-of-cycle
+5. Shows a transient "Adding…" state on that item, then schedules an out-of-cycle
    recheck ~2.5s later (independent of the regular poll interval) to give DA's
    autosave time to land before re-fetching — since, per the "DA source freshness"
    risk above, the panel's view of the current page is only as fresh as the last
    save, adding a block doesn't appear until that save completes.
-5. Multiple "Add" clicks on *different* missing blocks can be in flight at once —
+6. Multiple "Add" clicks on *different* missing blocks can be in flight at once —
    `_pendingAdd` is a `Set` of block names, not a single value, so adding one block
    doesn't block adding another while the first is still settling. (Fixed after the
    first implementation used a single-value guard that silently no-op'd a second
    block's Add click with no feedback — caught in task review.)
+
+**Why a table, not a div — a real gap found via live testing, not a preference.**
+The first implementation sent `findReferenceBlockHtml`'s div-shaped output directly
+to `sendHTML`. The user reported it "adds the content but does not add the block
+table" — confirmed by reading DA's actual editor source (`adobe/da-live`):
+
+- `blocks/edit/da-library/da-library.js`'s `sendHTML` handler parses the sent HTML
+  with a **generic** ProseMirror `DOMParser` against `window.view.state.schema` —
+  the same schema used everywhere in the editor, whose node types (`paragraph`,
+  `table`, `image`, `heading`, etc., defined in the vendored `da-parser` package)
+  each have their own `parseDOM` tag-matching rules. **None of them match
+  `div[class]`.** A `<div class="columns">` sent this way has no recognized parse
+  rule, so ProseMirror falls through to generic handling: content *inside* the div
+  (paragraphs, images) still parses fine, but the div itself — the only thing that
+  says "this is a `columns` block" — is discarded.
+- The div-shaped block markup only ever gets turned into an editable
+  table in the canvas via a **different, much larger** function,
+  `aem2doc` (in `deps/da-parser`), which runs when DA loads an entire document for
+  editing. It walks `<main>`'s section divs looking for classed child divs and
+  converts each one to a `<table>` via a helper (`H` in the minified source) — this
+  is the reverse of the save-time `prose2aem.js`'s `convertBlocks()`, which turns a
+  `.tableWrapper > table` back into the stored `<div class="blockname">` form.
+  `sendHTML`'s handler does not call `aem2doc` — it's a one-off content insert, not
+  a document load.
+- So: to make `sendHTML` produce a real, editable, round-trippable block, the panel
+  must do the div→table conversion itself before sending — i.e. reconstruct
+  what `convertBlocks()` expects to find, matching its exact shape: first row is a
+  single cell containing the block's class names as text (first class, plus any
+  remaining classes joined `", "` in parens — e.g. `columns (two-up)`), followed by
+  one row per block "row" div, one cell per "cell" div within each row (a cell's
+  *inner* HTML becomes the `<td>`'s content, not the cell div itself).
+
+```
+buildBlockTableHtml(blockOuterHtml: string): string | null
+```
 
 **Insertion position: confirmed mechanism, not an unsolved limitation.** Read
 directly from DA's actual editor source
