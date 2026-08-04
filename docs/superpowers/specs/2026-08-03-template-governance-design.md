@@ -475,12 +475,36 @@ Clicking "Add" on a `missing` (fully-absent, single-occurrence) block:
    autosave time to land before re-fetching — since, per the "DA source freshness"
    risk above, the panel's view of the current page is only as fresh as the last
    save, adding a block doesn't appear until that save completes.
+5. Multiple "Add" clicks on *different* missing blocks can be in flight at once —
+   `_pendingAdd` is a `Set` of block names, not a single value, so adding one block
+   doesn't block adding another while the first is still settling. (Fixed after the
+   first implementation used a single-value guard that silently no-op'd a second
+   block's Add click with no feedback — caught in task review.)
 
-**Known limitation, not solved here:** `sendHTML` inserts wherever DA's editor
-decides (its current cursor position, or the end of the document) — there is no SDK
-capability to insert "into section N specifically." The author may need to move the
-inserted block into place using DA's normal editing tools. This is a real constraint
-of the DA App SDK, not a gap in this plugin's design.
+**Insertion position: confirmed mechanism, not an unsolved limitation.** Read
+directly from DA's actual editor source
+(`adobe/da-live`, `blocks/edit/da-library/da-library.js`):
+
+```js
+if (e.data.action === 'sendHTML') {
+  const dom = new DOMParser().parseFromString(e.data.details, 'text/html');
+  const parsed = proseDOMParser.fromSchema(window.view.state.schema).parse(dom.body);
+  const slice = new Slice(parsed.content, 0, 0);
+  const { from, to } = window.view.state.selection;
+  window.view.dispatch(window.view.state.tr.replaceRange(from, to, slice));
+}
+```
+
+`sendHTML` inserts at `window.view.state.selection` — the main document editor's
+current cursor/selection, a real ProseMirror concept, not an opaque black box. If the
+author never clicks into the document body before clicking "Add," the selection
+defaults to the very start of the document, which is why an early manual test showed
+content landing at the top of the page — not a hard SDK limitation, just cursor
+placement the author controls. The panel now shows a hint line ("Click where you want
+new content in the page, then use + to add it there.") between the completeness bar
+and the anatomy section to make this discoverable, since nothing about DA's Library
+panel UI otherwise suggests the insertion point is driven by the *other* iframe's
+(the main editor's) cursor state.
 
 ### Auto-refresh (polling)
 
@@ -489,8 +513,9 @@ Confirmed there is no push/event mechanism for this: the DA App SDK's action set
 `getSelection`, `setPrompt`, `showPanel`) has nothing like an `onChange` or document
 subscription — read directly from `sdk.js`'s source. So "auto-refresh" means polling:
 
-- Every **8 seconds** while the panel is open and the tab is visible, silently
-  re-run the fetch-and-diff pipeline.
+- Every **3 seconds** while the panel is open and the tab is visible, silently
+  re-run the fetch-and-diff pipeline. (Started at 8s; shortened after the user
+  tried it live and asked for a faster cadence.)
 - Pause the interval on `document.visibilitychange` when hidden; resume (and poll
   once immediately) when visible again — avoids wasted requests while the DA tab
   isn't in focus.
