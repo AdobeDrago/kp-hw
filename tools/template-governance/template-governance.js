@@ -69,6 +69,7 @@ async function buildReport(org, repo, currentHtml, token) {
     status: 'ready',
     template: templateName,
     referenceHtml,
+    currentSections,
     sections,
     addedBlocks,
     totalExpected,
@@ -201,6 +202,26 @@ class TemplateGovernanceReport extends LitElement {
     `;
   }
 
+  renderCurrentStructure() {
+    if (!this._report.currentSections.length) return '';
+    return html`
+      <div class="current-structure">
+        <p class="current-structure-label">Your page's actual structure</p>
+        ${this._report.currentSections.map((section, index) => html`
+          <div class="section-card">
+            <p class="section-label">${index + 1}</p>
+            <div class="chip-row">
+              ${section.defaultContent.length ? html`
+                <span class="chip chip-default-content">${section.defaultContent.join(', ')}</span>
+              ` : ''}
+              ${section.blocks.map((name) => html`<span class="chip chip-block">${name}</span>`)}
+            </div>
+          </div>
+        `)}
+      </div>
+    `;
+  }
+
   renderBlock(block) {
     if (block.status === 'present') {
       return html`<div class="block-chip">${block.name}</div>`;
@@ -271,6 +292,7 @@ class TemplateGovernanceReport extends LitElement {
         </div>
         ${this.renderBar()}
         <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
+        ${this.renderCurrentStructure()}
         <div class="anatomy">
           ${this._report.sections.map((section, index) => this.renderSection(section, index))}
         </div>

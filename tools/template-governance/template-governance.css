@@ -250,3 +250,46 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+.current-structure {
+  padding: 12px 20px;
+  border-bottom: 1px solid #E9E9E9;
+}
+
+.current-structure-label {
+  font-size: 11px;
+  color: #717171;
+  margin: 0 0 8px;
+}
+
+.current-structure .section-card {
+  margin-bottom: 6px;
+}
+
+.current-structure .section-card:last-child {
+  margin-bottom: 0;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+}
+
+.chip-block {
+  background: #F3F3F3;
+  border: 1px solid #E9E9E9;
+  color: #292929;
+}
+
+.chip-default-content {
+  background: #E5F0FE;
+  border: 1px solid #4B75FF;
+  color: #4B75FF;
+}

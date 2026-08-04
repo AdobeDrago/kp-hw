@@ -83,8 +83,8 @@ describe('template-governance-utils.js', () => {
         </main></body></html>
       `;
       expect(extractSections(html)).to.deep.equal([
-        { style: 'full-width', blocks: ['hero'] },
-        { style: null, blocks: ['columns'] },
+        { style: 'full-width', blocks: ['hero'], defaultContent: [] },
+        { style: null, blocks: ['columns'], defaultContent: [] },
       ]);
     });
 
@@ -97,7 +97,7 @@ describe('template-governance-utils.js', () => {
           </div>
         </main></body></html>
       `;
-      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'] }]);
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'], defaultContent: [] }]);
     });
 
     it('records multiple block instances within one section in order, not deduplicated', () => {
@@ -110,11 +110,54 @@ describe('template-governance-utils.js', () => {
           </div>
         </main></body></html>
       `;
-      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'] }]);
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'], defaultContent: [] }]);
     });
 
     it('returns an empty array when there is no main element', () => {
       expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+
+    it('records the tag names of default (non-block) content, deduplicated and in order', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Heading</h2>
+            <p>First paragraph</p>
+            <p>Second paragraph</p>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: [], defaultContent: ['h2', 'p'] }]);
+    });
+
+    it('records both default content and blocks in the same section', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Intro</h2>
+            <p>Some text</p>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: null, blocks: ['columns'], defaultContent: ['h2', 'p'] },
+      ]);
+    });
+
+    it('does not count section-metadata or the page metadata block as default content', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <p>Some text</p>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: [], defaultContent: ['p'] },
+      ]);
     });
   });
 

@@ -49,9 +49,14 @@ export function extractSections(html) {
   return [...main.children].map((section) => {
     let style = null;
     const blocks = [];
+    const defaultContent = [];
     [...section.children].forEach((child) => {
       const [name] = child.classList;
-      if (!name) return;
+      if (!name) {
+        const tag = child.tagName.toLowerCase();
+        if (!defaultContent.includes(tag)) defaultContent.push(tag);
+        return;
+      }
       if (name === 'section-metadata') {
         const rows = [...child.querySelectorAll(':scope > div')];
         const styleRow = rows.find(
@@ -63,7 +68,7 @@ export function extractSections(html) {
       if (STRUCTURAL_BLOCK_NAMES.has(name)) return;
       blocks.push(name);
     });
-    return { style, blocks };
+    return { style, blocks, defaultContent };
   });
 }
 
