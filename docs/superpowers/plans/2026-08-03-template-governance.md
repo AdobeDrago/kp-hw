@@ -2568,7 +2568,399 @@ git commit -m "fix: convert reference block markup to a table before sending Add
 
 ---
 
-### Task 11: Manual verification and registration hand-off
+### Task 11: Default-content indicator for the current page's actual structure
+
+**Why this task exists:** the anatomy cards built so far only show blocks, aligned to the reference template's section order — they say nothing about "default content" (headings, paragraphs, lists authored directly in a section, not wrapped in any block). The user asked for a clearer, separate view of the page's real, actual structure that surfaces this — specifically naming the exact tag types present (e.g. `h2, p`), not a generic "text" label, styled with Adobe Spectrum 2's official "informative" color (`#4B75FF` border/text, `#E5F0FE` background — pulled from `@adobe/spectrum-tokens`, same source as the other status colors). Approved via prototype, placed above the existing reference-comparison anatomy cards.
+
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — targeted change to `extractSections` only (adds a `defaultContent` field to its return shape)
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — replace the `describe('extractSections', ...)` block to match the new field, add new default-content-specific cases
+- Modify: `tools/template-governance/template-governance.js` — targeted changes: `buildReport`'s return object gains `currentSections`; a new `renderCurrentStructure` method; `render()` calls it
+- Modify: `tools/template-governance/template-governance.css` — append new rules (append only, nothing removed)
+
+**Interfaces:**
+- Changes: `extractSections(html): Array<{ style: string|null, blocks: string[], defaultContent: string[] }>` — `defaultContent` is the deduplicated, document-order list of lowercase tag names for section-direct-child elements that have no class (i.e. aren't a block or `section-metadata`/`metadata`). `style`/`blocks` behavior is unchanged.
+- Unchanged: `computeSectionStatuses`, `countBlockOccurrences`, `computeAddedBlocks`, `findReferenceBlockHtml`, `buildBlockTableHtml`, and every other function — none of them read `defaultContent`, so their behavior is unaffected by the new field being present on the objects they consume.
+- `buildReport`'s report object gains a `currentSections` key (the current page's own `extractSections(currentHtml)` result, already computed locally in that function — just now also returned).
+
+- [ ] **Step 1: Replace the `describe('extractSections', ...)` test block (RED)**
+
+In `test/tools/template-governance/template-governance-utils.test.js`, replace this entire block:
+
+```js
+  describe('extractSections', () => {
+    it('returns one entry per section with its blocks in order and the section style', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="hero landing"><div>content</div></div>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+          </div>
+          <div>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+      ]);
+    });
+
+    it('excludes the page metadata block from a section\'s blocks', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="columns"><div>a</div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'] }]);
+    });
+
+    it('records multiple block instances within one section in order, not deduplicated', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="card"><div>a</div></div>
+            <div class="card"><div>b</div></div>
+            <div class="card"><div>c</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'] }]);
+    });
+
+    it('returns an empty array when there is no main element', () => {
+      expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+  });
+```
+
+with:
+
+```js
+  describe('extractSections', () => {
+    it('returns one entry per section with its blocks in order and the section style', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="hero landing"><div>content</div></div>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+          </div>
+          <div>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: ['hero'], defaultContent: [] },
+        { style: null, blocks: ['columns'], defaultContent: [] },
+      ]);
+    });
+
+    it('excludes the page metadata block from a section\'s blocks', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="columns"><div>a</div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'], defaultContent: [] }]);
+    });
+
+    it('records multiple block instances within one section in order, not deduplicated', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="card"><div>a</div></div>
+            <div class="card"><div>b</div></div>
+            <div class="card"><div>c</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'], defaultContent: [] }]);
+    });
+
+    it('returns an empty array when there is no main element', () => {
+      expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+
+    it('records the tag names of default (non-block) content, deduplicated and in order', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Heading</h2>
+            <p>First paragraph</p>
+            <p>Second paragraph</p>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: [], defaultContent: ['h2', 'p'] }]);
+    });
+
+    it('records both default content and blocks in the same section', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Intro</h2>
+            <p>Some text</p>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: null, blocks: ['columns'], defaultContent: ['h2', 'p'] },
+      ]);
+    });
+
+    it('does not count section-metadata or the page metadata block as default content', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <p>Some text</p>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: [], defaultContent: ['p'] },
+      ]);
+    });
+  });
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: FAIL — the new tests assert `defaultContent`, which the current implementation doesn't produce.
+
+- [ ] **Step 3: Replace the `extractSections` function (GREEN)**
+
+In `tools/template-governance/template-governance-utils.js`, replace this function:
+
+```js
+export function extractSections(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return [];
+  return [...main.children].map((section) => {
+    let style = null;
+    const blocks = [];
+    [...section.children].forEach((child) => {
+      const [name] = child.classList;
+      if (!name) return;
+      if (name === 'section-metadata') {
+        const rows = [...child.querySelectorAll(':scope > div')];
+        const styleRow = rows.find(
+          (row) => row.children[0]?.textContent?.trim().toLowerCase() === 'style',
+        );
+        if (styleRow) style = styleRow.children[1]?.textContent?.trim() || style;
+        return;
+      }
+      if (STRUCTURAL_BLOCK_NAMES.has(name)) return;
+      blocks.push(name);
+    });
+    return { style, blocks };
+  });
+}
+```
+
+with:
+
+```js
+export function extractSections(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return [];
+  return [...main.children].map((section) => {
+    let style = null;
+    const blocks = [];
+    const defaultContent = [];
+    [...section.children].forEach((child) => {
+      const [name] = child.classList;
+      if (!name) {
+        const tag = child.tagName.toLowerCase();
+        if (!defaultContent.includes(tag)) defaultContent.push(tag);
+        return;
+      }
+      if (name === 'section-metadata') {
+        const rows = [...child.querySelectorAll(':scope > div')];
+        const styleRow = rows.find(
+          (row) => row.children[0]?.textContent?.trim().toLowerCase() === 'style',
+        );
+        if (styleRow) style = styleRow.children[1]?.textContent?.trim() || style;
+        return;
+      }
+      if (STRUCTURAL_BLOCK_NAMES.has(name)) return;
+      blocks.push(name);
+    });
+    return { style, blocks, defaultContent };
+  });
+}
+```
+
+- [ ] **Step 4: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS.
+
+- [ ] **Step 5: Return `currentSections` from `buildReport`**
+
+In `tools/template-governance/template-governance.js`, replace this return statement (the end of `buildReport`):
+
+```js
+  return {
+    status: 'ready',
+    template: templateName,
+    referenceHtml,
+    sections,
+    addedBlocks,
+    totalExpected,
+    totalPresent,
+    missingMeta: metaDiff.missing,
+    addedMeta: metaDiff.added,
+  };
+}
+```
+
+with:
+
+```js
+  return {
+    status: 'ready',
+    template: templateName,
+    referenceHtml,
+    currentSections,
+    sections,
+    addedBlocks,
+    totalExpected,
+    totalPresent,
+    missingMeta: metaDiff.missing,
+    addedMeta: metaDiff.added,
+  };
+}
+```
+
+(`currentSections` is already computed earlier in this same function via `const currentSections = extractSections(currentHtml);` — this step only adds it to the returned object, no other change.)
+
+- [ ] **Step 6: Add the `renderCurrentStructure` method**
+
+In `tools/template-governance/template-governance.js`, insert this new method immediately after the `renderBar()` method (right after `renderBar()`'s closing `}`, before `renderBlock(block)`):
+
+```js
+  renderCurrentStructure() {
+    if (!this._report.currentSections.length) return '';
+    return html`
+      <div class="current-structure">
+        <p class="current-structure-label">Your page's actual structure</p>
+        ${this._report.currentSections.map((section, index) => html`
+          <div class="section-card">
+            <p class="section-label">${index + 1}</p>
+            <div class="chip-row">
+              ${section.defaultContent.length ? html`
+                <span class="chip chip-default-content">${section.defaultContent.join(', ')}</span>
+              ` : ''}
+              ${section.blocks.map((name) => html`<span class="chip chip-block">${name}</span>`)}
+            </div>
+          </div>
+        `)}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 7: Wire it into `render()`**
+
+In `tools/template-governance/template-governance.js`, replace this line in `render()`:
+
+```js
+        <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
+        <div class="anatomy">
+```
+
+with:
+
+```js
+        <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
+        ${this.renderCurrentStructure()}
+        <div class="anatomy">
+```
+
+- [ ] **Step 8: Append new CSS rules**
+
+Append to the end of `tools/template-governance/template-governance.css`:
+
+```css
+.current-structure {
+  padding: 12px 20px;
+  border-bottom: 1px solid #E9E9E9;
+}
+
+.current-structure-label {
+  font-size: 11px;
+  color: #717171;
+  margin: 0 0 8px;
+}
+
+.current-structure .section-card {
+  margin-bottom: 6px;
+}
+
+.current-structure .section-card:last-child {
+  margin-bottom: 0;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+}
+
+.chip-block {
+  background: #F3F3F3;
+  border: 1px solid #E9E9E9;
+  color: #292929;
+}
+
+.chip-default-content {
+  background: #E5F0FE;
+  border: 1px solid #4B75FF;
+  color: #4B75FF;
+}
+```
+
+- [ ] **Step 9: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js`
+Run: `npx stylelint tools/template-governance/template-governance.css`
+Expected: no errors.
+
+- [ ] **Step 10: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js tools/template-governance/template-governance.css
+git commit -m "feat: add default-content indicator for the page's actual structure"
+```
+
+---
+
+### Task 12: Manual verification and registration hand-off
 
 This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, plus v2's section anatomy, add-to-page action, and polling from Tasks 6–7) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
 

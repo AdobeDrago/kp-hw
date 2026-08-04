@@ -464,6 +464,32 @@ Colors are Adobe Spectrum 2's official semantic tokens (pulled directly from the
 | Partial | `#D45B00` | `#FFECCF` | `icon-color-notice` / `notice-subtle-background-color-default` |
 | Neutral chrome | `#717171` text, `#E9E9E9` border | `#F3F3F3` | gray scale |
 
+### Default-content indicator (the page's actual structure)
+
+The reference-comparison anatomy above is deliberately aligned to the *reference
+template's* section order — it can't show the current page's own actual section
+layout, since a page missing several blocks has fewer real sections than the
+template. The user asked for a separate, honest view of what the page *actually*
+looks like, specifically calling out where a section has content that isn't wrapped
+in any block (a heading or paragraph authored directly), and asked for the *specific*
+tag types (`h2, p`), not a vague "text" label.
+
+- `extractSections` gains a third field per section: `defaultContent: string[]` — the
+  deduplicated, document-order list of lowercase tag names for section-direct-child
+  elements that have no class (not a block, not `section-metadata`/`metadata`).
+- Rendered as a new strip, **above** the reference-comparison anatomy cards: one
+  compact card per section of the *current page's own* `extractSections` result (its
+  real index, its real order — not reference-aligned), each showing pill-style chips
+  for its block names (neutral, matching the "Beyond the template" treatment) and,
+  when present, a chip listing its default-content tags, colored with Spectrum 2's
+  official "informative" token: `#4B75FF` border/text on `#E5F0FE` background
+  (`icon-color-informative` / `informative-subtle-background-color-default`,
+  resolved from `@adobe/spectrum-tokens`, same source as the other status colors).
+- This is purely descriptive — default content isn't a violation or a gap to fill
+  (a section can legitimately be "just a paragraph," e.g. an article's intro); it's
+  informational, styled distinctly from the missing/partial states for exactly that
+  reason (informative blue, not negative red or notice orange).
+
 ### Add-to-page action
 
 Clicking "Add" on a `missing` block:
