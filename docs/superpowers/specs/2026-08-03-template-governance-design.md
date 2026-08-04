@@ -437,23 +437,48 @@ are computed and shown exactly as in v1 — unchanged, still informational/neutr
 still not itemized as "beyond quota" for a block type the reference names but at a
 higher count than needed (out of scope — see Non-goals).
 
-### UI: section-grouped anatomy view
+### UI: section-grouped anatomy view — reoriented around the page, not the template
 
-Replaces v1's two-list Missing/Added layout (kept only for the Added list, which
-remains a simple list at the bottom) with:
+**Reversed after live use.** The first cut of this view was built by walking the
+*reference template's* sections, in template order, and checking each against the
+current page. The user tried this and asked for it flipped: **the anatomy should
+reflect the page it sits next to** — its own real sections, in its own real order —
+**and separately show what the template expects that's missing**, rather than
+presenting the template's shape with the page's content checked off against it.
+Clarified via a follow-up: when the page has fewer sections than the template,
+represent the shortfall as trailing "missing" cards appended after the page's real
+sections, not folded into a single summary line.
 
-1. A **completeness bar** at the top — one segment per expected block *instance*
-   (not per unique name; the real `Homepage` template has 12 total instances across
-   its 11 sections, once the metadata-only section 11 is excluded), colored neutral
-   gray if present, red if missing. A one-line summary below it: "`X` of `Y` expected
-   block instances present."
-2. One card per reference section, in template order, showing the section's index
-   and style label (if any), and its block(s) with the status treatment described
-   above. A section that itself carries no real content block (like the real
-   template's section 11, which is only `section-metadata` + the page `metadata`
-   block) is not rendered.
-3. A final "Beyond the template" strip listing Added blocks, styled the same
-   neutral way as v1.
+Current structure:
+
+1. A **completeness bar** at the top — unchanged: one segment per expected block
+   *instance* (not per unique name), colored neutral gray if present, green
+   (`#079355`, Spectrum 2's positive token) if a segment is fully accounted for, red
+   if missing. A one-line summary below it: "`X` of `Y` expected block instances
+   present."
+2. **One card per the current page's own actual section** (`currentSections`, from
+   `extractSections(currentHtml)` — the page's real index, real order, real style
+   labels, real content), each showing:
+   - a default-content chip (Spectrum 2 informative `#4B75FF`/`#E5F0FE`) when that
+     section has content outside any block — same as before, just now describing
+     the page's own section directly rather than a reference-paired one (no more
+     positional-index pairing needed for this — the data is already the page's own).
+   - plain block-name chips for every block actually in that section — no
+     present/missing coloring here, since every block listed *is* on the page; there
+     is nothing to flag within a real section.
+3. **Trailing "Missing from template" cards**, appended after the page's own
+   sections, one per reference-template section that still has at least one unmet
+   block after the same sequential (first-come-first-served) allocation described
+   below — i.e. `computeSectionStatuses`'s existing output, filtered down to only
+   the entries with at least one `'missing'` status. These reuse the original
+   present/missing chip treatment (including the Add button on `missing` chips) so
+   an author can still add straight from this list; they do **not** show a
+   default-content chip (there's no current-page section to describe — by
+   definition, these are things the page doesn't have).
+4. A final "Beyond the template" strip listing Added blocks, styled the same
+   neutral way as before — unchanged, kept for the same reason as always: a block
+   type the reference never names at all is still worth naming as "beyond it,"
+   separately from the per-section view.
 
 Colors are Adobe Spectrum 2's official semantic tokens (pulled directly from the
 `@adobe/spectrum-tokens` npm package, not approximated) — light theme:
@@ -471,33 +496,36 @@ cards) was built, then removed** — the user tried it live and asked for it to 
 removed, no specific reason recorded. Reverted cleanly via `git revert`.
 
 **v2, built right after: the same underlying data (`extractSections`'s
-`defaultContent` field), but merged directly into the existing reference-comparison
-anatomy cards** rather than shown as a separate parallel view — explicit user
-direction after clarifying that the *separate strip* was the part they didn't want,
-not the underlying information.
+`defaultContent` field), but merged directly into the reference-comparison anatomy
+cards** rather than shown as a separate parallel view — explicit user direction
+after clarifying that the *separate strip* was the part they didn't want, not the
+underlying information. At the time, this needed a positional-pairing heuristic
+(`computeSectionStatuses`'s optional third `currentSections` parameter, matching
+by original pre-filter index) since the cards were still reference-section-shaped.
 
-- `extractSections` gains a third field per section: `defaultContent: string[]` — the
-  deduplicated, document-order list of lowercase tag names for section-direct-child
-  elements that have no class (not a block, not `section-metadata`/`metadata`).
-  Unchanged from the v1 attempt.
-- `computeSectionStatuses(referenceSections, currentCounts, currentSections = [])`
-  gains a third, optional parameter and a `defaultContent` field on each returned
-  section. **Pairing is positional, by original (pre-filter) index** — the current
-  page's section at index *i* is paired with the reference's section at index *i*,
-  computed *before* block-less reference sections are filtered out, so a filtered
-  section doesn't shift the correspondence for the ones after it. This is a
-  deliberate, accepted heuristic (an author's sections are usually filled in roughly
-  the same order as the template's, but this is not verified identity) — in the same
-  spirit as the sequential block-allocation heuristic above, and subject to the same
-  caveat: it can misattribute a specific section's content if the author reordered
-  or restructured sections relative to the template.
-- Rendered **inside** each existing anatomy card (`renderSection`), above that
-  section's block list: a full-width chip (reusing `.block-chip`'s shape, so it sits
-  visually consistent with the block chips below it) listing the section's
+**v3, superseded by the page-orientation reversal above:** now that the primary
+anatomy cards *are* the current page's own sections directly (`currentSections`,
+not reference-derived), the positional-pairing heuristic is no longer needed —
+`extractSections`'s `defaultContent` field is read straight off each real page
+section, no matching required, no more risk of misattribution.
+`computeSectionStatuses`'s third parameter and `defaultContent` output were removed
+again — it reverted to its Task-9 two-argument, `{style, blocks}`-only form,
+since the trailing "Missing from template" cards (built from its output) don't
+describe an existing page section and have nothing to pair.
+
+- `extractSections` still has the `defaultContent: string[]` field (unchanged) —
+  the deduplicated, document-order list of lowercase tag names for
+  section-direct-child elements that have no class (not a block, not
+  `section-metadata`/`metadata`).
+- Rendered inside each **page-oriented** anatomy card, above that section's block
+  list: a full-width chip (reusing `.block-chip`'s shape) listing the section's
   default-content tags, colored with Spectrum 2's official "informative" token:
   `#4B75FF` border/text on `#E5F0FE` background (`icon-color-informative` /
   `informative-subtle-background-color-default`, resolved from
   `@adobe/spectrum-tokens`, same source as the other status colors).
+- Not shown on the trailing "Missing from template" cards — those describe
+  template sections the page doesn't have a counterpart for, so there's no page
+  content to report.
 - This is purely descriptive — default content isn't a violation or a gap to fill
   (a section can legitimately be "just a paragraph," e.g. an article's intro); it's
   informational, styled distinctly from the missing/partial states for exactly that
