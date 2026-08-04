@@ -1,5 +1,8 @@
+const CONTENT_DA_ORIGIN = 'https://content.da.live';
+const STRUCTURAL_BLOCK_NAMES = new Set(['section-metadata', 'metadata']);
+
 export function buildSourceUrl(path, org, repo) {
-  return `https://content.da.live/${org}/${repo}${path}`;
+  return `${CONTENT_DA_ORIGIN}/${org}/${repo}${path}`;
 }
 
 function getMetadataRows(html) {
@@ -27,8 +30,6 @@ export function extractMetadataFields(html) {
   return names;
 }
 
-const CONTENT_DA_ORIGIN = 'https://content.da.live';
-
 export function parseContentDaUrl(url) {
   if (!url.startsWith(`${CONTENT_DA_ORIGIN}/`)) return null;
   const [org, repo, ...pathParts] = url.slice(CONTENT_DA_ORIGIN.length + 1).split('/');
@@ -40,8 +41,6 @@ export function findTemplateEntry(entries, templateName) {
   const target = templateName.trim().toLowerCase();
   return entries.find((entry) => entry.key?.trim().toLowerCase() === target) || null;
 }
-
-const STRUCTURAL_BLOCK_NAMES = new Set(['section-metadata', 'metadata']);
 
 export function extractSections(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
