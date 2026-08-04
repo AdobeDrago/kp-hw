@@ -3499,11 +3499,482 @@ git commit -m "feat: merge default-content indicator into the existing anatomy c
 
 ---
 
-### Task 13: Manual verification and registration hand-off
+### Task 13: Reorient the anatomy view around the page, not the template
 
-This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, and the merged default-content indicator from Task 12) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+**Why this task exists:** the anatomy cards built so far are shaped by the reference template — one card per template section, in template order, each checked against the current page. The user asked for this reversed: the anatomy should reflect the page's own actual sections (its own order, its own count), with what the template expects that the page is missing shown as trailing "Missing from template" cards appended after the page's real sections — not the other way around. See the design spec's "UI: section-grouped anatomy view — reoriented around the page, not the template" section for the full rationale.
 
-Additionally for this final pass, confirm: each anatomy card shows a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when that section has content outside any block, positioned above the section's block chips within the SAME card (not a separate strip) — and that this reads sensibly against a real page (keeping in mind the pairing is positional by original section index, so it may occasionally misattribute content if the page's sections don't line up with the template's).
+This task also **reverts part of Task 12**: `computeSectionStatuses`'s third parameter and `defaultContent` output are removed again, since the page-oriented cards now read `defaultContent` directly off the page's own sections (`currentSections`) with no pairing needed at all — the positional-pairing heuristic Task 12 introduced is no longer used anywhere.
+
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — revert `computeSectionStatuses` to its Task 9 (two-argument, no `defaultContent`) form
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — revert the `describe('computeSectionStatuses', ...)` block to match (drop the `defaultContent`/pairing-specific tests Task 12 added; keep the `extractSections` describe block exactly as-is, unchanged)
+- Modify: `tools/template-governance/template-governance.js` — `buildReport`'s call site and return object, split `renderSection` into `renderPageSection`/`renderMissingSection`, rewrite `render()`
+- Modify: `tools/template-governance/template-governance.css` — append one new rule
+
+**Interfaces:**
+- Reverts: `computeSectionStatuses(referenceSections, currentCounts): Array<{ style, blocks: Array<{name, status}> }>` — back to exactly its Task 9 shape (no third parameter, no `defaultContent` field).
+- `buildReport`'s returned report object: drops `sections`, adds `currentSections` (the page's own `extractSections` result — already computed locally, just now also returned) and `missingSections` (the reference-derived sections that still have at least one `'missing'` block, i.e. `computeSectionStatuses`'s output filtered).
+- `renderPageSection(section, index)` — new; renders one card per `currentSections` entry: plain block-name chips (no status coloring — everything in a real page section is, by definition, present), plus the default-content chip when present.
+- `renderMissingSection(section, index)` — new (renamed/adapted from the old `renderSection`); renders one card per `missingSections` entry, reusing `renderBlock` exactly as before (present/missing chip treatment, Add button on missing) — no default-content chip.
+- Unchanged: `extractSections` (including its `defaultContent` field — still needed, just consumed directly now instead of via `computeSectionStatuses`), `countBlockOccurrences`, `computeAddedBlocks`, `findReferenceBlockHtml`, `buildBlockTableHtml`, `renderBlock`, the polling lifecycle, the Add-handler logic.
+
+- [ ] **Step 1: Revert the `describe('computeSectionStatuses', ...)` test block**
+
+Replace this entire block:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, defaultContent: [], blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, defaultContent: [], blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+
+    it('defaults defaultContent to an empty array when no currentSections argument is given', () => {
+      const reference = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses[0].defaultContent).to.deep.equal([]);
+    });
+
+    it('pairs each surviving reference section with the current page section at the same original index', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const current = [
+        { style: null, blocks: ['hero'], defaultContent: ['h1', 'p'] },
+        { style: null, blocks: ['columns'], defaultContent: ['p'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1, columns: 1 }, current);
+      expect(statuses.map((s) => s.defaultContent)).to.deep.equal([['h1', 'p'], ['p']]);
+    });
+
+    it('preserves the original reference index when pairing, even when an earlier section is filtered out', () => {
+      const reference = [
+        { style: 'footnotes', blocks: [] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const current = [
+        { style: null, blocks: [], defaultContent: ['ignored-because-filtered-out'] },
+        { style: null, blocks: ['hero'], defaultContent: ['h2'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 }, current);
+      expect(statuses).to.have.lengthOf(1);
+      expect(statuses[0].defaultContent).to.deep.equal(['h2']);
+    });
+
+    it('defaults to an empty array when there is no current section at the corresponding index', () => {
+      const reference = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, { hero: 1 }, []);
+      expect(statuses[0].defaultContent).to.deep.equal([]);
+    });
+  });
+```
+
+with:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+  });
+```
+
+- [ ] **Step 2: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS. (This is a revert to a previously-passing state, so no RED phase is expected here — the test suite goes straight from "failing because the old defaultContent-aware tests no longer match the about-to-be-reverted implementation" to "passing" once Step 3 lands. Do Step 3 immediately after this step, then re-run once to confirm PASS.)
+
+- [ ] **Step 3: Revert `computeSectionStatuses`**
+
+Replace this function:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts, currentSections = []) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => section.blocks.length > 0)
+    .map(({ section, index }) => ({
+      style: section.style,
+      defaultContent: currentSections[index]?.defaultContent || [],
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+with:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
+      style: section.style,
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+- [ ] **Step 4: Run the tests once more to confirm they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS.
+
+- [ ] **Step 5: Update `buildReport`**
+
+Replace this:
+
+```js
+  const sections = computeSectionStatuses(referenceSections, currentCounts, currentSections);
+  const addedBlocks = computeAddedBlocks(currentCounts, referenceCounts);
+
+  const totalExpected = Object.values(referenceCounts).reduce((sum, n) => sum + n, 0);
+  const totalPresent = Object.keys(referenceCounts).reduce(
+    (sum, name) => sum + Math.min(currentCounts[name] || 0, referenceCounts[name]),
+    0,
+  );
+
+  const metaDiff = diffSets(
+    extractMetadataFields(currentHtml),
+    extractMetadataFields(referenceHtml),
+  );
+
+  return {
+    status: 'ready',
+    template: templateName,
+    referenceHtml,
+    sections,
+    addedBlocks,
+    totalExpected,
+    totalPresent,
+    missingMeta: metaDiff.missing,
+    addedMeta: metaDiff.added,
+  };
+}
+```
+
+with:
+
+```js
+  const sections = computeSectionStatuses(referenceSections, currentCounts);
+  const missingSections = sections.filter(
+    (section) => section.blocks.some((block) => block.status === 'missing'),
+  );
+  const addedBlocks = computeAddedBlocks(currentCounts, referenceCounts);
+
+  const totalExpected = Object.values(referenceCounts).reduce((sum, n) => sum + n, 0);
+  const totalPresent = Object.keys(referenceCounts).reduce(
+    (sum, name) => sum + Math.min(currentCounts[name] || 0, referenceCounts[name]),
+    0,
+  );
+
+  const metaDiff = diffSets(
+    extractMetadataFields(currentHtml),
+    extractMetadataFields(referenceHtml),
+  );
+
+  return {
+    status: 'ready',
+    template: templateName,
+    referenceHtml,
+    currentSections,
+    missingSections,
+    addedBlocks,
+    totalExpected,
+    totalPresent,
+    missingMeta: metaDiff.missing,
+    addedMeta: metaDiff.added,
+  };
+}
+```
+
+- [ ] **Step 6: Split `renderSection` into `renderPageSection` and `renderMissingSection`**
+
+Replace this method:
+
+```js
+  renderSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderPageSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+      </div>
+    `;
+  }
+
+  renderMissingSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 7: Rewrite `render()`**
+
+Replace this:
+
+```js
+  render() {
+    if (this._status !== 'ready') return this.renderStatus();
+
+    return html`
+      <div class="governance-app">
+        <div class="report-header">
+          <p class="report-title">${this._report.template}</p>
+          <button class="btn-recheck" @click=${() => this.load()}>Recheck</button>
+        </div>
+        ${this.renderBar()}
+        <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
+        <div class="anatomy">
+          ${this._report.sections.map((section, index) => this.renderSection(section, index))}
+        </div>
+        ${this.renderAdded()}
+        ${this.renderFindingList(
+          'Missing metadata',
+          this._report.missingMeta.map((name) => ({ type: 'metadata', name })),
+          'None — looks consistent with its template.',
+          'missing',
+        )}
+        ${this.renderFindingList(
+          'Added metadata',
+          this._report.addedMeta.map((name) => ({ type: 'metadata', name })),
+          'No metadata beyond the base template.',
+          'added',
+        )}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  render() {
+    if (this._status !== 'ready') return this.renderStatus();
+
+    return html`
+      <div class="governance-app">
+        <div class="report-header">
+          <p class="report-title">${this._report.template}</p>
+          <button class="btn-recheck" @click=${() => this.load()}>Recheck</button>
+        </div>
+        ${this.renderBar()}
+        <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
+        <div class="anatomy">
+          ${this._report.currentSections.map((section, index) => this.renderPageSection(section, index))}
+        </div>
+        ${this._report.missingSections.length ? html`
+          <p class="missing-from-template-label">Missing from template</p>
+          <div class="anatomy">
+            ${this._report.missingSections.map((section, index) => this.renderMissingSection(section, index))}
+          </div>
+        ` : ''}
+        ${this.renderAdded()}
+        ${this.renderFindingList(
+          'Missing metadata',
+          this._report.missingMeta.map((name) => ({ type: 'metadata', name })),
+          'None — looks consistent with its template.',
+          'missing',
+        )}
+        ${this.renderFindingList(
+          'Added metadata',
+          this._report.addedMeta.map((name) => ({ type: 'metadata', name })),
+          'No metadata beyond the base template.',
+          'added',
+        )}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 8: Append the CSS rule**
+
+Append to the end of `tools/template-governance/template-governance.css`:
+
+```css
+.missing-from-template-label {
+  padding: 8px 20px 0;
+  margin: 0;
+  font-size: 11px;
+  color: #717171;
+}
+```
+
+- [ ] **Step 9: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js`
+Run: `npx stylelint tools/template-governance/template-governance.css`
+Expected: no errors.
+
+- [ ] **Step 10: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js tools/template-governance/template-governance.css
+git commit -m "feat: reorient anatomy view around the page's own sections"
+```
+
+---
+
+### Task 14: Manual verification and registration hand-off
+
+This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, and the page-oriented anatomy view with trailing "Missing from template" cards from Task 13) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+
+Additionally for this final pass, confirm: the primary anatomy cards are ordered and numbered by the CURRENT PAGE's own real sections (not the template's), each showing that section's actual blocks (plain, no status coloring) plus a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when present; confirm a "Missing from template" label and a second set of cards appears AFTER the page's own sections, only for template sections still missing at least one block, with the usual present/missing coloring and Add buttons on those; confirm a page whose sections fully satisfy the template renders zero "Missing from template" cards (and no label).
 
 **Files:** none committed.
 
