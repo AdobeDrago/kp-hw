@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `tools/template-governance/` — a DA library plugin that, for the page currently open in the DA editor, resolves its declared `template` metadata value, looks it up in the project's own `docs/library/templates.json` template library, fetches the matching reference document, and shows a section-by-section anatomy of the page: which blocks are missing, partially present (for block types the template repeats), or present, plus a metadata Missing/Added list and an "Add to page" action that inserts a missing block's real markup from the reference document. Refreshes automatically on an interval while open.
+**Goal:** Build `tools/template-governance/` — a DA library plugin that, for the page currently open in the DA editor, resolves its declared `template` metadata value, looks it up in the project's own `docs/library/templates.json` template library, fetches the matching reference document, and shows a section-by-section anatomy of the page: which blocks are missing or present (definitive per section slot, per Task 9's revision — no ambiguous "partial" state), plus a metadata Missing/Added list and an "Add to page" action that inserts a missing block's real markup from the reference document. Refreshes automatically on an interval while open.
 
 **Architecture:** A pure-function module (`template-governance-utils.js`) provides source-URL building, template-name resolution, `content.da.live` URL parsing, template-entry lookup, section-and-count-aware block extraction/diffing, metadata extraction/diffing, and reference-block lookup — all testable without DOM/fetch/SDK mocking. `template-governance.js` wires the DA App SDK (`context`, `token`, `actions`) to a Lit custom element that fetches the current page, looks up and fetches the one matching reference document, computes the anatomy, renders it, handles the Add action, and polls on an interval for auto-refresh.
 
@@ -14,11 +14,11 @@
 - "Added" (page has it, reference doesn't, by name) is **informational, not a violation** — rendered neutrally, separate from Missing/Partial. Rationale: `templates.json` entries are starting layouts, not exhaustive schemas; real pages are expected to have more content than the bare template. A block type the reference wants *more* of than the page has (an "over-count", e.g. reference wants 2 `columns` and the page has 5) is out of scope — not itemized as a separate case.
 - **Revised after manual verification (Task 4):** the plugin does not use `.aem.page` preview fetches. All fetches go through DA's raw source, `https://content.da.live/{org}/{repo}{path}`, authenticated with an `Authorization: Bearer {token}` header (the DA SDK's `token`) — the preview-based approach required every page to have been manually previewed at least once before the panel would work at all, which defeats the point of a pre-publish governance check. Raw DA source has no `<head>`; template/metadata resolution reads the `.metadata` block instead (see Task 4).
 - `context.ref` is not used anywhere in this plugin — DA source has no branch/ref concept. `context.org`, `context.repo`, `context.path`, the SDK's `token`, and (as of Task 7) `actions` are read.
-- **Block identity vs. count (Task 6):** a block name that appears more than once in the reference gets a shared aggregate status (`X of Y present`) applied identically at every section slot it occupies — never a per-slot binary claiming one specific occurrence is "the" satisfied one and another isn't. A block name appearing exactly once gets a clean binary present/missing.
-- **The "Add" action reverses the plugin's original read-only design (Task 7), by explicit user direction given after reviewing the anatomy-view prototype.** It calls `actions.sendHTML` with the reference document's own block markup (not a synthesized empty skeleton), for `missing` blocks only (single-occurrence or fully-zero repeat-type) — never for `partial` blocks. It does not call `actions.closeLibrary()` — the panel stays open. There is no SDK capability to control *where* the inserted content lands; this is a known, accepted limitation of the DA App SDK, not something to work around.
+- **Block identity vs. count — revised after live use (Task 9):** Task 6 originally gave a block name that appears more than once in the reference a shared aggregate status (`X of Y present`) applied identically at every section slot it occupies, specifically to avoid claiming any one specific occurrence was "the" satisfied slot. The user tried this live and found it unhelpful (the same badge repeated at every slot doesn't say *where* to look) and explicitly asked for definitive per-slot present/missing instead. Task 9 replaces the aggregate approach with sequential (first-come-first-served, template document order) allocation — every slot gets a clean binary `status: 'present' | 'missing'`, no more `'partial'`. This is an accepted, deliberate tradeoff: arbitrary in a true tie, but more actionable in practice.
+- **The "Add" action reverses the plugin's original read-only design (Task 7), by explicit user direction given after reviewing the anatomy-view prototype.** It calls `actions.sendHTML` with the reference document's own block markup (not a synthesized empty skeleton), for every `missing` block slot (there's no more `partial` state to withhold it from, after Task 9). It does not call `actions.closeLibrary()` — the panel stays open. `sendHTML` inserts at the main document editor's current cursor/selection (confirmed from `adobe/da-live`'s source, not a guess) — the panel shows a hint telling the author to click where they want it first, since there's no way to pass a target position through the SDK.
 - **Auto-refresh (Task 7) polls every `POLL_INTERVAL_MS` ms** while the panel is open and the tab is visible (paused on `document.visibilitychange` when hidden, resumed + immediately re-polled when visible again). Started at `8000` per the plan below; **revised to `3000` after the user tried it live and asked for a faster cadence** (post-Task-7 fix round, see ledger). A poll tick is silent: it never flips the UI to a loading state, never surfaces an error (a failed poll is swallowed and retried next tick), and only re-renders if the computed report actually changed from what's displayed. The manual "Recheck" button is not silent — it shows loading and surfaces errors, for an immediate check without waiting for the next tick.
 - **Add-to-page insertion position (Task 7) is confirmed, not unsolved:** `sendHTML` inserts at the main document editor's current ProseMirror selection (confirmed from `adobe/da-live`'s `blocks/edit/da-library/da-library.js` source) — not a fixed/unsolvable position. A post-Task-7 fix round added a hint line in the panel telling the author to click where they want content before clicking Add, since the panel can't otherwise convey that the insertion point is driven by the other iframe's cursor state.
-- **Colors for status states (Task 7) are Adobe Spectrum 2's official values**, pulled from the `@adobe/spectrum-tokens` npm package (not approximated): missing `#D73220` border/text on `#FFEBE8` background; partial `#D45B00` border/text on `#FFECCF` background; neutral chrome `#E9E9E9` border, `#717171` secondary text, `#F3F3F3` card background, `#292929`/`#505050` for darker text on neutral backgrounds. The existing purple/blue gradient CTA buttons (Recheck, Retry) are unchanged — this recoloring applies to status indicators only, not general UI chrome.
+- **Colors for status states (Task 7, revised by Task 9) are Adobe Spectrum 2's official values**, pulled from the `@adobe/spectrum-tokens` npm package (not approximated): missing `#D73220` border/text on `#FFEBE8` background; the completeness bar's fully-present segments use the positive/success token `#079355`; neutral chrome `#E9E9E9` border, `#717171` secondary text, `#F3F3F3` card background, `#292929`/`#505050` for darker text on neutral backgrounds. The `partial`/notice color pairing (`#D45B00`/`#FFECCF`) introduced in Task 7 is removed in Task 9 along with the `partial` status itself. The existing purple/blue gradient CTA buttons (Recheck, Retry) are unchanged — this recoloring applies to status indicators only, not general UI chrome.
 - Import Lit via `../../deps/lit/dist/index.js` (relative path), matching `tools/scheduler/scheduler.js:1` — not a bare `da-lit` specifier.
 - Style the shadow root via `loadStyle(import.meta.url)` from `scripts/utils/styles.js`, matching `tools/scheduler/scheduler.js:6,19` and `tools/fragments/fragments.js`.
 - The DA config "library" sheet registration (`https://da.live/config#/adobedrago/kp-hw/`) is an external, shared-config change. It is **not** performed by any task below — the final task ends with the exact row to propose to the user, who must confirm it themselves, same pattern as the Fragments plugin's rollout.
@@ -2127,7 +2127,296 @@ git commit -m "feat: build section-anatomy UI, add-to-page action, and auto-refr
 
 ---
 
-### Task 8: Manual verification and registration hand-off
+### Task 9: Sequential per-section allocation for repeated block types
+
+**Why this task exists:** Task 6 gave a block name that repeats in the reference (e.g. `columns`, `hero`) a shared aggregate status (`X of Y present`) applied identically at every section slot it occupies, specifically to avoid a "false precision" claim about which one specific occurrence is satisfied. The user tried this live in the DA editor and found it unhelpful: seeing `columns · 3 of 4` repeated at four different section positions doesn't say *where* to look. Explicit direction: switch to definitive per-slot present/missing via sequential (first-come-first-served, template document order) allocation, accepting that the specific slot assignment is arbitrary in a true tie — practical clarity over technical certainty. See the design spec's "Diffing with counts: sequential allocation, reversed from the original design" section for the full rationale.
+
+This is a **targeted modification**, not a full-file replacement — only the `computeSectionStatuses` function (and its tests) and the `renderBlock` method (and one CSS rule) change; everything else in both files stays as-is.
+
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — replace only the `computeSectionStatuses` function body
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — replace only the `describe('computeSectionStatuses', ...)` block
+- Modify: `tools/template-governance/template-governance.js` — replace only the `renderBlock` method
+- Modify: `tools/template-governance/template-governance.css` — remove the now-unused `.block-chip-partial` rule
+
+**Interfaces:**
+- Changes: `computeSectionStatuses(referenceSections, currentCounts): Array<{ style: string|null, blocks: Array<{ name: string, status: 'present'|'missing' }> }>` — drops `have`/`total` fields and the `'partial'` status entirely; every slot is now a clean binary, assigned by walking `referenceSections` in order and consuming a running per-name "remaining available" count seeded from `currentCounts`.
+- Unchanged: `extractSections`, `countBlockOccurrences`, `computeAddedBlocks`, `findReferenceBlockHtml`, `resolveTemplateFromHtml`, `extractMetadataFields`, `parseContentDaUrl`, `findTemplateEntry`, `diffSets`, `buildSourceUrl` — none of these are touched by this task.
+- `renderBlock` in `template-governance.js` no longer has a `'partial'` rendering branch; every `'missing'` block (single-occurrence or repeated-type) now shows a plain block name (no `have`/`total` suffix) with an Add button, since there's no longer a status to distinguish "give it an Add button" from "withhold it."
+
+- [ ] **Step 1: Replace the `computeSectionStatuses` test block (RED)**
+
+In `test/tools/template-governance/template-governance-utils.test.js`, replace this entire `describe('computeSectionStatuses', ...)` block:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'columns-media', status: 'present', have: 1, total: 1 }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'tabs', status: 'missing', have: 0, total: 1 }] },
+      ]);
+    });
+
+    it('marks a repeated block partial at every slot when some but not all instances are present', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 1 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['partial', 'partial']);
+      expect(statuses.map((s) => s.blocks[0].total)).to.deep.equal([2, 2]);
+      expect(statuses.map((s) => s.blocks[0].have)).to.deep.equal([1, 1]);
+    });
+
+    it('marks a repeated block present at every slot once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+  });
+```
+
+with:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+  });
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: FAIL — the new test assertions (no `have`/`total` fields, sequential-allocation expectations) don't match the current aggregate-based implementation.
+
+- [ ] **Step 3: Replace the `computeSectionStatuses` function (GREEN)**
+
+In `tools/template-governance/template-governance-utils.js`, replace this function:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const referenceCounts = countBlockOccurrences(referenceSections);
+  return referenceSections
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
+      style: section.style,
+      blocks: section.blocks.map((name) => {
+        const total = referenceCounts[name] || 0;
+        const have = currentCounts[name] || 0;
+        let status;
+        if (have <= 0) status = 'missing';
+        else if (have < total) status = 'partial';
+        else status = 'present';
+        return {
+          name, status, have, total,
+        };
+      }),
+    }));
+}
+```
+
+with:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
+      style: section.style,
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+Note: `countBlockOccurrences` is no longer called from inside this function (it's still exported and still used elsewhere — do not remove it, do not remove its import/usage in `template-governance.js`, only this one function's body changes).
+
+- [ ] **Step 4: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS — all `describe` blocks green.
+
+- [ ] **Step 5: Replace the `renderBlock` method in the component**
+
+In `tools/template-governance/template-governance.js`, replace this method:
+
+```js
+  renderBlock(block) {
+    if (block.status === 'present') {
+      return html`<div class="block-chip">${block.name}</div>`;
+    }
+    if (block.status === 'partial') {
+      return html`
+        <div class="block-chip block-chip-partial">
+          <span>${block.name}</span>
+          <span>${block.have} of ${block.total}</span>
+        </div>
+      `;
+    }
+    const label = block.total > 1 ? `${block.name} · ${block.have} of ${block.total}` : block.name;
+    const isPending = this._pendingAdd.has(block.name);
+    return html`
+      <div class="block-chip block-chip-missing">
+        <span>${label}</span>
+        ${isPending
+          ? html`<span class="block-pending">Adding…</span>`
+          : html`
+            <button
+              class="btn-add"
+              aria-label="Add ${block.name} to page"
+              @click=${() => this.handleAdd(block.name)}
+            ><span aria-hidden="true">+</span></button>
+          `}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderBlock(block) {
+    if (block.status === 'present') {
+      return html`<div class="block-chip">${block.name}</div>`;
+    }
+    const isPending = this._pendingAdd.has(block.name);
+    return html`
+      <div class="block-chip block-chip-missing">
+        <span>${block.name}</span>
+        ${isPending
+          ? html`<span class="block-pending">Adding…</span>`
+          : html`
+            <button
+              class="btn-add"
+              aria-label="Add ${block.name} to page"
+              @click=${() => this.handleAdd(block.name)}
+            ><span aria-hidden="true">+</span></button>
+          `}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 6: Remove the now-unused `.block-chip-partial` CSS rule**
+
+In `tools/template-governance/template-governance.css`, delete this rule entirely (nothing references the `block-chip-partial` class anymore after Step 5):
+
+```css
+.block-chip-partial {
+  background: #FFECCF;
+  border-color: #D45B00;
+  color: #D45B00;
+  display: flex;
+  justify-content: space-between;
+}
+```
+
+- [ ] **Step 7: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js`
+Run: `npx stylelint tools/template-governance/template-governance.css`
+Expected: no errors.
+
+- [ ] **Step 8: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass.
+
+- [ ] **Step 9: Commit**
+
+```bash
+git add tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js tools/template-governance/template-governance.css
+git commit -m "fix: switch repeated block types to sequential per-section allocation"
+```
+
+---
+
+### Task 10: Manual verification and registration hand-off
 
 This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, plus v2's section anatomy, add-to-page action, and polling from Tasks 6–7) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
 
@@ -2153,10 +2442,10 @@ Go to `https://da.live/config#/adobedrago/kp-hw/` and add a temporary row to the
 2. Open that document for editing in `https://da.live/edit#/adobedrago/kp-hw/...`.
 3. Open the Library panel and select the "Template Governance (local)" tab.
 4. Confirm the completeness bar and section anatomy render **without requiring a Preview**: resolved template name (`Homepage`), a bar showing some fraction of the real `Homepage` template's total block instances present, and one card per real content-bearing section (the real template has 11 sections total but one — the footnotes/metadata-only section — has no content block and should not render a card). Confirm section style labels (e.g. `full-width`, `pale-blue`) appear where the reference declares them.
-5. Confirm repeat-type blocks (`hero`, `columns` in the real template) show the shared `X of Y` badge at every section slot they occupy, colored amber/notice (`#D45B00`) when partially satisfied — not a false-precision binary claiming one specific slot is satisfied and another isn't.
-6. Confirm single-occurrence missing blocks (e.g. `tabs`, `cards-icon`) render with the dashed red (`#D73220`) treatment and an Add button; confirm `partial` blocks do NOT show an Add button, per the Global Constraints.
-7. Click "Add" on a missing block. Confirm: the button shows an "Adding…" transient state, the reference's real block markup (not an empty skeleton) lands in the document (verify in DA's own editor view — this plugin cannot introspect document state itself), the panel does NOT close, and the panel automatically rechecks a few seconds later reflecting the addition (that block's status should move from `missing` toward `present`/`partial`).
-8. Without clicking Recheck, make a small edit directly in the DA editor (e.g. add another block) and confirm the panel picks it up automatically within about 8 seconds (polling), without a manual click.
+5. Confirm repeat-type blocks (`hero`, `columns` in the real template) show a definitive `present`/`missing` at every section slot — via sequential, first-come-first-served allocation in template order (Task 9) — not an aggregate `X of Y` badge. Every `missing` slot (single-occurrence or repeated-type) gets the dashed red (`#D73220`) treatment and an Add button.
+6. Confirm the completeness bar's fully-satisfied segments render green (`#079355`), not the neutral default.
+7. Click "Add" on a missing block. Confirm: the button shows an "Adding…" transient state (and that adding a *different* missing block while this one is still pending also works, not silently blocked), the reference's real block markup (not an empty skeleton) lands in the document at the main editor's current cursor position (verify in DA's own editor view — this plugin cannot introspect document state itself; per the panel's hint text, click into the document first to control where it lands), the panel does NOT close, and the panel automatically rechecks a few seconds later reflecting the addition (that block's status should move from `missing` to `present`).
+8. Without clicking Recheck, make a small edit directly in the DA editor (e.g. add another block) and confirm the panel picks it up automatically within about 3 seconds (polling), without a manual click.
 9. Switch to a different browser tab (or minimize) for a few seconds, then switch back; confirm no console errors accumulated and the panel resumes updating (visibility pause/resume).
 10. Change the test page's `template` metadata to something not in the library (e.g. `Bogus`) and confirm the "isn't in this site's template library" state renders.
 11. Clear the test page's `template` metadata entirely and confirm the "doesn't declare a template" state renders.

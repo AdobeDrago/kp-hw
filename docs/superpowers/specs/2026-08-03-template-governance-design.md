@@ -383,46 +383,54 @@ From this, block-type counts are just a sum:
 countBlockOccurrences(sections): Record<string, number>
 ```
 
-### Diffing with counts, without false precision
+### Diffing with counts: sequential allocation, reversed from the original design
 
-A naive approach would walk the reference's sections in document order and
-"allocate" the current page's block instances to them one-by-one, marking each
-reference section definitively present or missing. **This was considered and
-rejected** — it would report specific section slots as satisfied/missing based on
-an arbitrary allocation order (which of the page's two `columns` sections is "the
-one" satisfying reference section 2 vs. section 5? There's no way to know), which
-reads as false precision the author could reasonably distrust.
+**Original design (v2, first cut):** block types that repeat in the reference would
+get a shared *aggregate* status shown identically at every section slot they
+occupy — `X of Y present`, colored `missing`/`partial`/`present` by whether `X` was
+zero, partial, or fully met. The explicit rationale at the time: a naive
+"allocate the page's instances to reference sections in document order, one-by-one"
+approach would report specific section slots as definitively satisfied/missing based
+on an arbitrary allocation order (which of the page's two `columns` sections is "the
+one" satisfying reference section 2 vs. section 5? There's no way to know for
+certain), which reads as false precision.
 
-Instead:
+**Reversed after live use.** The user tried the aggregate version in the real DA
+editor and found it unhelpful in practice — seeing the same `columns · 3 of 4` badge
+repeated at four different section positions doesn't tell you *where* to look; it
+reads as noise, not signal. Explicit direction: switch to definitive per-slot
+present/missing, even though it means an allocation choice that's arbitrary in a true
+tie. Practical clarity ("here's likely where you're short a `columns` section") beats
+technical precision about which specific tie-broken slot is "the" gap.
 
-- **Block types that appear exactly once in the reference** get a clean binary
-  status per section: `present` or `missing`.
-- **Block types that repeat in the reference** get a shared **aggregate** status,
-  shown identically at *every* section position that type occupies: `X of Y
-  present`, where `Y` is the reference's total count for that name and `X` is the
-  current page's total count (capped display-wise at `Y`, since "more than needed"
-  is an "Added" concern, not a per-section one — see below). Status coloring:
-  `missing` (red) if `X = 0`, `partial` (notice/orange) if `0 < X < Y`, plain/neutral
-  if `X >= Y`.
+**Current design:** walk the reference's sections in document order, maintaining a
+running "remaining available" count per block name (initialized from the current
+page's counts). For each block slot in the reference:
+
+- If the running count for that name is `> 0`, mark this slot `present` and
+  decrement the count (this instance is "used up" by this slot).
+- Otherwise mark this slot `missing`.
+
+This is first-come-first-served in template order — earlier sections in the
+reference "claim" the page's existing instances first, so any shortfall surfaces at
+the *later* occurrences of a repeated type. There is no `partial` status anymore —
+every slot is a clean binary.
 
 ```
 computeSectionStatuses(referenceSections, currentCounts):
   Array<{ style: string|null, blocks: Array<{
     name: string,
-    status: 'present' | 'missing' | 'partial',
-    have: number,   // current page's total count for this name
-    total: number,  // reference's total count for this name (>= 1)
+    status: 'present' | 'missing',
   }> }>
 ```
 
-- `status = 'present'` and `total = 1` → render as a plain block chip (no badge),
-  same visual treatment as v1's non-flagged blocks.
-- `status = 'missing'` → dashed red card + an "Add" button (see below).
-- `status = 'partial'` → amber/notice card showing `have of total`, no Add button in
-  v1 of this feature (see Non-goals) — adding one instance of a block that already
-  has some but not all copies is left to the author's judgment about placement.
-- `status = 'present'` with `total > 1` (fully satisfied repeat) → plain block chip,
-  same as the `total = 1` present case — no special badge once fully met.
+- `status = 'present'` → render as a plain block chip (no badge) — same treatment
+  regardless of whether the block type repeats elsewhere in the reference.
+- `status = 'missing'` → dashed red card + an "Add" button. Since `partial` no
+  longer exists as a status, **every** missing slot gets an Add button now
+  (including repeated-type slots) — the earlier v2 Non-goal withholding Add from
+  `partial` blocks no longer applies, since there's no `partial` state to withhold
+  it from.
 
 **Added** blocks (present on the page, absent from the reference by name entirely)
 are computed and shown exactly as in v1 — unchanged, still informational/neutral,
@@ -532,12 +540,16 @@ subscription — read directly from `sdk.js`'s source. So "auto-refresh" means p
 
 ### v2 Non-goals
 
-- **No control over where `sendHTML` inserts content** — a real DA SDK limitation,
-  not something this plugin can work around.
-- **No Add action for `partial` (some-but-not-all) block types** — only fully
-  `missing` (0 of N) single-occurrence and repeat-type blocks get an Add button in
-  this version; deciding where a *partial* repeat's next instance should go is a
-  judgment call left to the author.
+- **No UI control over where `sendHTML` inserts content** — it always lands at the
+  main editor's current cursor/selection (confirmed mechanism, see the Add-to-page
+  action section above), which the panel can only hint at via UI copy, not dictate.
+- **The sequential allocation is arbitrary when the current page's instances of a
+  repeated block type could equally satisfy multiple reference slots** — e.g. if the
+  reference wants `columns` in sections 2, 5, 6, and 8, and the page has exactly 2,
+  they're assigned to sections 2 and 5 (document order, first-come-first-served),
+  not necessarily because those are "actually" the ones the author intended to keep.
+  Explicit, accepted tradeoff per the reversal above — practical clarity over
+  technical certainty.
 - **No handling of "added beyond quota" for a known block type** (e.g. reference
   wants 2 `columns`, page has 5) — the extra 3 are not itemized separately from a
   true "Added" (unknown-to-the-template) block; out of scope for this version.
