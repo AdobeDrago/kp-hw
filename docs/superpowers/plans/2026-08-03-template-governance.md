@@ -2962,9 +2962,548 @@ git commit -m "feat: add default-content indicator for the page's actual structu
 
 ---
 
-### Task 12: Manual verification and registration hand-off
+### Task 12: Merge the default-content indicator into the existing anatomy cards
 
-This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, plus v2's section anatomy, add-to-page action, and polling from Tasks 6–7) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+**Why this task exists:** Task 11 built a default-content indicator as a separate "Your page's actual structure" strip, above the reference-comparison anatomy cards. The user tried it live and asked for it to be removed (Task 11 was reverted via `git revert` — see its entry above). When asked what to do with the underlying information, the user clarified: keep showing the specific default-content tag names (h1, h2, p, etc.), but merge them into the *existing* reference-comparison anatomy cards instead of a separate parallel view. This task re-adds `extractSections`'s `defaultContent` field (identical to Task 11's version) and threads it through `computeSectionStatuses` into the existing per-section cards, using **positional (by original reference-section index, before filtering) pairing** between the current page's sections and the reference's — an accepted heuristic, not verified identity (see the design spec's updated "Default-content indicator" section for the full rationale, including why this pairing can misattribute content if sections were reordered relative to the template).
+
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — targeted changes to `extractSections` and `computeSectionStatuses` only
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — replace the `describe('extractSections', ...)` and `describe('computeSectionStatuses', ...)` blocks to match
+- Modify: `tools/template-governance/template-governance.js` — targeted changes: the `computeSectionStatuses` call site in `buildReport`, and `renderSection`
+- Modify: `tools/template-governance/template-governance.css` — append one new rule
+
+**Interfaces:**
+- Changes: `extractSections(html): Array<{ style, blocks, defaultContent: string[] }>` — same as Task 11's version (deduplicated, document-order lowercase tag names for unclassed section-direct-children).
+- Changes: `computeSectionStatuses(referenceSections, currentCounts, currentSections = []): Array<{ style, defaultContent: string[], blocks: Array<{name, status}> }>` — gains the optional third parameter and a `defaultContent` field per returned (surviving) section, positionally paired to `currentSections[originalIndex]` (the index into `referenceSections` *before* the block-less-section filter runs).
+- Unchanged: `countBlockOccurrences`, `computeAddedBlocks`, `findReferenceBlockHtml`, `buildBlockTableHtml`, `resolveTemplateFromHtml`, `extractMetadataFields`, `parseContentDaUrl`, `findTemplateEntry`, `diffSets`, `buildSourceUrl`, the polling lifecycle, the Add-handler logic.
+
+- [ ] **Step 1: Replace the `describe('extractSections', ...)` test block (RED)**
+
+In `test/tools/template-governance/template-governance-utils.test.js`, replace this entire block:
+
+```js
+  describe('extractSections', () => {
+    it('returns one entry per section with its blocks in order and the section style', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="hero landing"><div>content</div></div>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+          </div>
+          <div>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+      ]);
+    });
+
+    it('excludes the page metadata block from a section\'s blocks', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="columns"><div>a</div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'] }]);
+    });
+
+    it('records multiple block instances within one section in order, not deduplicated', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="card"><div>a</div></div>
+            <div class="card"><div>b</div></div>
+            <div class="card"><div>c</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'] }]);
+    });
+
+    it('returns an empty array when there is no main element', () => {
+      expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+  });
+```
+
+with:
+
+```js
+  describe('extractSections', () => {
+    it('returns one entry per section with its blocks in order and the section style', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="hero landing"><div>content</div></div>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+          </div>
+          <div>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: ['hero'], defaultContent: [] },
+        { style: null, blocks: ['columns'], defaultContent: [] },
+      ]);
+    });
+
+    it('excludes the page metadata block from a section\'s blocks', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="columns"><div>a</div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['columns'], defaultContent: [] }]);
+    });
+
+    it('records multiple block instances within one section in order, not deduplicated', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <div class="card"><div>a</div></div>
+            <div class="card"><div>b</div></div>
+            <div class="card"><div>c</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: ['card', 'card', 'card'], defaultContent: [] }]);
+    });
+
+    it('returns an empty array when there is no main element', () => {
+      expect(extractSections('<html><body></body></html>')).to.deep.equal([]);
+    });
+
+    it('records the tag names of default (non-block) content, deduplicated and in order', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Heading</h2>
+            <p>First paragraph</p>
+            <p>Second paragraph</p>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([{ style: null, blocks: [], defaultContent: ['h2', 'p'] }]);
+    });
+
+    it('records both default content and blocks in the same section', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <h2>Intro</h2>
+            <p>Some text</p>
+            <div class="columns"><div>a</div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: null, blocks: ['columns'], defaultContent: ['h2', 'p'] },
+      ]);
+    });
+
+    it('does not count section-metadata or the page metadata block as default content', () => {
+      const html = `
+        <html><body><main>
+          <div>
+            <p>Some text</p>
+            <div class="section-metadata"><div><div><p>style</p></div><div><p>full-width</p></div></div></div>
+            <div class="metadata"><div><div><p>title</p></div><div><p>Home</p></div></div></div>
+          </div>
+        </main></body></html>
+      `;
+      expect(extractSections(html)).to.deep.equal([
+        { style: 'full-width', blocks: [], defaultContent: ['p'] },
+      ]);
+    });
+  });
+```
+
+- [ ] **Step 2: Replace the `describe('computeSectionStatuses', ...)` test block**
+
+Replace this entire block:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+  });
+```
+
+with:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, defaultContent: [], blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, defaultContent: [], blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+
+    it('defaults defaultContent to an empty array when no currentSections argument is given', () => {
+      const reference = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses[0].defaultContent).to.deep.equal([]);
+    });
+
+    it('pairs each surviving reference section with the current page section at the same original index', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const current = [
+        { style: null, blocks: ['hero'], defaultContent: ['h1', 'p'] },
+        { style: null, blocks: ['columns'], defaultContent: ['p'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1, columns: 1 }, current);
+      expect(statuses.map((s) => s.defaultContent)).to.deep.equal([['h1', 'p'], ['p']]);
+    });
+
+    it('preserves the original reference index when pairing, even when an earlier section is filtered out', () => {
+      const reference = [
+        { style: 'footnotes', blocks: [] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const current = [
+        { style: null, blocks: [], defaultContent: ['ignored-because-filtered-out'] },
+        { style: null, blocks: ['hero'], defaultContent: ['h2'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 }, current);
+      expect(statuses).to.have.lengthOf(1);
+      expect(statuses[0].defaultContent).to.deep.equal(['h2']);
+    });
+
+    it('defaults to an empty array when there is no current section at the corresponding index', () => {
+      const reference = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, { hero: 1 }, []);
+      expect(statuses[0].defaultContent).to.deep.equal([]);
+    });
+  });
+```
+
+- [ ] **Step 3: Run the tests to verify they fail**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: FAIL — `extractSections` doesn't produce `defaultContent` yet, and `computeSectionStatuses` doesn't accept a third argument or return `defaultContent` yet.
+
+- [ ] **Step 4: Replace `extractSections`**
+
+Replace this function:
+
+```js
+export function extractSections(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return [];
+  return [...main.children].map((section) => {
+    let style = null;
+    const blocks = [];
+    [...section.children].forEach((child) => {
+      const [name] = child.classList;
+      if (!name) return;
+      if (name === 'section-metadata') {
+        const rows = [...child.querySelectorAll(':scope > div')];
+        const styleRow = rows.find(
+          (row) => row.children[0]?.textContent?.trim().toLowerCase() === 'style',
+        );
+        if (styleRow) style = styleRow.children[1]?.textContent?.trim() || style;
+        return;
+      }
+      if (STRUCTURAL_BLOCK_NAMES.has(name)) return;
+      blocks.push(name);
+    });
+    return { style, blocks };
+  });
+}
+```
+
+with:
+
+```js
+export function extractSections(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return [];
+  return [...main.children].map((section) => {
+    let style = null;
+    const blocks = [];
+    const defaultContent = [];
+    [...section.children].forEach((child) => {
+      const [name] = child.classList;
+      if (!name) {
+        const tag = child.tagName.toLowerCase();
+        if (!defaultContent.includes(tag)) defaultContent.push(tag);
+        return;
+      }
+      if (name === 'section-metadata') {
+        const rows = [...child.querySelectorAll(':scope > div')];
+        const styleRow = rows.find(
+          (row) => row.children[0]?.textContent?.trim().toLowerCase() === 'style',
+        );
+        if (styleRow) style = styleRow.children[1]?.textContent?.trim() || style;
+        return;
+      }
+      if (STRUCTURAL_BLOCK_NAMES.has(name)) return;
+      blocks.push(name);
+    });
+    return { style, blocks, defaultContent };
+  });
+}
+```
+
+- [ ] **Step 5: Replace `computeSectionStatuses`**
+
+Replace this function:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
+      style: section.style,
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+with:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts, currentSections = []) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => section.blocks.length > 0)
+    .map(({ section, index }) => ({
+      style: section.style,
+      defaultContent: currentSections[index]?.defaultContent || [],
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+- [ ] **Step 6: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS.
+
+- [ ] **Step 7: Pass `currentSections` into `computeSectionStatuses` in `buildReport`**
+
+In `tools/template-governance/template-governance.js`, replace this line:
+
+```js
+  const sections = computeSectionStatuses(referenceSections, currentCounts);
+```
+
+with:
+
+```js
+  const sections = computeSectionStatuses(referenceSections, currentCounts, currentSections);
+```
+
+- [ ] **Step 8: Render the default-content chip inside each existing anatomy card**
+
+Replace this method:
+
+```js
+  renderSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderSection(section, index) {
+    const label = section.style ? `${index + 1} · ${section.style}` : `${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 9: Append the CSS rule**
+
+Append to the end of `tools/template-governance/template-governance.css`:
+
+```css
+.block-chip-default-content {
+  background: #E5F0FE;
+  border: 1px solid #4B75FF;
+  color: #4B75FF;
+}
+```
+
+- [ ] **Step 10: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js`
+Run: `npx stylelint tools/template-governance/template-governance.css`
+Expected: no errors.
+
+- [ ] **Step 11: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass.
+
+- [ ] **Step 12: Commit**
+
+```bash
+git add tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js tools/template-governance/template-governance.css
+git commit -m "feat: merge default-content indicator into the existing anatomy cards"
+```
+
+---
+
+### Task 13: Manual verification and registration hand-off
+
+This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, and the merged default-content indicator from Task 12) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+
+Additionally for this final pass, confirm: each anatomy card shows a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when that section has content outside any block, positioned above the section's block chips within the SAME card (not a separate strip) — and that this reads sensibly against a real page (keeping in mind the pairing is positional by original section index, so it may occasionally misattribute content if the page's sections don't line up with the template's).
 
 **Files:** none committed.
 

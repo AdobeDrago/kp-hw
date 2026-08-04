@@ -464,36 +464,40 @@ Colors are Adobe Spectrum 2's official semantic tokens (pulled directly from the
 | Partial | `#D45B00` | `#FFECCF` | `icon-color-notice` / `notice-subtle-background-color-default` |
 | Neutral chrome | `#717171` text, `#E9E9E9` border | `#F3F3F3` | gray scale |
 
-### Default-content indicator (the page's actual structure) — built, then removed
+### Default-content indicator (the page's actual structure) — v1 removed, v2 merged in
 
-**Removed after the user tried it live and didn't like it** (no specific reason
-recorded beyond that — reverted on request, not replaced with an alternative). The
-code (`extractSections`'s `defaultContent` field, `buildReport`'s `currentSections`,
-`renderCurrentStructure()`, and its Spectrum 2 "informative" CSS) was cleanly
-reverted via `git revert` rather than hand-edited back out, so the git history keeps
-both the original implementation and the removal as a clear, invertible pair. The
-description below is kept for the historical record (what was built and why) — it is
-**not** part of the current plugin.
+**v1 (a separate "Your page's actual structure" strip, above the reference-comparison
+cards) was built, then removed** — the user tried it live and asked for it to be
+removed, no specific reason recorded. Reverted cleanly via `git revert`.
 
-The reference-comparison anatomy above is deliberately aligned to the *reference
-template's* section order — it can't show the current page's own actual section
-layout, since a page missing several blocks has fewer real sections than the
-template. The user asked for a separate, honest view of what the page *actually*
-looks like, specifically calling out where a section has content that isn't wrapped
-in any block (a heading or paragraph authored directly), and asked for the *specific*
-tag types (`h2, p`), not a vague "text" label.
+**v2, built right after: the same underlying data (`extractSections`'s
+`defaultContent` field), but merged directly into the existing reference-comparison
+anatomy cards** rather than shown as a separate parallel view — explicit user
+direction after clarifying that the *separate strip* was the part they didn't want,
+not the underlying information.
 
 - `extractSections` gains a third field per section: `defaultContent: string[]` — the
   deduplicated, document-order list of lowercase tag names for section-direct-child
   elements that have no class (not a block, not `section-metadata`/`metadata`).
-- Rendered as a new strip, **above** the reference-comparison anatomy cards: one
-  compact card per section of the *current page's own* `extractSections` result (its
-  real index, its real order — not reference-aligned), each showing pill-style chips
-  for its block names (neutral, matching the "Beyond the template" treatment) and,
-  when present, a chip listing its default-content tags, colored with Spectrum 2's
-  official "informative" token: `#4B75FF` border/text on `#E5F0FE` background
-  (`icon-color-informative` / `informative-subtle-background-color-default`,
-  resolved from `@adobe/spectrum-tokens`, same source as the other status colors).
+  Unchanged from the v1 attempt.
+- `computeSectionStatuses(referenceSections, currentCounts, currentSections = [])`
+  gains a third, optional parameter and a `defaultContent` field on each returned
+  section. **Pairing is positional, by original (pre-filter) index** — the current
+  page's section at index *i* is paired with the reference's section at index *i*,
+  computed *before* block-less reference sections are filtered out, so a filtered
+  section doesn't shift the correspondence for the ones after it. This is a
+  deliberate, accepted heuristic (an author's sections are usually filled in roughly
+  the same order as the template's, but this is not verified identity) — in the same
+  spirit as the sequential block-allocation heuristic above, and subject to the same
+  caveat: it can misattribute a specific section's content if the author reordered
+  or restructured sections relative to the template.
+- Rendered **inside** each existing anatomy card (`renderSection`), above that
+  section's block list: a full-width chip (reusing `.block-chip`'s shape, so it sits
+  visually consistent with the block chips below it) listing the section's
+  default-content tags, colored with Spectrum 2's official "informative" token:
+  `#4B75FF` border/text on `#E5F0FE` background (`icon-color-informative` /
+  `informative-subtle-background-color-default`, resolved from
+  `@adobe/spectrum-tokens`, same source as the other status colors).
 - This is purely descriptive — default content isn't a violation or a gap to fill
   (a section can legitimately be "just a paragraph," e.g. an article's intro); it's
   informational, styled distinctly from the missing/partial states for exactly that
