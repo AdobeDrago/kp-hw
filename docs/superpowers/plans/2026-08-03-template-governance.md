@@ -4094,11 +4094,329 @@ git commit -m "fix: replace misleading card index numbers with the section's rea
 
 ---
 
-### Task 15: Manual verification and registration hand-off
+### Task 15: Give each card type its own correctly-scoped index label
 
-This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, the page-oriented anatomy view with trailing "Missing from template" cards from Task 13, and the card-label fix from Task 14) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+**Why this task exists:** Task 14 removed the numeric index from both card types after the user found it misleading on the "Missing from template" cards. The user then clarified this went too far: page cards' positions are real (they're the page's own actual sections in actual order) and should be labeled; missing-from-template cards still need *some* indication of where the missing content belongs in the template's structure, just not a fabricated list-position number. Fix: `renderPageSection` gets back its render-time `index` (a true fact about the page's own section order) labeled as `Section N`; `computeSectionStatuses` gains a `referenceIndex` field (the section's true, filter-preserving position in the original `referenceSections` array) so `renderMissingSection` can label each card `Template section N` — a true fact about the template's structure, without claiming to know exactly where in the page it belongs. See the design spec's revised "Card labels" note for the full history and rationale.
 
-Additionally for this final pass, confirm: the primary anatomy cards are ORDERED by the CURRENT PAGE's own real sections (not the template's) but carry NO numeric index — only the section's `style` value if set, or no label at all if not — each showing that section's actual blocks (plain, no status coloring) plus a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when present; confirm a "Missing from template" label and a second set of cards appears AFTER the page's own sections (also with no numeric index, style-or-nothing labels), only for template sections still missing at least one block, with the usual present/missing coloring and Add buttons on those; confirm a page whose sections fully satisfy the template renders zero "Missing from template" cards (and no label).
+**Files:**
+- Modify: `tools/template-governance/template-governance-utils.js` — targeted change to `computeSectionStatuses` (add `referenceIndex`, preserving the pre-filter index — same technique as Task 12's now-reverted pairing logic, reused for a different purpose)
+- Modify: `test/tools/template-governance/template-governance-utils.test.js` — update the `describe('computeSectionStatuses', ...)` block to match
+- Modify: `tools/template-governance/template-governance.js` — `renderPageSection` (bring back `index` param + labeling), `renderMissingSection` (use `section.referenceIndex` instead of a render-time index), and the `renderPageSection` call site in `render()`
+
+**Interfaces:**
+- Changes: `computeSectionStatuses(referenceSections, currentCounts): Array<{ style, referenceIndex: number, blocks: Array<{name, status}> }>` — same two-argument signature as before, adds one new field (`referenceIndex`) to each returned section: the section's index in the original (pre-filter) `referenceSections` array.
+- `renderPageSection(section, index)` — `index` parameter restored; label is `Section ${index + 1}` (plus `· ${section.style}` if set).
+- `renderMissingSection(section)` — signature unchanged (still one parameter), but now reads `section.referenceIndex` internally; label is `Template section ${section.referenceIndex + 1}` (plus `· ${section.style}` if set).
+- Unchanged: `extractSections`, `countBlockOccurrences`, `computeAddedBlocks`, `findReferenceBlockHtml`, `buildBlockTableHtml`, `renderBlock`, `buildReport`'s return shape, the polling lifecycle, the Add-handler logic.
+
+- [ ] **Step 1: Update the `describe('computeSectionStatuses', ...)` test block**
+
+Replace this entire block:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+  });
+```
+
+with:
+
+```js
+  describe('computeSectionStatuses', () => {
+    it('marks a single-occurrence block present when the page has it', () => {
+      const reference = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      expect(statuses).to.deep.equal([
+        { style: null, referenceIndex: 0, blocks: [{ name: 'columns-media', status: 'present' }] },
+      ]);
+    });
+
+    it('marks a single-occurrence block missing when the page lacks it', () => {
+      const reference = [{ style: null, blocks: ['tabs'] }];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses).to.deep.equal([
+        { style: null, referenceIndex: 0, blocks: [{ name: 'tabs', status: 'missing' }] },
+      ]);
+    });
+
+    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
+    });
+
+    it('marks every slot of a repeated block present once fully satisfied', () => {
+      const reference = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
+    });
+
+    it('marks every slot of a repeated block missing when the page has none', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, {});
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
+    });
+
+    it('allocates independently across multiple instances of the same block within one section', () => {
+      const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
+      const statuses = computeSectionStatuses(reference, { card: 1 });
+      expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
+    });
+
+    it('omits sections with no real content block', () => {
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: 'footnotes', blocks: [] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+    });
+
+    it('preserves the original reference index when an earlier section is filtered out', () => {
+      const reference = [
+        { style: 'footnotes', blocks: [] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      expect(statuses).to.have.lengthOf(1);
+      expect(statuses[0].referenceIndex).to.equal(1);
+    });
+  });
+```
+
+- [ ] **Step 2: Run the tests to verify they fail**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: FAIL — `referenceIndex` isn't in `computeSectionStatuses`'s output yet.
+
+- [ ] **Step 3: Update `computeSectionStatuses`**
+
+Replace this function:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .filter((section) => section.blocks.length > 0)
+    .map((section) => ({
+      style: section.style,
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+with:
+
+```js
+export function computeSectionStatuses(referenceSections, currentCounts) {
+  const remaining = { ...currentCounts };
+  return referenceSections
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => section.blocks.length > 0)
+    .map(({ section, index }) => ({
+      style: section.style,
+      referenceIndex: index,
+      blocks: section.blocks.map((name) => {
+        const available = remaining[name] || 0;
+        if (available > 0) {
+          remaining[name] = available - 1;
+          return { name, status: 'present' };
+        }
+        return { name, status: 'missing' };
+      }),
+    }));
+}
+```
+
+- [ ] **Step 4: Run the tests to verify they pass**
+
+Run: `npx wtr "test/tools/template-governance/template-governance-utils.test.js" --node-resolve`
+Expected: PASS.
+
+- [ ] **Step 5: Update `renderPageSection`**
+
+Replace this method:
+
+```js
+  renderPageSection(section) {
+    return html`
+      <div class="section-card">
+        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderPageSection(section, index) {
+    const label = section.style ? `Section ${index + 1} · ${section.style}` : `Section ${index + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.defaultContent.length ? html`
+          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
+        ` : ''}
+        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 6: Update `renderMissingSection`**
+
+Replace this method:
+
+```js
+  renderMissingSection(section) {
+    return html`
+      <div class="section-card">
+        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+with:
+
+```js
+  renderMissingSection(section) {
+    const label = section.style
+      ? `Template section ${section.referenceIndex + 1} · ${section.style}`
+      : `Template section ${section.referenceIndex + 1}`;
+    return html`
+      <div class="section-card">
+        <p class="section-label">${label}</p>
+        ${section.blocks.map((block) => this.renderBlock(block))}
+      </div>
+    `;
+  }
+```
+
+- [ ] **Step 7: Update the `renderPageSection` call site in `render()`**
+
+Replace this:
+
+```js
+        <div class="anatomy">
+          ${this._report.currentSections.map((section) => this.renderPageSection(section))}
+        </div>
+```
+
+with:
+
+```js
+        <div class="anatomy">
+          ${this._report.currentSections.map((section, index) => this.renderPageSection(section, index))}
+        </div>
+```
+
+(The `renderMissingSection` call site is unchanged — it never needed a render-time index; `section.referenceIndex` now comes from the data itself.)
+
+- [ ] **Step 8: Lint**
+
+Run: `npx eslint tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js`
+Expected: no errors.
+
+- [ ] **Step 9: Run the full test suite**
+
+Run: `npm test`
+Expected: all pass.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add tools/template-governance/template-governance-utils.js test/tools/template-governance/template-governance-utils.test.js tools/template-governance/template-governance.js
+git commit -m "fix: give page sections and missing-from-template sections their own correctly-scoped index labels"
+```
+
+---
+
+### Task 16: Manual verification and registration hand-off
+
+This task has no code changes. It confirms the full plugin (v1 read/no-preview rework from Task 4, v2's section anatomy/add-to-page/polling from Tasks 6–7, sequential allocation from Task 9, block-table conversion from Task 10, the page-oriented anatomy view with trailing "Missing from template" cards from Task 13, and the two-round card-label fix from Tasks 14–15) works against real content, and hands off the one remaining step (site config registration) that requires the user's own action.
+
+Additionally for this final pass, confirm: the primary anatomy cards are ORDERED by the CURRENT PAGE's own real sections and each labeled `Section N` (plus `· style` if set) — a true position in the page; each shows that section's actual blocks (plain, no status coloring) plus a blue "informative" chip (`#4B75FF`/`#E5F0FE`) listing default-content tag names (e.g. `h2, p`) when present. Confirm a "Missing from template" label and a second set of cards appears AFTER the page's own sections, each labeled `Template section N` (plus `· style` if set) — the block's true position in the template's structure, NOT a claim about where it belongs on this specific page — only for template sections still missing at least one block, with the usual present/missing coloring and Add buttons on those. Confirm a page whose sections fully satisfy the template renders zero "Missing from template" cards (and no label).
 
 **Files:** none committed.
 
