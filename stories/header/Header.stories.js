@@ -11,7 +11,7 @@
 
 import { ensurePatternStyles, assetUrl } from '../pattern-utils.js';
 // Single source of truth: the same renderer the EDS block uses (blocks/header).
-import { renderHeader as renderDsHeader } from '../../blocks/header/header-dom.js';
+import { renderHeader as renderDsHeader } from '../../libs/blocks/header/header-dom.js';
 
 const PATTERN = 'header';
 const img = (path) => assetUrl(PATTERN, path);

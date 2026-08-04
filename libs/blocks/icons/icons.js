@@ -1,4 +1,4 @@
-import { createPicture } from '../../scripts/utils/picture.js';
+import { createPicture } from '../../../scripts/utils/picture.js';
 
 export default function init(el) {
   const isList = el.classList.contains('list');

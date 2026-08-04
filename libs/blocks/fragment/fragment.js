@@ -1,4 +1,4 @@
-import { loadArea } from '../../scripts/ak.js';
+import { loadArea } from '../../../scripts/ak.js';
 
 function replaceDotMedia(path, doc) {
   const resetAttributeBase = (tag, attr) => {

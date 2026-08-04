@@ -10,6 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
+import { FEDERATED_BLOCKS, resolveLibsBase } from '../libs/scripts/libs-config.js';
+
 const LOG = async (ex, el) => (await import('./utils/error.js')).default(ex, el);
 
 export function getMetadata(name) {
@@ -30,11 +32,22 @@ export const [setConfig, getConfig] = (() => {
   let config;
   return [
     (conf = {}) => {
+      // `siteBase` = the consuming site's own root (where /blocks and
+      // /styles/styles.css live). `libsBase` = the federated project root (where
+      // /libs/blocks and /libs/styles/libs.css live) — same-origin `/libs` by
+      // default, or a pinned deployment via <meta name="libs">. loadBlock picks
+      // between them per block using `federatedBlocks`.
+      const siteBase = `${import.meta.url.replace('/scripts/ak.js', '')}`;
       config = {
         ...conf,
         log: conf.log || LOG,
         locale: getLocale(conf.locales),
-        codeBase: `${import.meta.url.replace('/scripts/ak.js', '')}`,
+        siteBase,
+        libsBase: resolveLibsBase(siteBase),
+        federatedBlocks: FEDERATED_BLOCKS,
+        // `codeBase` = the site root; retained for site-owned templates/utils
+        // that resolve relative to it (loadTemplate, loadTemplateJS).
+        codeBase: siteBase,
       };
       return config;
     },
@@ -58,11 +71,18 @@ export async function loadStyle(href) {
 }
 
 export async function loadBlock(block) {
-  const { codeBase, log, components } = getConfig();
+  const {
+    siteBase, libsBase, federatedBlocks, log, components,
+  } = getConfig();
   const { classList } = block;
   const name = classList[0];
   block.dataset.blockName = name;
-  const blockPath = `${codeBase}/blocks/${name}/${name}`;
+  // Federated blocks resolve from the libs project; everything else from the
+  // consuming site. `data-libs` is set so QA / the demo can see the split.
+  const isFederated = federatedBlocks?.has(name);
+  const base = isFederated ? libsBase : siteBase;
+  if (isFederated) block.dataset.libs = 'true';
+  const blockPath = `${base}/blocks/${name}/${name}`;
   const loading = [new Promise((resolve) => {
     (async () => {
       try {

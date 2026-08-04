@@ -1,5 +1,5 @@
-import { getConfig, localizeUrl } from '../../scripts/ak.js';
-import ENV from '../../scripts/utils/env.js';
+import { getConfig, localizeUrl } from '../../../scripts/ak.js';
+import ENV from '../../../scripts/utils/env.js';
 import { loadFragment } from '../fragment/fragment.js';
 
 const config = getConfig();

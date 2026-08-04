@@ -53,7 +53,7 @@ async function applyFragmentNav(authed, root) {
   try {
     const [{ loadFragment }, { getConfig }] = await Promise.all([
       import('../fragment/fragment.js'),
-      import('../../scripts/ak.js'),
+      import('../../../scripts/ak.js'),
     ]);
     const prefix = getConfig()?.locale?.prefix || '';
     const fragment = await loadFragment(`${prefix}${authed ? NAV_PATH.auth : NAV_PATH.nonAuth}`);

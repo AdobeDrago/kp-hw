@@ -4,7 +4,7 @@
 // served /sb/kp-header copy (same stylesheet the Components/KP Header reference uses),
 // so the block can be pixel-compared against the reference.
 
-import init from '../../blocks/header/header.js';
+import init from '../../libs/blocks/header/header.js';
 
 function ensureKpStyles() {
   if (document.querySelector('link[data-kp-header]')) return;

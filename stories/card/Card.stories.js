@@ -10,7 +10,7 @@
 
 import { ensurePatternStyles, assetUrl } from '../pattern-utils.js';
 // Single source of truth: the same renderer the EDS block uses (blocks/card).
-import { renderCard as renderDsCard } from '../../blocks/card/card-dom.js';
+import { renderCard as renderDsCard } from '../../libs/blocks/card/card-dom.js';
 
 const PATTERN = 'card';
 const img = (file) => assetUrl(PATTERN, `assets/images/${file}`);
