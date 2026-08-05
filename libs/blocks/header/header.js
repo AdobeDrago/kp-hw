@@ -1,3 +1,4 @@
+import { getConfig } from '../../scripts/ak.js';
 import { NON_AUTH, AUTH } from './kp-markup.js';
 
 // KP production header (.kp-header) with a localStorage-driven auth toggle:
@@ -51,10 +52,7 @@ function primaryNavItems(fragment) {
 // Replace the shell's primary nav with the fragment's links (author-editable).
 async function applyFragmentNav(authed, root) {
   try {
-    const [{ loadFragment }, { getConfig }] = await Promise.all([
-      import('../fragment/fragment.js'),
-      import('../../scripts/ak.js'),
-    ]);
+    const { loadFragment } = await import('../fragment/fragment.js');
     const prefix = getConfig()?.locale?.prefix || '';
     const fragment = await loadFragment(`${prefix}${authed ? NAV_PATH.auth : NAV_PATH.nonAuth}`);
     const list = fragment && root.querySelector(PRIMARY_NAV);
@@ -118,9 +116,24 @@ function wireDropdowns(root) {
   });
 }
 
+// The vendored shell markup references its assets with root-relative paths
+// (`/libs/blocks/header/assets/…`). On a CONSUMING site those would resolve to the
+// consumer's own origin (which has no /libs) → 404. Rewrite them to the resolved
+// libs base so assets always load from the libs project, cross-origin or not.
+function resolveLibsAssets(root) {
+  const { libsBase } = getConfig();
+  if (!libsBase) return;
+  ['src', 'href'].forEach((attr) => {
+    root.querySelectorAll(`[${attr}^="/libs/"]`).forEach((node) => {
+      node.setAttribute(attr, node.getAttribute(attr).replace(/^\/libs/, libsBase));
+    });
+  });
+}
+
 export default function init(el) {
   const authed = isAuthenticated();
   const header = elFromHTML(authed ? AUTH : NON_AUTH);
+  resolveLibsAssets(header);
   el.replaceChildren(header);
   applyFragmentNav(authed, header);
   wireDropdowns(header);
