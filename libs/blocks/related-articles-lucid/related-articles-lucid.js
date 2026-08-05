@@ -1,4 +1,4 @@
-import { fetchArticles } from '../../utils/kp-api.js';
+import { fetchArticles } from '../../scripts/utils/kp-api.js';
 
 const KP_BASE = 'https://healthy.kaiserpermanente.org';
 const MAX_ARTICLES = 6;

@@ -9,7 +9,7 @@
 
 import { ensurePatternStyles, assetUrl } from '../pattern-utils.js';
 // Single source of truth: the same renderer the EDS block uses (blocks/notification).
-import { renderNotification as renderDsNotification } from '../../blocks/notification/notification-dom.js';
+import { renderNotification as renderDsNotification } from '../../libs/blocks/notification/notification-dom.js';
 
 const PATTERN = 'notifications';
 const ICON_FILE = {

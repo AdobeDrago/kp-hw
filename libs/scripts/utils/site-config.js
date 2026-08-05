@@ -18,9 +18,7 @@
  * this module is pulled in by blocks/utils that must not trigger that.
  */
 
-// getConfig comes from the federated runtime, resolved from the same-origin /libs.
-// eslint-disable-next-line import/no-absolute-path, import/no-unresolved
-import { getConfig } from '/libs/scripts/ak.js';
+import { getConfig } from '../ak.js';
 
 let siteConfigPromise;
 

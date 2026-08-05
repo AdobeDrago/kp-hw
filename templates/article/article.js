@@ -15,7 +15,7 @@
  * share row, both appended to the end of that section's .default-content.
  */
 
-import { renderBreadcrumbs } from '../../blocks/breadcrumbs/breadcrumbs-dom.js';
+import { renderBreadcrumbs } from '../../libs/blocks/breadcrumbs/breadcrumbs-dom.js';
 
 const SEARCH_BASE = '/pages/search?query='; // mirrors production tag target
 
@@ -60,7 +60,7 @@ function buildBreadcrumb() {
   });
 
   // Load the breadcrumbs block CSS (scoped to .breadcrumbs) once.
-  const cssHref = new URL('../../blocks/breadcrumbs/breadcrumbs.css', import.meta.url).href;
+  const cssHref = new URL('../../libs/blocks/breadcrumbs/breadcrumbs.css', import.meta.url).href;
   if (!document.querySelector(`link[href="${cssHref}"]`)) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';

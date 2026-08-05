@@ -10,11 +10,13 @@ runtime mechanics see [libs-architecture.md](./libs-architecture.md).
 ## kp-hw is a hybrid: provider **and** its own consumer
 
 - **`/libs/`** is the federated layer (the `ak-libs` role): the shared runtime,
-  global styles, and common blocks. Other sites consume it at runtime.
-- **The repo root** is kp-hw's own consumer layer (the `ak-consumer-1` role): its
-  bootstrap, sub-brand styles, and KP-specific blocks — it consumes `/libs`.
+  global styles, **all blocks**, deps, tools, and KP utils. Other sites consume it
+  at runtime.
+- **The repo root** is kp-hw's own consumer shell (the `ak-consumer-1` role): its
+  bootstrap, sub-brand styles, templates, and UE config — it consumes `/libs`.
+  Every block now lives in `/libs`, so the root has **no `/blocks`** of its own.
 
-A future "Site-A" is then just this root layer lifted into its own repo.
+A future "Site-A" is then just this root shell lifted into its own repo.
 
 ```
 kp-hw/
@@ -24,39 +26,40 @@ kp-hw/
 │
 ├── libs/                     ← FEDERATED LAYER (mirrors ak-libs)
 │   ├── scripts/
-│   │   ├── ak.js             ← the runtime (aem.js). libsBase = its own import.meta.url
+│   │   ├── ak.js             ← the runtime (aem.js). libsBase = own import.meta; PROVIDERS resolve by prefix
 │   │   ├── scripts.js        ← libs bootstrap (for /libs served as its own site)
-│   │   ├── libs-config.js    ← FEDERATED_BLOCKS manifest
 │   │   ├── lazy.js, postlcp.js, utils/*
 │   ├── styles/styles.css     ← federated global tokens (the brand base)
-│   ├── blocks/*              ← 17 federated blocks (accordion, card, columns, header, footer, …)
+│   ├── blocks/*              ← ALL 24 blocks (accordion, card, columns, header, footer, …
+│   │                            AND KP: classes-search, related-articles, article-collection, …)
+│   ├── scripts/utils/*       ← runtime utils + KP utils (kp-api.js, site-config.js)
 │   ├── deps/*                ← lit, rum.js
 │   └── tools/{da,quick-edit,scheduler,sidekick}
 │
 ├── scripts/scripts.js        ← CONSUMER bootstrap: resolves libsBase, imports ak.js from it,
-│                                setConfig({ codeBase: <root>, env, KP linkBlocks, ue wiring })
+│                                setConfig({ codeBase: <root>, env, ue wiring })
 │   scripts/*.mjs, *.sh        ← build-only dev tooling (stay at root)
 ├── styles/styles.css         ← KP sub-brand overrides + KP @font-face (Gotham); + styles/fonts/, ds-tokens.css, error.css
-├── blocks/*                  ← KP-specific: classes-search, classes-results, related-articles,
-│                                related-articles-lucid, article-collection, breadcrumbs, notification
 ├── img/*                     ← KP brand assets (favicons/icons/logos; loaded via codeBase)
 ├── templates/  ue/ + component-*.json  config/  aem-edge-functions/  workers/  well-known/
-├── utils/{kp-api.js, site-config.js}   tools/{fragments, storybook}   stories/  test/
+├── tools/{fragments, storybook}   stories/  test/
 ```
+
+(No root `/blocks` or `/utils` — everything moved to `/libs`.)
 
 ## Block taxonomy
 
-| | **Federated** | **Site-specific** |
-|---|---|---|
-| Lives in | `libs/blocks/` | `blocks/` |
-| Loaded from | `libsBase` (`/libs`) | `codeBase` (the site root) |
-| Owned by | Libs / foundation team | Site dev team |
-| Examples | `header`, `footer`, `hero`, `card`, `columns`, `tabs`, … (17) | `classes-*`, `related-articles*`, `article-collection`, `breadcrumbs`, `notification` |
+All 24 blocks are now federated (`/libs/blocks/`, loaded from `libsBase`). kp-hw's
+root keeps no blocks of its own — it's a thin consumer shell. A *different* consumer
+(Site-A) could still add its own blocks under its root `/blocks` (loaded from
+`codeBase`); those would use plain names, federated ones use `lib-`.
 
-A block is federated either by the `lib-` name prefix (`lib-columns`) **or** by
-being in `FEDERATED_BLOCKS` (author-transparent — keeps the live KP content
-unchanged). Per the spec's **"no lib overrides"**, a federated name always
-resolves to libs; a consumer needing different behavior makes a *new* block.
+A block is federated **by the `lib-` name prefix** (`lib-columns`) — resolved via
+the `PROVIDERS` list in `ak.js`, no manifest (as `ak-libs`). A plain name always
+means "this site's own block", so per the spec's **"no lib overrides"** a consumer
+can have its own `columns` distinct from the federated `lib-columns`. (Header/footer
+default to `lib-header`/`lib-footer`; the auto link-blocks are `lib-fragment` /
+`lib-schedule` / `lib-youtube`.)
 
 ## Ownership & the seven principles
 

@@ -17,15 +17,10 @@ const locales = {
   '/zh': { lang: 'zh' },
 };
 
-// Auto-blocks use the `lib-` prefix here (these are federated blocks).
-const linkBlocks = [
-  { 'lib-fragment': '/fragments/' },
-  { 'lib-schedule': '/schedules/' },
-  { 'lib-youtube': 'https://www.youtube' },
-];
-
-// Blocks with self-managed styles
-const components = ['fragment', 'schedule'];
+// Federated auto-blocks + self-styled components come from the ak.js defaults
+// (DEF_LINK_BLOCKS / DEF_COMPONENTS). Nothing extra to add here.
+const linkBlocks = [];
+const components = [];
 
 // How to decorate an area before loading it
 const decorateArea = ({ area = document }) => {

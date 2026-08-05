@@ -1,7 +1,5 @@
-/* eslint-disable import/no-absolute-path, import/no-unresolved -- runtime is
-   federated: a KP (consumer) block resolves it from the same-origin /libs project. */
-import { getConfig, loadStyle } from '/libs/scripts/ak.js';
-import { createPicture } from '/libs/scripts/utils/picture.js';
+import { getConfig, loadStyle } from '../../scripts/ak.js';
+import { createPicture } from '../../scripts/utils/picture.js';
 import { renderRelatedArticles } from './related-articles-dom.js';
 
 // Authored block shape (all rows are optional except the index URL):

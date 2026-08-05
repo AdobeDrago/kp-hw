@@ -71,28 +71,39 @@ await loadArea();
 
 ## The resolver (`libs/scripts/ak.js`)
 
+Federation is resolved **purely by class-name prefix** via a `PROVIDERS` list —
+no manifest (exactly as `ak-libs`):
+
 ```js
-import { FEDERATED_BLOCKS } from './libs-config.js';
+const PROVIDERS = [{ prefix: 'lib', pathPrefix: '/libs', local: 3000 }];
 
 // setConfig:
 const libsBase = import.meta.url.replace('/scripts/ak.js', '');
-config = { ...conf, libsBase, codeBase: conf.codeBase ?? libsBase, federatedBlocks: FEDERATED_BLOCKS };
+config = { ...conf, libsBase, codeBase: conf.codeBase ?? libsBase, providers: PROVIDERS };
 
 // loadBlock:
-const hasLibPrefix = name.startsWith('lib-');        // official convention
-const folder = hasLibPrefix ? name.slice(4) : name;
-const isFederated = hasLibPrefix || federatedBlocks.has(folder);  // manifest = retrofit path
-if (hasLibPrefix) block.classList.add(folder);       // bridge so base CSS applies
-const base = isFederated ? libsBase : codeBase;
-const blockPath = `${base}/blocks/${folder}/${folder}`;
+let name = classList[0];
+const provider = providers.find((pr) => name.startsWith(`${pr.prefix}-`));  // lib-columns → `lib`
+if (provider) {
+  name = name.replace(`${provider.prefix}-`, '');   // → columns
+  classList.add(name);                              // bridge so base-name CSS applies
+  block.dataset.libs = 'true';
+}
+const base = getCodeBase(env, libsBase, codeBase, provider);  // provider → libsBase, else codeBase
+const blockPath = `${base}/blocks/${name}/${name}`;
 ```
 
-Two ways to federate a block:
-- **`lib-` prefix** — author `lib-columns` (spec convention; folder `columns`).
-- **Manifest** (`FEDERATED_BLOCKS` in `libs/scripts/libs-config.js`) — a plain name
-  resolves to libs, so the **live KP site's authored content is unchanged**.
+- **`lib-columns`** → the `lib` provider → loaded from `/libs/blocks/columns`.
+- **`columns`** (no prefix) → no provider → the consuming site's `/blocks/columns`.
 
-Both honor **"no lib overrides"**: a federated name always resolves to `/libs`.
+This enforces **"no lib overrides"** structurally: a consumer can have its own
+`columns` distinct from the federated `lib-columns`. Header/footer default to
+`lib-header`/`lib-footer`, and the auto link-blocks are `lib-fragment` /
+`lib-schedule` / `lib-youtube`, so that chrome is federated with no authoring change.
+
+> **Authoring impact:** because there is no manifest, a federated block must be
+> authored with its `lib-` prefix in DA (`lib-columns`, `lib-card`, …). A plain
+> name always means "this site's own block."
 
 ---
 
@@ -116,13 +127,17 @@ relatively (`../../scripts/ak.js`), so they stay on the libs origin.
 
 ## Common tasks
 
-**Promote a site block to federated:** `git mv blocks/<x> libs/blocks/<x>`; add
-`<x>` to `FEDERATED_BLOCKS`; fix its runtime imports to `../../scripts/…` (now
-inside `/libs`). A KP block that needs a federated block's module imports it
-absolutely, e.g. `/libs/blocks/card/card-dom.js` (see `related-articles`).
+**Promote a site block to federated:** `git mv blocks/<x> libs/blocks/<x>`; fix
+its runtime imports to `../../scripts/…` (now inside `/libs`); and **re-author the
+block in DA as `lib-<x>`** so the prefix routes it to `/libs`. A KP block that
+needs a federated block's module imports it absolutely, e.g.
+`/libs/blocks/card/card-dom.js` (see `related-articles`).
 
-**Add a new federated block:** create `libs/blocks/<x>/` + add to `FEDERATED_BLOCKS`
-(or author as `lib-<x>`).
+**Add a new federated block:** create `libs/blocks/<x>/` and author it as `lib-<x>`.
+
+**Add another provider** (e.g. commerce): push an entry onto `PROVIDERS` in
+`ak.js` with its own `prefix`/`origin`/`pathPrefix`; blocks authored `<prefix>-…`
+then load from that provider.
 
 **A consumer needs different behavior:** make a *new* block in the consumer's
 `blocks/` — do not shadow a federated one (no overrides).
@@ -136,20 +151,20 @@ npx aem up --no-open --port 3010
 ```
 
 On the homepage: the runtime loads from `/libs/scripts/ak.js`; `/libs/styles/styles.css`
-loads before `/styles/styles.css`; federated blocks resolve from `/libs/blocks/*`
-(and carry `data-libs`), KP blocks from `/blocks/*`; header/footer render; KP brand
-intact. `npm run lint` (no new errors) and `npx wtr ./test/scripts/*.test.js` pass.
+loads before `/styles/styles.css`; blocks authored `lib-*` resolve from `/libs/blocks/*`
+(and carry `data-libs`); header/footer render; KP brand intact. `npm run lint` (no new
+errors) and `npx wtr ./test/scripts/*.test.js` pass.
 
 ## Key files
 
 | File | Role |
 |---|---|
-| `libs/scripts/ak.js` | Runtime; `libsBase` = own `import.meta`; `loadBlock` resolves per block |
-| `libs/scripts/libs-config.js` | `FEDERATED_BLOCKS` manifest |
+| `libs/scripts/ak.js` | Runtime; `libsBase` = own `import.meta`; `PROVIDERS` + `loadBlock` resolve per block by prefix |
 | `libs/scripts/scripts.js` | Libs bootstrap (libs served as its own site) |
 | `libs/styles/styles.css` | Federated global tokens (brand base) |
-| `libs/blocks/*`, `libs/deps/*`, `libs/tools/*` | Federated blocks, deps, tools |
+| `libs/blocks/*` | All 24 federated blocks (incl. KP: classes-*, related-articles*, …) |
+| `libs/scripts/utils/*` | Runtime utils + KP utils (`kp-api.js`, `site-config.js`) |
+| `libs/deps/*`, `libs/tools/*` | Federated deps + tools |
 | `scripts/scripts.js` | Consumer bootstrap (resolves libsBase, sets codeBase) |
 | `styles/styles.css` | KP sub-brand overrides (wins the cascade) |
 | `head.html` | Consumer head (libs styles → site styles → bootstrap) |
-| `blocks/*` | KP-specific blocks |

@@ -7,9 +7,7 @@
 // array; falls back to a single flat grid when no articles are tagged.
 // Non-active panels are lazy-built on first click.
 
-// `card` is a federated block — import its renderer from the /libs project.
-// eslint-disable-next-line import/no-absolute-path, import/no-unresolved
-import { renderCard } from '/libs/blocks/card/card-dom.js';
+import { renderCard } from '../card/card-dom.js';
 
 let uidCounter = 0;
 const uid = (prefix = 'ra') => {

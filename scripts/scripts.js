@@ -1,12 +1,8 @@
 // kp-hw CONSUMER bootstrap. kp-hw is both the federated libs provider (/libs) and
 // its own consuming site; this file is the consumer half. It resolves where /libs
 // lives, loads the federated runtime + styles from there, and passes kp-hw's own
-// codeBase so KP-specific blocks (/blocks) still resolve locally.
+// codeBase (used for site-owned templates). All blocks now live in /libs.
 // Mirrors author-kit/ak-consumer-1's scripts/scripts.js.
-
-// The site-config loader lives in a standalone module (no page-bootstrap side
-// effects) so blocks/utils can import it freely; re-exported here for convenience.
-export { getSiteConfig } from '../utils/site-config.js';
 
 // Where the federated libs project is served from:
 //  - production (real domain): same-origin `/libs` (CDN-mapped → no DNS/SSL/CORS cost)
@@ -67,16 +63,11 @@ const locales = {
   '/zh': { lang: 'zh' },
 };
 
-// Auto-blocks from links. Names are federated via the FEDERATED_BLOCKS manifest,
-// so they resolve from /libs (no `lib-` prefix needed in kp-hw content).
-const linkBlocks = [
-  { fragment: '/fragments/' },
-  { schedule: '/schedules/' },
-  { youtube: 'https://www.youtube' },
-];
-
-// Blocks with self-managed styles
-const components = ['fragment', 'schedule'];
+// The federated auto-blocks (lib-fragment/schedule/youtube) and self-styled
+// components come from the libs defaults (DEF_LINK_BLOCKS/DEF_COMPONENTS in ak.js).
+// These arrays are for kp-hw's OWN site-specific link-blocks/components (none yet).
+const linkBlocks = [];
+const components = [];
 
 // Load the federated global styles from libs. kp-hw's own styles.css (linked in
 // head.html) is a heavy sub-brand override that must WIN, so — unlike a light
