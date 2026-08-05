@@ -1,197 +1,155 @@
 # Libs Architecture (Federated Blocks)
 
-How this repo shares common blocks/styles/runtime across sites, and how a page
-decides — per block — whether to load from the shared **libs** project or from
-the **consuming site**.
+How kp-hw shares a runtime + common blocks + global styles with consuming sites,
+and how a page resolves — per block — whether to load from the shared **libs**
+project (`/libs`) or from the **consuming site**.
 
-- Concept & diagram: <https://docs.da.live/media/libs-arch.pdf>
-- In this org, **`kp-hw` is the federated "libs" project** (the `fedlibs` role in
-  the diagram). It hosts `/libs/...`; consuming sites fetch that at runtime while
-  keeping their own `/blocks`.
-
-> This repo is currently **both** the libs provider **and** a consuming site — a
-> page here loads common blocks from `/libs` and KP-specific blocks from `/blocks`
-> on the same page. That's the whole POC.
+- Spec: <https://main--ak-consumer-1--author-kit.aem.page/>
+- Reference repos: [`author-kit/ak-libs`](https://github.com/author-kit/ak-libs)
+  (provider), [`author-kit/ak-consumer-1`](https://github.com/author-kit/ak-consumer-1)
+  (consumer). This repo mirrors both: **kp-hw is the libs provider (`/libs`) and its
+  own consumer (root)** — see [repo-structure.md](./repo-structure.md).
 
 ---
 
 ## The one idea
 
-Every block, style, and template used to resolve from a **single** base
-(`codeBase`). The libs architecture makes that base resolution **per block**:
+Two bases, chosen **per block**:
 
 ```
-federated block  →  libsBase  (the shared /libs project)
-everything else  →  siteBase  (the consuming site's own /blocks)
+federated block  →  libsBase   (the shared /libs project)
+everything else  →  codeBase   (the consuming site's own root)
 ```
 
-A small manifest says which blocks are federated; the runtime picks the base.
+- **`libsBase`** — `ak.js` derives it from its **own** `import.meta.url` (it is
+  served from `/libs/scripts/ak.js`). Whatever libs deployment a consumer imports
+  the runtime from *is* the libsBase.
+- **`codeBase`** — the consuming site passes it into `setConfig`; it defaults to
+  `libsBase` (so a libs project rendering its own pages loads everything from libs).
+
+This is the ak-libs / Milo model (inverse of deriving the site base from the page
+origin).
 
 ---
 
-## What is federated today
+## Page lifecycle
 
-`libs/scripts/libs-config.js` is the single source of truth:
+1. **`head.html`** (consumer) links `/libs/styles/styles.css` then `/styles/styles.css`,
+   and loads `/scripts/scripts.js`.
+2. **Consumer bootstrap** (`scripts/scripts.js`) resolves `libsBase`, imports the
+   runtime from it, and `setConfig`s its own `codeBase`.
+3. **Federated blocks** load from `${libsBase}/blocks/…`; **site blocks** from
+   `${codeBase}/blocks/…`. Federated blocks carry `data-libs="true"` for QA.
+4. **Styles cascade**: libs `styles.css` (global tokens) is first; the site's
+   `styles.css` (KP sub-brand) is second and wins.
+
+---
+
+## The consumer bootstrap (`scripts/scripts.js`)
+
+Mirrors `ak-consumer-1`. It runs before the runtime exists, so it computes
+`libsBase` itself, then imports `ak.js` from there:
 
 ```js
-export const FEDERATED_BLOCKS = new Set([
-  'accordion', 'advanced-tabs', 'card', 'cards-icon',
-  'columns', 'columns-media', 'footer', 'fragment',
-  'header', 'hero', 'icons', 'plan-compare',
-  'schedule', 'section-metadata', 'table', 'tabs', 'youtube',
-]);
-```
+const libsBase = (() => {
+  // kp-hw hosts its own /libs → default is same-origin `/libs` (prod CDN-mapped,
+  // and served directly under preview / `aem up` / tests). `?libs=` overrides.
+  const branch = new URLSearchParams(window.location.search).get('libs');
+  if (!branch) return '/libs';
+  if (branch === 'local') return 'http://localhost:3000/libs';
+  return `https://${branch}--kp-hw--adobedrago.aem.live/libs`; // branch deploy
+})();
 
-Everything else stays site-local under `/blocks` — the KP-unique blocks:
-`classes-search`, `classes-results`, `related-articles`, `related-articles-lucid`,
-`article-collection`, `breadcrumbs`, `notification`.
+const codeBase = import.meta.url.replace('/scripts/scripts.js', '');
 
----
-
-## Page lifecycle (mapped to the spec's 6 steps)
-
-1. **Page load** — `head.html` loads the site's `scripts.js`.
-2. **Libs runtime loads** — `scripts.js` imports the federated runtime
-   (`scripts/ak.js`, exposed as `/libs/scripts/libs.js` — aka `aem.js`): section
-   decoration, block loading, links/buttons, templates.
-3. **Libs styles load** — `/libs/styles/libs.css` (global brand tokens) — **first**.
-4. **Site styles load** — `/styles/styles.css` (KP sub-brand overrides) — **after**,
-   so the site wins the cascade.
-5. **Site block loads** — `loadBlock` sees a non-federated block → `${siteBase}/blocks/...`.
-6. **Federated block loads** — `loadBlock` sees a federated block → `${libsBase}/blocks/...`.
-
-Steps 3–4 are wired in `head.html`:
-
-```html
-<link rel="stylesheet" href="/libs/styles/libs.css"/>   <!-- global brand: first -->
-<link rel="stylesheet" href="/styles/styles.css"/>      <!-- site sub-brand: after -->
+const { setConfig, loadArea } = await import(`${libsBase}/scripts/ak.js`);
+setConfig({ codeBase, env: getEnv(), hostnames, locales, linkBlocks, components, decorateArea });
+await loadArea();
 ```
 
 ---
 
-## The resolver (base selection)
-
-`scripts/ak.js` computes both bases once, then `loadBlock` chooses per block.
-
-**Config** (`setConfig`):
+## The resolver (`libs/scripts/ak.js`)
 
 ```js
-import { FEDERATED_BLOCKS, resolveLibsBase } from '../libs/scripts/libs-config.js';
+import { FEDERATED_BLOCKS } from './libs-config.js';
 
-// siteBase = this site's root (where /blocks & /styles/styles.css live)
-const siteBase = `${import.meta.url.replace('/scripts/ak.js', '')}`;
+// setConfig:
+const libsBase = import.meta.url.replace('/scripts/ak.js', '');
+config = { ...conf, libsBase, codeBase: conf.codeBase ?? libsBase, federatedBlocks: FEDERATED_BLOCKS };
 
-config = {
-  ...conf,
-  siteBase,
-  libsBase: resolveLibsBase(siteBase),   // same-origin `/libs` by default
-  federatedBlocks: FEDERATED_BLOCKS,
-  codeBase: siteBase,                    // site-owned templates/utils resolve here
-};
+// loadBlock:
+const hasLibPrefix = name.startsWith('lib-');        // official convention
+const folder = hasLibPrefix ? name.slice(4) : name;
+const isFederated = hasLibPrefix || federatedBlocks.has(folder);  // manifest = retrofit path
+if (hasLibPrefix) block.classList.add(folder);       // bridge so base CSS applies
+const base = isFederated ? libsBase : codeBase;
+const blockPath = `${base}/blocks/${folder}/${folder}`;
 ```
 
-**Per-block resolution** (`loadBlock`):
+Two ways to federate a block:
+- **`lib-` prefix** — author `lib-columns` (spec convention; folder `columns`).
+- **Manifest** (`FEDERATED_BLOCKS` in `libs/scripts/libs-config.js`) — a plain name
+  resolves to libs, so the **live KP site's authored content is unchanged**.
 
-```js
-const { siteBase, libsBase, federatedBlocks } = getConfig();
-const name = block.classList[0];
-
-const isFederated = federatedBlocks?.has(name);
-const base = isFederated ? libsBase : siteBase;
-if (isFederated) block.dataset.libs = 'true';   // QA/demo marker
-
-const blockPath = `${base}/blocks/${name}/${name}`;
-await (await import(`${blockPath}.js`)).default(block);
-loadStyle(`${blockPath}.css`);
-```
-
-At runtime you'll see (on a page that uses both):
-
-```
-GET /libs/blocks/columns/columns.js   200   ← federated
-GET /libs/blocks/tabs/tabs.js         200   ← federated
-GET /blocks/hero/hero.js              200   ← site
-GET /blocks/card/card.js              200   ← site
-```
-
-Federated blocks carry `data-libs="true"` in the DOM so QA can see the split.
+Both honor **"no lib overrides"**: a federated name always resolves to `/libs`.
 
 ---
 
-## Choosing the libs deployment (prod / stage / local)
+## Choosing the libs deployment (prod / preview / local)
 
-`resolveLibsBase(siteBase)` (in `libs/scripts/libs-config.js`) resolves in order:
+`libsBase` comes from the consumer bootstrap:
 
-1. `<meta name="libs" content="…">` — an absolute origin/URL or absolute path.
-   Pins a specific libs deployment for that page/environment.
-2. Same-origin `${siteBase}/libs` — the default.
+| Context | `libsBase` |
+|---|---|
+| Production | same-origin `/libs` (CDN-mapped to the libs project — no DNS/SSL/CORS cost) |
+| Preview / `aem up` / tests (default) | same-origin `/libs` (kp-hw serves its own) |
+| `?libs=<branch>` | `https://<branch>--kp-hw--adobedrago.aem.live/libs` (test a libs branch vs this content) |
+| `?libs=local` | `http://localhost:3000/libs` |
 
-```html
-<!-- Point a site at an external libs deployment -->
-<meta name="libs" content="https://main--kp-hw--adobedrago.aem.live">
-<!-- now federated blocks load from https://main--kp-hw--adobedrago.aem.live/libs/blocks/... -->
-```
-
-When `libsBase` is external, also serve `libs.css` from there (swap the `head.html`
-link, or inject it from `libs.js`).
-
-**Federated blocks depend on the provider's shared runtime and utils.** They live
-in `libs/blocks/<name>/` and reference the provider's `/scripts` tree one level up
-(`../../../scripts/...`) — the runtime (`ak.js`) and shared utils (`picture.js`,
-`env.js`, `observer.js`). Because a federated block is always **served from the
-libs-provider origin**, those `../../../scripts/...` paths resolve against that same
-origin, so the block stays self-contained cross-origin. Sibling federated blocks
-are referenced normally (e.g. `footer` → `../fragment/fragment.js`).
+Cross-origin (`?libs=`) works with no extra config: aem.live/.page serve code
+(JS + CSS) with `access-control-allow-origin: *`, so `import()` of the runtime and
+federated blocks resolves cross-origin. Federated blocks reference the runtime
+relatively (`../../scripts/ak.js`), so they stay on the libs origin.
 
 ---
 
 ## Common tasks
 
-**Federate an existing site block** (e.g. `table`):
-1. `git mv blocks/table libs/blocks/table`
-2. Add `'table'` to `FEDERATED_BLOCKS` in `libs/scripts/libs-config.js`
-3. Fix provider imports one level deeper: `../../scripts/…` → `../../../scripts/…`
-   (runtime + shared utils stay in the provider `/scripts` tree — single source of
-   truth). Sibling federated-block imports (`../otherblock/…`) are unchanged.
-4. If the block ships block-absolute asset URLs (like `header`'s
-   `/blocks/header/assets/…`), rewrite them to `/libs/blocks/<name>/assets/…` and
-   update any Storybook `staticDirs`.
-5. If a Storybook story imports the block by path, repoint it to `../../libs/blocks/…`.
+**Promote a site block to federated:** `git mv blocks/<x> libs/blocks/<x>`; add
+`<x>` to `FEDERATED_BLOCKS`; fix its runtime imports to `../../scripts/…` (now
+inside `/libs`). A KP block that needs a federated block's module imports it
+absolutely, e.g. `/libs/blocks/card/card-dom.js` (see `related-articles`).
 
-**Un-federate / let a site override a federated block:**
-- Remove the name from `FEDERATED_BLOCKS` (it now resolves from the site), **or**
-- Ship a site-local `/blocks/<name>/` and drop the name from the manifest — the
-  site copy wins.
+**Add a new federated block:** create `libs/blocks/<x>/` + add to `FEDERATED_BLOCKS`
+(or author as `lib-<x>`).
 
-**Add a brand-new federated block:** create `libs/blocks/<name>/` and add `<name>`
-to `FEDERATED_BLOCKS`.
+**A consumer needs different behavior:** make a *new* block in the consumer's
+`blocks/` — do not shadow a federated one (no overrides).
 
 ---
 
 ## Verify locally
 
 ```bash
-npx aem up --no-open --port 3005
+npx aem up --no-open --port 3010
 ```
 
-Open a page that uses federated blocks (the homepage uses `header`, `footer`,
-`hero`, `card`, `columns`, `tabs`, …) and check the Network panel: those load from
-`/libs/blocks/...`, while a KP-unique block like `classes-search` loads from
-`/blocks/...`; `/libs/styles/libs.css` loads before `/styles/styles.css`. Federated
-blocks have `data-libs="true"` in the DOM.
+On the homepage: the runtime loads from `/libs/scripts/ak.js`; `/libs/styles/styles.css`
+loads before `/styles/styles.css`; federated blocks resolve from `/libs/blocks/*`
+(and carry `data-libs`), KP blocks from `/blocks/*`; header/footer render; KP brand
+intact. `npm run lint` (no new errors) and `npx wtr ./test/scripts/*.test.js` pass.
 
----
-
-## Files
+## Key files
 
 | File | Role |
 |---|---|
-| `libs/scripts/libs-config.js` | `FEDERATED_BLOCKS` manifest (17 blocks) + `resolveLibsBase()` |
-| `libs/scripts/libs.js` | Federated runtime entry (aka `aem.js`); re-exports `scripts/ak.js` |
-| `libs/styles/libs.css` | Federated global brand tokens (loaded first) |
-| `libs/blocks/*` | The 17 federated blocks (incl. `header` + its `assets/`) |
-| `scripts/ak.js` | Runtime: `setConfig` computes bases; `loadBlock` picks per block |
-| `scripts/utils/*` | Provider runtime utils (`ak.js` + `picture/env/observer`) — shared by site & federated blocks |
-| `styles/styles.css` | Site (KP) sub-brand token overrides (loaded after libs.css) |
-| `head.html` | Loads `libs.css` before `styles.css` |
-| `blocks/*` | Site-specific blocks (KP-unique) |
+| `libs/scripts/ak.js` | Runtime; `libsBase` = own `import.meta`; `loadBlock` resolves per block |
+| `libs/scripts/libs-config.js` | `FEDERATED_BLOCKS` manifest |
+| `libs/scripts/scripts.js` | Libs bootstrap (libs served as its own site) |
+| `libs/styles/styles.css` | Federated global tokens (brand base) |
+| `libs/blocks/*`, `libs/deps/*`, `libs/tools/*` | Federated blocks, deps, tools |
+| `scripts/scripts.js` | Consumer bootstrap (resolves libsBase, sets codeBase) |
+| `styles/styles.css` | KP sub-brand overrides (wins the cascade) |
+| `head.html` | Consumer head (libs styles → site styles → bootstrap) |
+| `blocks/*` | KP-specific blocks |

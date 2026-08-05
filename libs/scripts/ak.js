@@ -10,7 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { FEDERATED_BLOCKS, resolveLibsBase } from '../libs/scripts/libs-config.js';
+import { FEDERATED_BLOCKS } from './libs-config.js';
 
 const LOG = async (ex, el) => (await import('./utils/error.js')).default(ex, el);
 
@@ -32,22 +32,21 @@ export const [setConfig, getConfig] = (() => {
   let config;
   return [
     (conf = {}) => {
-      // `siteBase` = the consuming site's own root (where /blocks and
-      // /styles/styles.css live). `libsBase` = the federated project root (where
-      // /libs/blocks and /libs/styles/libs.css live) — same-origin `/libs` by
-      // default, or a pinned deployment via <meta name="libs">. loadBlock picks
-      // between them per block using `federatedBlocks`.
-      const siteBase = `${import.meta.url.replace('/scripts/ak.js', '')}`;
+      // `libsBase` = the federated project root, derived from THIS runtime's own
+      // URL (ak.js is served from `/libs/scripts/`). A consumer imports ak.js from
+      // its chosen libs deployment, so import.meta always points back at that libs
+      // project — the block/style/font base for everything federated.
+      const libsBase = `${import.meta.url.replace('/scripts/ak.js', '')}`;
+      // `codeBase` = the CONSUMING site's own root (where its /blocks, /templates,
+      // /img live). The consumer passes it in; a libs project rendering its own
+      // pages omits it and defaults to libsBase. (Mirrors ak-libs.)
       config = {
         ...conf,
         log: conf.log || LOG,
         locale: getLocale(conf.locales),
-        siteBase,
-        libsBase: resolveLibsBase(siteBase),
+        libsBase,
+        codeBase: conf.codeBase ?? libsBase,
         federatedBlocks: FEDERATED_BLOCKS,
-        // `codeBase` = the site root; retained for site-owned templates/utils
-        // that resolve relative to it (loadTemplate, loadTemplateJS).
-        codeBase: siteBase,
       };
       return config;
     },
@@ -72,17 +71,25 @@ export async function loadStyle(href) {
 
 export async function loadBlock(block) {
   const {
-    siteBase, libsBase, federatedBlocks, log, components,
+    codeBase, libsBase, federatedBlocks, log, components,
   } = getConfig();
   const { classList } = block;
   const name = classList[0];
   block.dataset.blockName = name;
-  // Federated blocks resolve from the libs project; everything else from the
-  // consuming site. `data-libs` is set so QA / the demo can see the split.
-  const isFederated = federatedBlocks?.has(name);
-  const base = isFederated ? libsBase : siteBase;
+  // A block is federated two ways (both resolve to the libs project):
+  //   1. the official `lib-` name prefix (`lib-columns` → folder `columns`), or
+  //   2. its name is in the FEDERATED_BLOCKS manifest (author-transparent; keeps
+  //      the live KP site's content unchanged — no `lib-` prefix needed).
+  // Everything else loads from the consuming site. `data-libs` marks the split.
+  const hasLibPrefix = name.startsWith('lib-');
+  const folder = hasLibPrefix ? name.slice(4) : name;
+  const isFederated = hasLibPrefix || federatedBlocks?.has(folder);
+  // Bridge: a `lib-columns` element also gets the `columns` class so the block's
+  // own CSS (scoped to the base name) applies without a separate `.lib-` sheet.
+  if (hasLibPrefix) classList.add(folder);
+  const base = isFederated ? libsBase : codeBase;
   if (isFederated) block.dataset.libs = 'true';
-  const blockPath = `${base}/blocks/${name}/${name}`;
+  const blockPath = `${base}/blocks/${folder}/${folder}`;
   const loading = [new Promise((resolve) => {
     (async () => {
       try {

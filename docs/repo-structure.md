@@ -1,145 +1,82 @@
 # Repository Structure
 
-How `kp-hw` is organized for enterprise, multi-site use under the **Libs
-Architecture** (<https://docs.da.live/media/libs-arch.pdf>). For the runtime
-mechanics and code examples, see [libs-architecture.md](./libs-architecture.md).
+How `kp-hw` is organized under the **Libs (Federated) Architecture**, mirroring the
+reference repos built by the pattern's author:
+[`author-kit/ak-libs`](https://github.com/author-kit/ak-libs) (the provider) and
+[`author-kit/ak-consumer-1`](https://github.com/author-kit/ak-consumer-1) (a
+consumer). Spec: <https://main--ak-consumer-1--author-kit.aem.page/>. For the
+runtime mechanics see [libs-architecture.md](./libs-architecture.md).
 
----
+## kp-hw is a hybrid: provider **and** its own consumer
 
-## Two roles in one repo
+- **`/libs/`** is the federated layer (the `ak-libs` role): the shared runtime,
+  global styles, and common blocks. Other sites consume it at runtime.
+- **The repo root** is kp-hw's own consumer layer (the `ak-consumer-1` role): its
+  bootstrap, sub-brand styles, and KP-specific blocks — it consumes `/libs`.
 
-`kp-hw` is the federated **libs** project (the `fedlibs` role): it owns global
-brand, common blocks, and the shared runtime that consuming sites pull at runtime.
-In this POC it also acts as its own **consuming site**, so both halves live here:
+A future "Site-A" is then just this root layer lifted into its own repo.
 
 ```
 kp-hw/
-├── libs/                        ← FEDERATED ("libs") — shared across all sites
+├── head.html                 ← consumer: links /libs/styles/styles.css → /styles/styles.css,
+│                                loads /libs/deps/rum.js + /scripts/scripts.js
+├── 404.html, helix-query.yaml, eslint.config.js, package.json, README, LICENSE …
+│
+├── libs/                     ← FEDERATED LAYER (mirrors ak-libs)
 │   ├── scripts/
-│   │   ├── libs.js              ← federated runtime entry (aka aem.js); re-exports scripts/ak.js
-│   │   └── libs-config.js       ← FEDERATED_BLOCKS manifest (17) + resolveLibsBase()
-│   ├── styles/
-│   │   └── libs.css             ← global brand tokens (grid, spacing, palette, type) — loads FIRST
-│   └── blocks/                  ← common/global blocks (17)
-│       ├── accordion/  columns/  tabs/  youtube/
-│       ├── card/  cards-icon/  columns-media/  hero/  advanced-tabs/
-│       ├── header/  (+ assets/)  footer/  fragment/
-│       ├── icons/  section-metadata/  schedule/  plan-compare/  table/
+│   │   ├── ak.js             ← the runtime (aem.js). libsBase = its own import.meta.url
+│   │   ├── scripts.js        ← libs bootstrap (for /libs served as its own site)
+│   │   ├── libs-config.js    ← FEDERATED_BLOCKS manifest
+│   │   ├── lazy.js, postlcp.js, utils/*
+│   ├── styles/styles.css     ← federated global tokens (the brand base)
+│   ├── blocks/*              ← 17 federated blocks (accordion, card, columns, header, footer, …)
+│   ├── deps/*                ← lit, rum.js
+│   └── tools/{da,quick-edit,scheduler,sidekick}
 │
-├── blocks/                      ← SITE-SPECIFIC blocks (KP-unique to this site)
-│   ├── classes-search/  classes-results/      (KP Lucid Search feature)
-│   ├── related-articles/  related-articles-lucid/  article-collection/
-│   ├── breadcrumbs/  notification/
-│
-├── scripts/                     ← site + runtime scripts
-│   ├── scripts.js               ← SITE entry: env detection, config, loadArea (loaded by head.html)
-│   ├── ak.js                    ← the shared runtime impl (federated; setConfig + loadBlock resolver)
-│   └── utils/                   ← site-owned runtime utils
-├── styles/
-│   ├── styles.css               ← SITE (KP sub-brand) token overrides — loads AFTER libs.css
-│   └── ds-tokens.css            ← generated design-token reference (build-time only)
-├── templates/                   ← page templates (article, health-encyclopedia-article)
-├── head.html                    ← loads libs.css → styles.css → scripts.js
-│
-├── config/  aem-edge-functions/  well-known/  workers/   ← platform/edge config
-├── ue/  component-*.json         ← Universal Editor models/definitions/filters
-├── stories/  .storybook/  tools/storybook/               ← Storybook (design-system parity)
-├── test/                         ← unit tests (web-test-runner)
-└── docs/                         ← this documentation
+├── scripts/scripts.js        ← CONSUMER bootstrap: resolves libsBase, imports ak.js from it,
+│                                setConfig({ codeBase: <root>, env, KP linkBlocks, ue wiring })
+│   scripts/*.mjs, *.sh        ← build-only dev tooling (stay at root)
+├── styles/styles.css         ← KP sub-brand overrides + KP @font-face (Gotham); + styles/fonts/, ds-tokens.css, error.css
+├── blocks/*                  ← KP-specific: classes-search, classes-results, related-articles,
+│                                related-articles-lucid, article-collection, breadcrumbs, notification
+├── img/*                     ← KP brand assets (favicons/icons/logos; loaded via codeBase)
+├── templates/  ue/ + component-*.json  config/  aem-edge-functions/  workers/  well-known/
+├── utils/{kp-api.js, site-config.js}   tools/{fragments, storybook}   stories/  test/
 ```
 
----
+## Block taxonomy
 
-## Block taxonomy: common vs site
-
-| | **Common / Global** | **Site-specific** |
+| | **Federated** | **Site-specific** |
 |---|---|---|
 | Lives in | `libs/blocks/` | `blocks/` |
-| Served from | `libsBase` (`/libs`, or a pinned deployment) | `siteBase` (the site) |
+| Loaded from | `libsBase` (`/libs`) | `codeBase` (the site root) |
 | Owned by | Libs / foundation team | Site dev team |
-| Examples | `header`, `footer`, `hero`, `card`, `columns`, `tabs`, `plan-compare`, … (17) | `classes-search`, `classes-results`, `related-articles`, `breadcrumbs`, `notification`, … |
-| Listed in | `FEDERATED_BLOCKS` (`libs/scripts/libs-config.js`) | (everything not in the manifest) |
+| Examples | `header`, `footer`, `hero`, `card`, `columns`, `tabs`, … (17) | `classes-*`, `related-articles*`, `article-collection`, `breadcrumbs`, `notification` |
 
-**Selection criteria used here:** the 17 federated blocks are the common, reusable
-building blocks and unified chrome (header/footer) — the shared brand surface that
-should stay consistent across sites. Blocks stay site-local when they're tied to
-*this* site's data/features: the KP Lucid Search blocks (`classes-search`,
-`classes-results`, `related-articles-lucid`), content-feed blocks
-(`related-articles`, `article-collection`), and other KP-specific pieces
-(`breadcrumbs`, `notification`).
+A block is federated either by the `lib-` name prefix (`lib-columns`) **or** by
+being in `FEDERATED_BLOCKS` (author-transparent — keeps the live KP content
+unchanged). Per the spec's **"no lib overrides"**, a federated name always
+resolves to libs; a consumer needing different behavior makes a *new* block.
 
-A block name appears in **exactly one** tree. To move a block between trees, move
-the folder and update `FEDERATED_BLOCKS` (see libs-architecture.md → Common tasks).
+## Ownership & the seven principles
 
----
+The libs team owns `libs/**` (runtime, global styles, common blocks) and controls
+certain root files. Site teams own their root layer (KP `blocks/`, `styles.css`,
+`templates/`, `ue/`, edge functions). The spec's principles this realizes:
 
-## Ownership model
+1. **No duplicate code** — one runtime + block set under `/libs`, consumed, never forked.
+2. **Evergreen** — consumers get the latest libs at runtime; no downstream pull.
+3. **No lib overrides** — federated names always resolve to libs.
+4. **Sensible customizations** — site blocks/styles live at root.
+5. **Blast-radius** — `?libs=<branch>` previews a libs change against real content.
+6. **Zero perf degradation** — `/libs` is **same-origin** in production (CDN-mapped), no DNS/SSL/CORS cost.
+7. **Selective promotion** — only org-wide-value blocks are promoted into `/libs`.
 
-- **Libs / foundation team** owns `libs/**` and certain root files (`head.html`
-  load order, the shared runtime `scripts/ak.js`). Changes here roll out to **all**
-  consuming sites on deploy — no per-site PR or pull required.
-- **Site dev teams** own their site's `blocks/**` and `styles/styles.css`. They:
-  - mix federated blocks with their own custom blocks (no forking of common code),
-  - re-skin the global brand via token overrides in `styles.css` (sub-brand tweaks),
-  - build site-only blocks when a federated block doesn't fit, and
-  - override a federated block locally when needed (ship `/blocks/<name>` + drop it
-    from the manifest).
+## Standing up a new consuming site (Site-A)
 
-This is the "guardrails with central control" model: global identity stays
-consistent because federated block styles/tokens are owned centrally, while each
-site keeps ergonomic freedom over its own surface.
-
----
-
-## Cascade & branding
-
-Two token layers, loaded in order by `head.html`:
-
-1. `libs/styles/libs.css` — **global** design-system base (neutral palette,
-   spacing scale, generic type). The shared brand foundation.
-2. `styles/styles.css` — **site** sub-brand overrides (`/* KP brand colors */`,
-   `/* KP fonts */`, etc.). Loads second, so the site wins for any token it
-   re-declares (e.g. `--font-family`, `--spacing-l`, `--color-navy`).
-
-A new sub-brand = a new consuming site's `styles.css` overriding the same tokens —
-no change to `libs`.
-
----
-
-## Standing up a new consuming site
-
-1. Create a new EDS site repo (e.g. `site-2`) with its own `blocks/`,
-   `styles/styles.css`, `scripts/scripts.js`, and `head.html`.
-2. Point it at the libs project: load the shared runtime from libs and set
-   `<meta name="libs" content="https://main--kp-hw--adobedrago.aem.live">` (or run
-   same-origin if the site vendors `/libs`).
-3. Load `libs.css` before `styles.css` in the site's `head.html`.
-4. Put the site's sub-brand token overrides in its `styles.css`.
-5. Author pages using federated blocks (`columns`, `tabs`, …) alongside the site's
-   own blocks — they resolve automatically per the manifest.
-
-The site inherits every federated block and future libs update without a code pull.
-
----
-
-## Versioning & rollout
-
-- **Rollout:** consuming sites fetch libs **at runtime**, so when the libs team
-  deploys, every site gets the update on its next page load — no downstream PR.
-- **Pinning (prod/stage/local):** a site chooses which libs deployment it consumes
-  via `<meta name="libs">` (see `resolveLibsBase` in `libs/scripts/libs-config.js`).
-  Point at `main--…` for latest, or a ref-specific host to pin a version.
-- **Pre-merge impact check:** because a federated block is served from a URL, a
-  libs engineer can point a staging site's `<meta name="libs">` at their branch
-  deployment and see the change across consuming surfaces **before** merging.
-
----
-
-## Related docs
-
-- [libs-architecture.md](./libs-architecture.md) — runtime lifecycle, resolver
-  code, and common tasks.
-- Root `CLAUDE.md` — KP Lucid Search API blocks (`classes-search`,
-  `classes-results`) and the proxy pattern.
-- `STORYBOOK.md` — design-system parity; the EDS harness renders both `blocks/`
-  and `libs/blocks/`.
+A consumer is a **tiny shell** (like `ak-consumer-1`): copy kp-hw's root consumer
+layer — `head.html`, `scripts/scripts.js`, `styles/styles.css`, its own `blocks/`
+— into a new EDS repo, point `libsBase` at kp-hw's deployed `/libs`
+(production: same-origin `/libs` via CDN/worker mapping; preview: `?libs=<branch>`),
+and author. It inherits every federated block and future libs update with no code
+pull. See [libs-architecture.md](./libs-architecture.md) for the bootstrap code.

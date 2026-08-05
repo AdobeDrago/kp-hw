@@ -1,6 +1,6 @@
 import DA_SDK from 'https://da.live/nx/utils/sdk.js';
-import { LitElement, html } from '../../deps/lit/dist/index.js';
-import loadStyle from '../../scripts/utils/styles.js';
+import { LitElement, html } from '../../libs/deps/lit/dist/index.js';
+import loadStyle from '../../libs/scripts/utils/styles.js';
 import {
   buildListUrl, toItems, buildBreadcrumbs, buildInsertHtml, buildPreviewUrl,
 } from './fragment-utils.js';

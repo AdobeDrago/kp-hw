@@ -1,4 +1,4 @@
-import { getConfig } from '../../../scripts/ak.js';
+import { getConfig } from '../../scripts/ak.js';
 
 const { log } = getConfig();
 

@@ -1,4 +1,4 @@
-import { getConfig, getMetadata } from '../../../scripts/ak.js';
+import { getConfig, getMetadata } from '../../scripts/ak.js';
 import { loadFragment } from '../fragment/fragment.js';
 
 const FOOTER_PATH = '/fragments/nav/footer';
