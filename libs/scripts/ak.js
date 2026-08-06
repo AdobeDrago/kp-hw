@@ -121,6 +121,11 @@ export async function loadBlock(block) {
   } = getConfig();
   const { classList } = block;
   let name = classList[0];
+  // Not a real block: a class-less div, or the runtime's own section wrappers
+  // (`block-content` / `default-content`). These get here if the area is decorated
+  // more than once (e.g. the DA live-preview re-render wraps already-grouped
+  // sections). Skip — there is no `/blocks/block-content` to load.
+  if (!name || name === 'block-content' || name === 'default-content') return block;
   // A provider owns the block when its class starts with `<prefix>-`
   // (e.g. `lib-columns` → the `lib` provider → loaded from /libs). No prefix →
   // the block loads from the consuming site. `data-libs` marks the federated split.
