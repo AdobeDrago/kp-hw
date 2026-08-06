@@ -116,25 +116,62 @@ function wireDropdowns(root) {
   });
 }
 
-// The vendored shell markup references its assets with root-relative paths
-// (`/libs/blocks/header/assets/…`). On a CONSUMING site those would resolve to the
-// consumer's own origin (which has no /libs) → 404. Rewrite them to the resolved
-// libs base so assets always load from the libs project, cross-origin or not.
-function resolveLibsAssets(root) {
+const getUseHref = (u) => u.getAttribute('href') || u.getAttribute('xlink:href') || '';
+
+// The vendored shell markup references assets with root-relative paths
+// (`/libs/blocks/header/assets/…`). On a CONSUMING site those resolve to the
+// consumer's own origin (no /libs) → 404. Fix both kinds:
+//  - `<img>`/`src`: cross-origin loads fine → repoint at the libs origin.
+//  - SVG `<use>` sprites: cross-origin is BLOCKED by the browser ("Unsafe attempt
+//    to load URL … from frame"). Point `<use>` at a LOCAL fragment now (so nothing
+//    cross-origin is attempted) and return the sprite files to inline afterward.
+function rewriteLibsAssets(root) {
+  const { libsBase } = getConfig();
+  if (!libsBase) return [];
+  root.querySelectorAll('[src^="/libs/"]').forEach((node) => {
+    node.setAttribute('src', node.getAttribute('src').replace(/^\/libs/, libsBase));
+  });
+  const sprites = new Set();
+  root.querySelectorAll('use').forEach((use) => {
+    const href = getUseHref(use);
+    if (!href.startsWith('/libs/')) return;
+    const [file, frag] = href.split('#');
+    sprites.add(file);
+    if (frag) {
+      use.setAttribute('href', `#${frag}`);
+      use.removeAttribute('xlink:href');
+    }
+  });
+  return [...sprites];
+}
+
+// Fetch each libs SVG sprite once and inline it (same-origin) so the local `<use>`
+// fragments resolve. Failures are silent — worst case the icon is absent, no error.
+async function inlineLibsSprites(files) {
   const { libsBase } = getConfig();
   if (!libsBase) return;
-  ['src', 'href'].forEach((attr) => {
-    root.querySelectorAll(`[${attr}^="/libs/"]`).forEach((node) => {
-      node.setAttribute(attr, node.getAttribute(attr).replace(/^\/libs/, libsBase));
-    });
-  });
+  await Promise.all(files.map(async (file) => {
+    const id = `libs-sprite-${file.split('/').pop().replace(/\W/g, '-')}`;
+    if (document.getElementById(id)) return;
+    try {
+      const res = await fetch(`${libsBase}${file.replace(/^\/libs/, '')}`);
+      if (!res.ok) return;
+      const holder = document.createElement('div');
+      holder.id = id;
+      holder.setAttribute('aria-hidden', 'true');
+      holder.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+      holder.innerHTML = await res.text();
+      document.body.prepend(holder);
+    } catch { /* icon just won't render — no console error */ }
+  }));
 }
 
 export default function init(el) {
   const authed = isAuthenticated();
   const header = elFromHTML(authed ? AUTH : NON_AUTH);
-  resolveLibsAssets(header);
+  const sprites = rewriteLibsAssets(header);
   el.replaceChildren(header);
+  inlineLibsSprites(sprites);
   applyFragmentNav(authed, header);
   wireDropdowns(header);
 }
