@@ -481,6 +481,10 @@
         <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"/></svg>
         Key references
       </a>
+      <a class="sidebar-link" href="#poc-summary">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
+        POC Summary for SI Partners
+      </a>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Scenario 1 · Landing Page <span class="nav-status ns-done">Complete</span></div>
@@ -613,6 +617,125 @@
             <tr><td>Reference site</td><td>healthy.kaiserpermanente.org</td></tr>
           </tbody>
         </table>
+      </section>
+
+      <!-- POC SUMMARY FOR SI PARTNERS -->
+      <section class="doc-section" id="poc-summary">
+        <h2>
+          <span class="section-icon icon-navy">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A2.5 2.5 0 002 4.5v7A2.5 2.5 0 004.5 14h7a2.5 2.5 0 002.5-2.5v-7A2.5 2.5 0 0011.5 2h-7zM5 5.5A.5.5 0 015.5 5h5a.5.5 0 010 1h-5A.5.5 0 015 5.5zm0 2.5a.5.5 0 01.5-.5h5a.5.5 0 010 1h-5A.5.5 0 015 8zm.5 2a.5.5 0 000 1h3a.5.5 0 000-1h-3z"/></svg>
+          </span>
+          POC Summary for SI Partners
+          <span class="status-badge sb-done">Appendix</span>
+        </h2>
+        <div class="section-rule"></div>
+        <p>This appendix exists to keep the broader EDS modernization framework anchored to what the Health &amp; Wellness POC actually did. It documents the POC's objectives and success criteria, the four scenarios evaluated, the architecture and integrations demonstrated, and — separately — which parts of this framework are <strong>validated POC deliverables</strong> versus <strong>future-state recommendations</strong> not yet built or proven.</p>
+
+        <h3>POC objectives and success criteria</h3>
+        <table class="spec-table">
+          <thead><tr><th>Objective</th><th>Success criteria</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Validate migration from AEM Managed Services to Edge Delivery Services</td>
+              <td>A production KP Health &amp; Wellness experience can be rebuilt on EDS using the block-based development model, under a One Repo Per Project architecture with an immutable Global Library</td>
+              <td><span class="nav-status ns-done">Met</span> — 4/4 scenarios rebuilt and live on EDS</td>
+            </tr>
+            <tr>
+              <td>Validate support for dynamic, backend-driven experiences</td>
+              <td>EDS can call and render live data from KP's own backend services (Content Hub, Lucid Search, AEM Servlet APIs) rather than static, author-only content</td>
+              <td><span class="nav-status ns-done">Met</span> — all three backend integrations validated end to end</td>
+            </tr>
+            <tr>
+              <td>Validate KP Design System conformance in the EDS block model</td>
+              <td>At least one production block can be built from a KP Storybook ("vessel") pattern with token- and CSS-level traceability back to that source, not a hand-approximated restyle</td>
+              <td><span class="nav-status ns-progress">Partially met</span> — pipeline built and proven on one pilot block (<code class="code-inline">card</code>); CI enforcement and scale-out still pending, see below</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>The four Health &amp; Wellness scenarios evaluated</h3>
+        <p>Full detail, live URLs, and per-scenario requirement checklists are in <a href="#overview" style="color:var(--kp-blue);">Project overview</a> and each scenario's own section. Summarized here for reference:</p>
+        <table class="spec-table">
+          <thead><tr><th>Scenario</th><th>What it validated</th></tr></thead>
+          <tbody>
+            <tr><td>1 · Health &amp; Wellness Landing</td><td>Core EDS rendering, Content Hub content-fragment fetching, and a dynamic related-articles block driven by a query index</td></tr>
+            <tr><td>2 · Health Class Directory</td><td>KP Lucid Search integration through a CORS-bridging proxy, faceted/filterable dynamic results, and hand-off to AEM-backed detail pages</td></tr>
+            <tr><td>3 · Health Encyclopedia</td><td>Server-side rendering at the edge (Fastly Compute) — third-party (Healthwise) content injected into the EDS page shell before it reaches the browser</td></tr>
+            <tr><td>4 · Diabetes Landing</td><td>A second Lucid Search integration pattern (article/topic search rather than location/class search) with client-side filtering and a detail modal</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Architecture and repository patterns demonstrated</h3>
+        <ul class="req-list">
+          <li><strong>One Repo Per Project</strong> — a single project repository (<code class="code-inline">kp-hw</code>) holding blocks, pages, services, configuration, and tests, proven across four independent scenarios without structural conflict.</li>
+          <li><strong>EDS block-based development model, exclusively</strong> — no scenario required stepping outside the block/template authoring model to hit its requirements.</li>
+          <li><strong>A modular service layer</strong> — backend calls are isolated behind per-integration utility modules (e.g. <code class="code-inline">utils/kp-api.js</code> for Lucid Search) rather than embedded directly in block code, and are shared across scenarios that use the same backend (Scenarios 2 and 4 both reuse the Lucid Search proxy layer).</li>
+          <li><strong>Region switching</strong> — Scenario 2/4's Lucid Search flows resolve a region (NCA/SCA) from ZIP or geolocation, proving the pattern; full language switching was not exercised by any scenario.</li>
+          <li><strong>Immutable Global Library</strong> — designed and partially built (the <code class="code-inline">--ds-*</code> token layer, the CSS-slice tooling, the EDS-block harness) but not yet extracted as an independently versioned artifact consumed by more than this one project repo. See Findings below.</li>
+        </ul>
+
+        <h3>Key integrations validated</h3>
+        <table class="spec-table">
+          <thead><tr><th>Integration</th><th>Pattern proven</th></tr></thead>
+          <tbody>
+            <tr><td>Content Hub</td><td>Server-triggered content-fragment fetch rendered into an EDS page (Scenario 1)</td></tr>
+            <tr><td>KP Lucid Search</td><td>Browser → Adobe App Builder CORS proxy → KP Lucid Search API, for both location/class search (Scenario 2) and topic/article search (Scenario 4); see <a href="#storybook" style="color:var(--kp-blue);">this repo's CLAUDE.md</a> for the full request/response contract</td></tr>
+            <tr><td>AEM Servlet APIs</td><td>Lucid Search results hand off to existing AEM-backed detail pages via response-provided URLs (Scenario 2)</td></tr>
+            <tr><td>Third-party content at the edge</td><td>Fastly Compute edge function fetches and injects Healthwise RHTML into the EDS shell server-side, with per-article SEO metadata (Scenario 3) — not a Content Hub/Lucid Search/AEM integration, but a fourth, distinct backend pattern worth calling out for SI partner planning</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Demonstrated POC deliverables vs. future-state recommendations</h3>
+        <p>The broader framework blends what this POC actually built and verified with governance, operating-model, and enterprise-scale guidance intended for later adoption. They are distinguished here so neither is mistaken for the other:</p>
+        <table class="spec-table">
+          <thead><tr><th>Area</th><th>Demonstrated in this POC</th><th>Future-state — not yet built or proven</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Repo / library architecture</td>
+              <td>One Repo Per Project, working end to end for a single project (<code class="code-inline">kp-hw</code>)</td>
+              <td>An immutable Global Library published and consumed as a versioned dependency across <em>multiple</em> project repos</td>
+            </tr>
+            <tr>
+              <td>Design system conformance</td>
+              <td>Storybook → token-extraction → CSS-slice → EDS-block pipeline, proven on one pilot block (<code class="code-inline">card</code>)</td>
+              <td>Full vessel pattern-library coverage; a CI-enforced visual-parity gate blocking merges on drift (designed, not implemented)</td>
+            </tr>
+            <tr>
+              <td>Backend integrations</td>
+              <td>Content Hub, Lucid Search (×2 patterns), and an edge-rendered third-party content integration, each validated end to end for its scenario</td>
+              <td>Production hardening (rate limiting, caching, multi-region failover, secret rotation) and a documented pattern for integrating <em>additional</em> backends beyond these four</td>
+            </tr>
+            <tr>
+              <td>Region / language support</td>
+              <td>Region selection (NCA/SCA) for Lucid Search flows</td>
+              <td>Language switching; a full region matrix beyond NCA/SCA</td>
+            </tr>
+            <tr>
+              <td>Governance &amp; SI partner model</td>
+              <td>Ad hoc PR review and this documentation set</td>
+              <td>Formal migration governance, SI partner engagement/handoff model, contribution and review standards, enterprise rollout plan</td>
+            </tr>
+            <tr>
+              <td>Testing / CI</td>
+              <td>Manual end-to-end verification per scenario; unit tests for the template-governance tooling</td>
+              <td>Automated visual-parity CI gate; broader automated test-coverage requirements for future contributors</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Lessons learned, findings, and recommendations</h3>
+        <p><strong>What was successfully demonstrated.</strong> EDS's block model can render dynamic, backend-driven experiences — not just static content — across four realistic KP scenarios spanning three distinct backend patterns (client-side API calls through a proxy, server-triggered content-fragment fetches, and edge-side third-party content injection). A CORS-bridging proxy is a reliable, reusable way to integrate a KP API that doesn't return CORS headers, without any change on KP's side. Document Authoring plus lightweight governance tooling (a DA library plugin that diffs an authored page against its declared template) can keep authored content aligned to a canonical structure without blocking authors.</p>
+        <p><strong>Areas requiring additional maturity or validation.</strong> The visual-parity CI gate that's meant to enforce design-system conformance is designed but not implemented — today, conformance for the one pilot block was verified manually. Only one block has gone through the full Storybook-to-EDS pipeline; scale-out to the rest of the vessel pattern library, and reconciliation with the project's existing Lit-based blocks (header/hero/footer), is unproven. The Healthwise edge function's production rollout (CDN routing, secret provisioning) is still pending. Icon-font/SVG asset migration from the design system into EDS has no defined path yet.</p>
+        <p><strong>Design System conformance findings.</strong> Storybook components are driven by args/props; EDS blocks are driven by authored content tables decorated at runtime. Reconciling those two contracts required an explicit rule — <strong>the block owns the renderer, and the story imports it</strong> — so there is exactly one implementation per design pattern, not two that can silently drift apart. Design tokens have to be extracted into a namespaced <code class="code-inline">--ds-*</code> layer and CSS sliced/rescoped per block, since EDS pages carry none of the design system's own wrapper markup; without that discipline, a block built by eye against the design system will drift from it over time with no mechanism to catch the drift.</p>
+        <p><strong>Shared library and repository architecture learnings.</strong> One Repo Per Project is workable at single-project pilot scale, but the "immutable Global Library" half of the architecture is still aspirational — this POC has not yet extracted a genuinely independent, versioned library consumed by more than one project repo, so multi-project reuse and library-versioning discipline are unproven. Page-level governance (the template-governance tooling) and block-level design-system conformance are complementary but separate concerns; a future migration needs both, not one in place of the other.</p>
+        <p><strong>Recommendations for future migration execution and SI partner expectations.</strong></p>
+        <ul class="req-list">
+          <li>Treat the KP Design System's Storybook patterns, tokens, accessibility standards, and approved HTML pattern library as an <strong>enforced input</strong> to any block build, not a reference consulted after the fact — see <a href="#storybook" style="color:var(--kp-blue);">Design System Governance</a> below.</li>
+          <li>Require the visual-parity CI gate to exist and pass before scaling the Storybook→EDS pipeline beyond a handful of blocks — the one-block pilot proves the pipeline works, not that it scales safely without automated enforcement.</li>
+          <li>Treat the four POC scenarios as <strong>reference implementations of integration patterns</strong>, not templates to copy verbatim — each new SI partner engagement should validate its own blocks against KP's canonical Storybook/token source, not against this pilot's specific code.</li>
+          <li>Formalize the CORS-bridging proxy as the standard approach for any KP backend API that doesn't return CORS headers, rather than re-deriving it per integration.</li>
+          <li>Before committing to the immutable Global Library as an enterprise pattern, validate it with a second consuming project repo — this POC only exercised the single-project half of that architecture.</li>
+        </ul>
       </section>
 
       <!-- KEY REFERENCES -->
@@ -1218,6 +1341,13 @@
         </h2>
         <div class="section-rule"></div>
         <p>How the KP <strong>"vessel"</strong> design system drives building and styling EDS blocks, with <strong>Storybook as the design source of truth</strong>. This is the high-level workflow and recommended architecture; the detailed decisions, tooling, and status follow below.</p>
+
+        <h3 id="design-system-governance">Governance position: KP Design System is authoritative, EDS conforms to it</h3>
+        <div class="notice warning">
+          <svg class="notice-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368L8.22 1.754zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z"/></svg>
+          <span><strong>Storybook and EDS blocks are not two complementary, independently valid implementations of the same design.</strong> The KP Design System artifacts — Storybook patterns, CSS, design tokens, accessibility standards, and the approved HTML pattern library — are the <strong>single, authoritative source of truth</strong>. EDS blocks are required to <strong>conform</strong> to those artifacts and to KP's governance standards; they are not a separate, EDS-native design system that happens to look similar. A key objective of this POC was proving that EDS and AI-assisted migration tooling can <strong>enforce</strong> KP's existing Design System rather than produce an alternative implementation of it.</span>
+        </div>
+        <p>The architecture below exists specifically to make that conformance mechanical rather than a matter of visual judgment: one design pattern produces exactly one implementation (the block owns the renderer; Storybook imports it), tokens and CSS are derived programmatically from KP's own source files rather than hand-copied, and a CI-gated visual-parity check is designed to catch any divergence before it ships. Today this pipeline and its enforcement are proven on a single pilot block — see <a href="#poc-summary" style="color:var(--kp-blue);">Demonstrated POC deliverables vs. future-state recommendations</a> for exactly what's validated versus still pending.</p>
 
         <h3>Recommended architecture</h3>
         <p>Two contracts have to be reconciled: Storybook components are driven by <strong>args/props</strong>, while EDS blocks are driven by <strong>authored content</strong> (a table that <code class="code-inline">init(el)</code> decorates into DOM). The architecture threads them so <strong>one design pattern produces exactly one block</strong> — and the story and the shipping block can't silently drift apart.</p>
