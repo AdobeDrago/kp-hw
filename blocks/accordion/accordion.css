@@ -78,3 +78,17 @@
     }
   }
 }
+
+.accordion.two-column {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 24px;
+
+  @media (width >= 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .accordion-item {
+    margin-top: 0;
+  }
+}
