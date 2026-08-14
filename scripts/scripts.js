@@ -73,6 +73,18 @@ export function suppressFragmentChrome() {
   setMetaOverride('footer', 'off');
 }
 
+// The block-library preview (DA / Experience Workspace "Search blocks" modal)
+// renders each block's demo page under /docs/library/ in an iframe. Those pages
+// show the block in isolation, so the site nav/footer is unwanted chrome —
+// suppress it, same as fragments. Path-based, so it only affects library demo
+// pages and never the editable full-page canvas (which loads at its real path,
+// e.g. /index).
+export function suppressLibraryChrome() {
+  if (!window.location.pathname.startsWith('/docs/library/')) return;
+  setMetaOverride('header', 'off');
+  setMetaOverride('footer', 'off');
+}
+
 // How to decorate an area before loading it
 const decorateArea = ({ area = document }) => {
   const eagerLoad = (parent, selector) => {
@@ -134,6 +146,7 @@ export async function loadPage() {
     hostnames, locales, linkBlocks, components, decorateArea, env: getEnv(),
   });
   suppressFragmentChrome();
+  suppressLibraryChrome();
   await loadArea();
   await loadTemplateJS();
 }
