@@ -306,6 +306,17 @@ describe('template-governance-utils.js', () => {
     it('returns an empty object when there is no .metadata block', () => {
       expect(extractMetadataValues('<html><body><main></main></body></html>')).to.deep.equal({});
     });
+
+    it('returns an empty string for a row with a key but no value cell', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(extractMetadataValues(html)).to.deep.equal({ title: '' });
+    });
   });
 
   describe('checkCharacterLimits', () => {
@@ -327,6 +338,10 @@ describe('template-governance-utils.js', () => {
 
     it('ignores fields that have no configured limit', () => {
       expect(checkCharacterLimits({ author: 'A very long author name indeed' }, limits)).to.deep.equal([]);
+    });
+
+    it('does not throw on a value from a malformed metadata row (empty string, not undefined)', () => {
+      expect(checkCharacterLimits({ title: '' }, limits)).to.deep.equal([]);
     });
   });
 

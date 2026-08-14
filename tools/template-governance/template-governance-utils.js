@@ -33,7 +33,7 @@ export function extractMetadataFields(html) {
 export function extractMetadataValues(html) {
   const values = {};
   getMetadataRows(html).forEach((row) => {
-    values[row.key] = row.value;
+    values[row.key] = row.value ?? '';
   });
   return values;
 }
