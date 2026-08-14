@@ -12,6 +12,8 @@ import {
   computeAddedBlocks,
   findReferenceBlockHtml,
   extractMetadataFields,
+  extractMetadataValues,
+  checkCharacterLimits,
   diffSets,
   buildBlockTableHtml,
 } from './template-governance-utils.js';
@@ -67,6 +69,7 @@ async function buildReport(org, repo, currentHtml, token) {
     extractMetadataFields(currentHtml),
     extractMetadataFields(referenceHtml),
   );
+  const overLimitMeta = checkCharacterLimits(extractMetadataValues(currentHtml));
 
   return {
     status: 'ready',
@@ -79,6 +82,7 @@ async function buildReport(org, repo, currentHtml, token) {
     totalPresent,
     missingMeta: metaDiff.missing,
     addedMeta: metaDiff.added,
+    overLimitMeta,
   };
 }
 
@@ -307,6 +311,12 @@ class TemplateGovernanceReport extends LitElement {
           this._report.addedMeta.map((name) => ({ type: 'metadata', name })),
           'No metadata beyond the base template.',
           'added',
+        )}
+        ${this.renderFindingList(
+          'Over character limit',
+          this._report.overLimitMeta.map((f) => ({ type: 'metadata', name: `${f.key} (${f.length}/${f.limit})` })),
+          'All metadata fields are within their limits.',
+          'warning',
         )}
       </div>
     `;

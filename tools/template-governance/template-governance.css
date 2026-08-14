@@ -190,6 +190,19 @@
   border-left-color: #E9E9E9;
 }
 
+.report-section-warning {
+  border-left-color: #B45309;
+}
+
+.report-section-warning .report-section-title {
+  color: #B45309;
+}
+
+.report-section-warning .finding-type {
+  color: #B45309;
+  font-weight: 700;
+}
+
 .report-section-title {
   margin: 0 0 8px;
   font-size: 13px;

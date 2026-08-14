@@ -30,6 +30,27 @@ export function extractMetadataFields(html) {
   return names;
 }
 
+export function extractMetadataValues(html) {
+  const values = {};
+  getMetadataRows(html).forEach((row) => {
+    values[row.key] = row.value ?? '';
+  });
+  return values;
+}
+
+export const CHARACTER_LIMITS = {
+  title: 60,
+  description: 160,
+};
+
+export function checkCharacterLimits(values, limits = CHARACTER_LIMITS) {
+  return Object.entries(values)
+    .filter(([key, value]) => limits[key] !== undefined && value.length > limits[key])
+    .map(([key, value]) => ({
+      key, value, length: value.length, limit: limits[key],
+    }));
+}
+
 export function parseContentDaUrl(url) {
   if (!url.startsWith(`${CONTENT_DA_ORIGIN}/`)) return null;
   const [org, repo, ...pathParts] = url.slice(CONTENT_DA_ORIGIN.length + 1).split('/');

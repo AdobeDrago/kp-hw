@@ -18,7 +18,7 @@ function resolveLanguage(authored) {
   return LOCALE_TO_LANGUAGE[lang] || 'english';
 }
 
-function readConfig(block) {
+export function readConfig(block) {
   const config = { topics: [] };
   block.querySelectorAll(':scope > div').forEach((row) => {
     const cells = row.querySelectorAll(':scope > div');
@@ -35,6 +35,11 @@ function readConfig(block) {
     }
   });
   return config;
+}
+
+export function resolveCount(config, fallback) {
+  const parsed = parseInt(config.count, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function getRegion() {
@@ -125,6 +130,7 @@ export default async function init(block) {
   const language = resolveLanguage(config.language);
   const region = getRegion();
   const hasSidebar = config.topics.length > 0;
+  const count = resolveCount(config, MAX_ARTICLES);
 
   block.textContent = '';
 
@@ -169,13 +175,13 @@ export default async function init(block) {
   async function selectTopic(topicItem, topic) {
     topicList.querySelectorAll('.ral-topic-item').forEach((li) => li.classList.remove('is-active'));
     topicItem.classList.add('is-active');
-    renderSkeletons(grid, MAX_ARTICLES);
+    renderSkeletons(grid, count);
     try {
       const data = await fetchArticles({
         tags: defaultTags, topic, language, taxonomicID,
       });
       const raw = Array.isArray(data) ? data : (data.documents || data.value || data.results || []);
-      renderGrid(grid, raw.slice(0, MAX_ARTICLES), region, language);
+      renderGrid(grid, raw.slice(0, count), region, language);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[related-articles-lucid] fetch failed:', err);
@@ -207,11 +213,11 @@ export default async function init(block) {
 
   // Initial fetch — show skeletons up front so the grid reserves its height
   // and articles swap in without layout shift.
-  renderSkeletons(grid, MAX_ARTICLES);
+  renderSkeletons(grid, count);
   try {
     const data = await fetchArticles({ tags: defaultTags, language, taxonomicID });
     const raw = Array.isArray(data) ? data : (data.documents || data.value || data.results || []);
-    renderGrid(grid, raw.slice(0, MAX_ARTICLES), region, language);
+    renderGrid(grid, raw.slice(0, count), region, language);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[related-articles-lucid] fetch failed:', err);
