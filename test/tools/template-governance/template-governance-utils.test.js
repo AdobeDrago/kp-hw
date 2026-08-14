@@ -10,6 +10,8 @@ import {
   computeAddedBlocks,
   findReferenceBlockHtml,
   extractMetadataFields,
+  extractMetadataValues,
+  checkCharacterLimits,
   diffSets,
   buildBlockTableHtml,
 } from '../../../tools/template-governance/template-governance-utils.js';
@@ -282,6 +284,49 @@ describe('template-governance-utils.js', () => {
 
     it('returns an empty array when there is no .metadata block', () => {
       expect(extractMetadataFields('<html><body><main></main></body></html>')).to.deep.equal([]);
+    });
+  });
+
+  describe('extractMetadataValues', () => {
+    it('returns key/value pairs from the .metadata block', () => {
+      const html = `
+        <html><body><main><div>
+          <div class="metadata">
+            <div><div><p>title</p></div><div><p>Home</p></div></div>
+            <div><div><p>description</p></div><div><p>A short summary.</p></div></div>
+          </div>
+        </div></main></body></html>
+      `;
+      expect(extractMetadataValues(html)).to.deep.equal({
+        title: 'Home',
+        description: 'A short summary.',
+      });
+    });
+
+    it('returns an empty object when there is no .metadata block', () => {
+      expect(extractMetadataValues('<html><body><main></main></body></html>')).to.deep.equal({});
+    });
+  });
+
+  describe('checkCharacterLimits', () => {
+    const limits = { title: 10, description: 20 };
+
+    it('returns fields that exceed their limit', () => {
+      const result = checkCharacterLimits(
+        { title: 'This title is way too long', description: 'Fine.' },
+        limits,
+      );
+      expect(result).to.deep.equal([
+        { key: 'title', value: 'This title is way too long', length: 26, limit: 10 },
+      ]);
+    });
+
+    it('returns an empty array when every field is within its limit', () => {
+      expect(checkCharacterLimits({ title: 'Short', description: 'Fine.' }, limits)).to.deep.equal([]);
+    });
+
+    it('ignores fields that have no configured limit', () => {
+      expect(checkCharacterLimits({ author: 'A very long author name indeed' }, limits)).to.deep.equal([]);
     });
   });
 
