@@ -73,30 +73,6 @@ export function suppressFragmentChrome() {
   setMetaOverride('footer', 'off');
 }
 
-// Experience Workspace (and similar editor surfaces) render the page inside an
-// iframe hosted by an Adobe app so authors can drop/edit blocks on a canvas.
-// In that context the site nav/footer is just chrome around the block being
-// authored, so suppress it — same mechanism as suppressFragmentChrome().
-// Gated on being framed by da.live (the Experience Workspace host —
-// https://da.live/canvas#/...) so it never fires during normal top-level
-// preview/live viewing (which is never framed).
-const WORKSPACE_FRAME_HOSTS = /(^|\.)da\.live$/;
-
-export function suppressWorkspaceChrome() {
-  // Not framed → normal preview/live view; leave the chrome alone.
-  if (window.self === window.top) return;
-
-  // Chromium exposes the full ancestor chain; document.referrer is the
-  // cross-browser fallback (empty on some cross-origin frames).
-  const framedBy = window.location.ancestorOrigins?.[0] || document.referrer;
-  let host = '';
-  try { host = new URL(framedBy).hostname; } catch { /* opaque/no referrer */ }
-  if (!WORKSPACE_FRAME_HOSTS.test(host)) return;
-
-  setMetaOverride('header', 'off');
-  setMetaOverride('footer', 'off');
-}
-
 // How to decorate an area before loading it
 const decorateArea = ({ area = document }) => {
   const eagerLoad = (parent, selector) => {
@@ -158,7 +134,6 @@ export async function loadPage() {
     hostnames, locales, linkBlocks, components, decorateArea, env: getEnv(),
   });
   suppressFragmentChrome();
-  suppressWorkspaceChrome();
   await loadArea();
   await loadTemplateJS();
 }
