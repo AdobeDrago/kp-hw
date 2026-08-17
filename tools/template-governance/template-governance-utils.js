@@ -5,16 +5,38 @@ export function buildSourceUrl(path, org, repo) {
   return `${CONTENT_DA_ORIGIN}/${org}/${repo}${path}`;
 }
 
-function getMetadataRows(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const metadataBlock = doc.querySelector('.metadata');
-  if (!metadataBlock) return [];
-  return [...metadataBlock.children]
+function getRowsFromElement(el) {
+  return [...el.children]
     .map((row) => {
       const cells = [...row.children];
       return { key: cells[0]?.textContent?.trim(), value: cells[1]?.textContent?.trim() };
     })
     .filter((row) => row.key);
+}
+
+function getMetadataRows(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const metadataBlock = doc.querySelector('.metadata');
+  if (!metadataBlock) return [];
+  return getRowsFromElement(metadataBlock);
+}
+
+const REQUIRED_METADATA_FIELDS = ['template', 'title', 'image'];
+
+export function checkPageMetadata(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return { present: false, isLast: false, missingFields: [...REQUIRED_METADATA_FIELDS] };
+
+  const sections = [...main.children];
+  const metadataIndex = sections.findIndex((section) => section.querySelector(':scope > .metadata'));
+  const present = metadataIndex !== -1;
+  const isLast = present && metadataIndex === sections.length - 1;
+  const rows = present ? getRowsFromElement(sections[metadataIndex].querySelector(':scope > .metadata')) : [];
+  const keys = rows.map((row) => row.key.toLowerCase());
+  const missingFields = REQUIRED_METADATA_FIELDS.filter((field) => !keys.includes(field));
+
+  return { present, isLast, missingFields };
 }
 
 export function resolveTemplateFromHtml(html) {

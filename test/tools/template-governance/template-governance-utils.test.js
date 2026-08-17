@@ -10,6 +10,7 @@ import {
   computeAddedBlocks,
   findReferenceBlockHtml,
   extractMetadataFields,
+  checkPageMetadata,
   diffSets,
   buildBlockTableHtml,
 } from '../../../tools/template-governance/template-governance-utils.js';
@@ -292,6 +293,57 @@ describe('template-governance-utils.js', () => {
 
     it('returns an empty array when there is no .metadata block', () => {
       expect(extractMetadataFields('<html><body><main></main></body></html>')).to.deep.equal([]);
+    });
+  });
+
+  describe('checkPageMetadata', () => {
+    function html(metadataRows, { lastSection = true } = {}) {
+      const metadataBlock = `<div class="metadata">${metadataRows
+        .map(([key, value]) => `<div><div><p>${key}</p></div><div><p>${value}</p></div></div>`)
+        .join('')}</div>`;
+      const metadataSection = `<div>${metadataBlock}</div>`;
+      const otherSection = '<div><div class="columns"><div>a</div></div></div>';
+      const sections = lastSection ? [otherSection, metadataSection] : [metadataSection, otherSection];
+      return `<html><body><main>${sections.join('')}</main></body></html>`;
+    }
+
+    const complete = [['template', 'Homepage'], ['title', 'Home'], ['image', 'hero.png']];
+
+    it('reports present, last, and complete when all required fields exist in the last section', () => {
+      expect(checkPageMetadata(html(complete))).to.deep.equal({
+        present: true,
+        isLast: true,
+        missingFields: [],
+      });
+    });
+
+    it('reports missing entirely when there is no .metadata block', () => {
+      const noMeta = '<html><body><main><div><div class="columns"><div>a</div></div></div></main></body></html>';
+      expect(checkPageMetadata(noMeta)).to.deep.equal({
+        present: false,
+        isLast: false,
+        missingFields: ['template', 'title', 'image'],
+      });
+    });
+
+    it('reports not last when the metadata block is not the final section', () => {
+      const result = checkPageMetadata(html(complete, { lastSection: false }));
+      expect(result.present).to.equal(true);
+      expect(result.isLast).to.equal(false);
+    });
+
+    it('reports missing fields, case-insensitively matched, when required fields are absent', () => {
+      const result = checkPageMetadata(html([['Template', 'Homepage']]));
+      expect(result.present).to.equal(true);
+      expect(result.missingFields).to.deep.equal(['title', 'image']);
+    });
+
+    it('returns all fields missing when there is no main element', () => {
+      expect(checkPageMetadata('<html><body></body></html>')).to.deep.equal({
+        present: false,
+        isLast: false,
+        missingFields: ['template', 'title', 'image'],
+      });
     });
   });
 
