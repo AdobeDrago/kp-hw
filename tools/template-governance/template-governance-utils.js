@@ -5,16 +5,38 @@ export function buildSourceUrl(path, org, repo) {
   return `${CONTENT_DA_ORIGIN}/${org}/${repo}${path}`;
 }
 
-function getMetadataRows(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const metadataBlock = doc.querySelector('.metadata');
-  if (!metadataBlock) return [];
-  return [...metadataBlock.children]
+function getRowsFromElement(el) {
+  return [...el.children]
     .map((row) => {
       const cells = [...row.children];
       return { key: cells[0]?.textContent?.trim(), value: cells[1]?.textContent?.trim() };
     })
     .filter((row) => row.key);
+}
+
+function getMetadataRows(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const metadataBlock = doc.querySelector('.metadata');
+  if (!metadataBlock) return [];
+  return getRowsFromElement(metadataBlock);
+}
+
+const REQUIRED_METADATA_FIELDS = ['template', 'title', 'image'];
+
+export function checkPageMetadata(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const main = doc.querySelector('main');
+  if (!main) return { present: false, isLast: false, missingFields: [...REQUIRED_METADATA_FIELDS] };
+
+  const sections = [...main.children];
+  const metadataIndex = sections.findIndex((section) => section.querySelector(':scope > .metadata'));
+  const present = metadataIndex !== -1;
+  const isLast = present && metadataIndex === sections.length - 1;
+  const rows = present ? getRowsFromElement(sections[metadataIndex].querySelector(':scope > .metadata')) : [];
+  const keys = rows.map((row) => row.key.toLowerCase());
+  const missingFields = REQUIRED_METADATA_FIELDS.filter((field) => !keys.includes(field));
+
+  return { present, isLast, missingFields };
 }
 
 export function resolveTemplateFromHtml(html) {
@@ -82,21 +104,56 @@ export function countBlockOccurrences(sections) {
   return counts;
 }
 
-export function computeSectionStatuses(referenceSections, currentCounts) {
-  const remaining = { ...currentCounts };
+// Longest-common-subsequence match: which reference-side items line up, in order,
+// with an item on the current side. Unlike simple per-name counting, this correctly
+// tells apart "the page is missing the Nth occurrence of block X" from "occurrence
+// N+1 is missing" when a block name repeats — matching by position, not just count.
+function lcsMatchMask(reference, current) {
+  const n = reference.length;
+  const m = current.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i -= 1) {
+    for (let j = m - 1; j >= 0; j -= 1) {
+      dp[i][j] = reference[i] === current[j]
+        ? dp[i + 1][j + 1] + 1
+        : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+
+  const matched = new Array(n).fill(false);
+  let i = 0;
+  let j = 0;
+  while (i < n && j < m) {
+    if (reference[i] === current[j]) {
+      matched[i] = true;
+      i += 1;
+      j += 1;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      i += 1;
+    } else {
+      j += 1;
+    }
+  }
+  return matched;
+}
+
+export function computeSectionStatuses(referenceSections, currentSections) {
+  const referenceNames = referenceSections.flatMap((section) => section.blocks);
+  const currentNames = currentSections.flatMap((section) => section.blocks);
+  const matched = lcsMatchMask(referenceNames, currentNames);
+
+  let cursor = 0;
   return referenceSections
-    .filter((section) => section.blocks.length > 0)
-    .map((section) => ({
-      style: section.style,
-      blocks: section.blocks.map((name) => {
-        const available = remaining[name] || 0;
-        if (available > 0) {
-          remaining[name] = available - 1;
-          return { name, status: 'present' };
-        }
-        return { name, status: 'missing' };
-      }),
-    }));
+    .map((section, index) => ({ section, index }))
+    .filter(({ section }) => section.blocks.length > 0)
+    .map(({ section, index }) => {
+      const blocks = section.blocks.map((name) => {
+        const status = matched[cursor] ? 'present' : 'missing';
+        cursor += 1;
+        return { name, status };
+      });
+      return { style: section.style, referenceIndex: index, blocks };
+    });
 }
 
 export function computeAddedBlocks(currentCounts, referenceCounts) {

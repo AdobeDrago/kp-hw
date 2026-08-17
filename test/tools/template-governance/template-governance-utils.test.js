@@ -10,6 +10,7 @@ import {
   computeAddedBlocks,
   findReferenceBlockHtml,
   extractMetadataFields,
+  checkPageMetadata,
   diffSets,
   buildBlockTableHtml,
 } from '../../../tools/template-governance/template-governance-utils.js';
@@ -179,27 +180,50 @@ describe('template-governance-utils.js', () => {
   describe('computeSectionStatuses', () => {
     it('marks a single-occurrence block present when the page has it', () => {
       const reference = [{ style: null, blocks: ['columns-media'] }];
-      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      const current = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'columns-media', status: 'present' }] },
+        { style: null, referenceIndex: 0, blocks: [{ name: 'columns-media', status: 'present' }] },
       ]);
     });
 
     it('marks a single-occurrence block missing when the page lacks it', () => {
       const reference = [{ style: null, blocks: ['tabs'] }];
-      const statuses = computeSectionStatuses(reference, {});
+      const statuses = computeSectionStatuses(reference, []);
       expect(statuses).to.deep.equal([
-        { style: null, blocks: [{ name: 'tabs', status: 'missing' }] },
+        { style: null, referenceIndex: 0, blocks: [{ name: 'tabs', status: 'missing' }] },
       ]);
     });
 
-    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+    it('matches a present block to its true position instead of an earlier occurrence of the same name', () => {
+      // The template has hero at position 1 (landing) and position 3 (later in the
+      // page). The page only kept the later one — surrounded by the same "columns"
+      // neighbor as the template — so that's the occurrence that must read "present",
+      // not position 1. This is the exact case a simple per-name counter gets backwards.
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const current = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, current);
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'present', 'present']);
+    });
+
+    it('matches repeated-block instances to the earliest reference slots when nothing else distinguishes them', () => {
       const reference = [
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
       ];
-      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      const current = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
     });
 
@@ -208,7 +232,11 @@ describe('template-governance-utils.js', () => {
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
       ];
-      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      const current = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
     });
 
@@ -217,13 +245,14 @@ describe('template-governance-utils.js', () => {
         { style: null, blocks: ['hero'] },
         { style: null, blocks: ['hero'] },
       ];
-      const statuses = computeSectionStatuses(reference, {});
+      const statuses = computeSectionStatuses(reference, []);
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
     });
 
     it('allocates independently across multiple instances of the same block within one section', () => {
       const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
-      const statuses = computeSectionStatuses(reference, { card: 1 });
+      const current = [{ style: null, blocks: ['card'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
     });
 
@@ -232,8 +261,20 @@ describe('template-governance-utils.js', () => {
         { style: null, blocks: ['hero'] },
         { style: 'footnotes', blocks: [] },
       ];
-      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      const current = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses).to.have.lengthOf(1);
+    });
+
+    it('preserves the original reference index when an earlier section is filtered out', () => {
+      const reference = [
+        { style: 'footnotes', blocks: [] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const current = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, current);
+      expect(statuses).to.have.lengthOf(1);
+      expect(statuses[0].referenceIndex).to.equal(1);
     });
   });
 
@@ -282,6 +323,57 @@ describe('template-governance-utils.js', () => {
 
     it('returns an empty array when there is no .metadata block', () => {
       expect(extractMetadataFields('<html><body><main></main></body></html>')).to.deep.equal([]);
+    });
+  });
+
+  describe('checkPageMetadata', () => {
+    function html(metadataRows, { lastSection = true } = {}) {
+      const metadataBlock = `<div class="metadata">${metadataRows
+        .map(([key, value]) => `<div><div><p>${key}</p></div><div><p>${value}</p></div></div>`)
+        .join('')}</div>`;
+      const metadataSection = `<div>${metadataBlock}</div>`;
+      const otherSection = '<div><div class="columns"><div>a</div></div></div>';
+      const sections = lastSection ? [otherSection, metadataSection] : [metadataSection, otherSection];
+      return `<html><body><main>${sections.join('')}</main></body></html>`;
+    }
+
+    const complete = [['template', 'Homepage'], ['title', 'Home'], ['image', 'hero.png']];
+
+    it('reports present, last, and complete when all required fields exist in the last section', () => {
+      expect(checkPageMetadata(html(complete))).to.deep.equal({
+        present: true,
+        isLast: true,
+        missingFields: [],
+      });
+    });
+
+    it('reports missing entirely when there is no .metadata block', () => {
+      const noMeta = '<html><body><main><div><div class="columns"><div>a</div></div></div></main></body></html>';
+      expect(checkPageMetadata(noMeta)).to.deep.equal({
+        present: false,
+        isLast: false,
+        missingFields: ['template', 'title', 'image'],
+      });
+    });
+
+    it('reports not last when the metadata block is not the final section', () => {
+      const result = checkPageMetadata(html(complete, { lastSection: false }));
+      expect(result.present).to.equal(true);
+      expect(result.isLast).to.equal(false);
+    });
+
+    it('reports missing fields, case-insensitively matched, when required fields are absent', () => {
+      const result = checkPageMetadata(html([['Template', 'Homepage']]));
+      expect(result.present).to.equal(true);
+      expect(result.missingFields).to.deep.equal(['title', 'image']);
+    });
+
+    it('returns all fields missing when there is no main element', () => {
+      expect(checkPageMetadata('<html><body></body></html>')).to.deep.equal({
+        present: false,
+        isLast: false,
+        missingFields: ['template', 'title', 'image'],
+      });
     });
   });
 

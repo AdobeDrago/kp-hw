@@ -476,18 +476,35 @@ Current structure:
    default-content chip (there's no current-page section to describe — by
    definition, these are things the page doesn't have).
 
-**Card labels: no numeric index — a real name, or nothing.** Both card types
-originally showed a sequential number (`1`, `2`, `3`...) ahead of the section's
-style, if any. The user flagged this as actively misleading on the "Missing from
-template" cards specifically: the numbers there don't correspond to any real
-section — they're just this filtered list's own count — and reading "1", "2", "3"
-invites the (wrong) inference "this is missing from section 1/2/3 of your page" or
-"of the template." Fixed by dropping the numeric index everywhere (both card types,
-for consistency): the label now shows the section's own `style` value when one
-exists (e.g. `pale-blue`), and renders no label at all when it doesn't — never a
-fabricated identifier. In practice, most of the real `Homepage` template's sections
-have no style set, so many "Missing from template" cards now show no label above
-their block chip at all, which is honest: there is no name to give them.
+**Card labels: went from index → no index → a *different*, correctly-scoped index
+per card type.** Both card types originally showed a bare sequential number (`1`,
+`2`, `3`...) ahead of the section's style. The user flagged this as actively
+misleading on the "Missing from template" cards: those numbers were just the
+filtered list's own count, not a real section position, and reading "1", "2", "3"
+invited the wrong inference "this is missing from section 1/2/3." The first fix
+dropped numbering from *both* card types for consistency — but the user then
+pointed out this went too far the other way: the page cards' numbers **were** real,
+meaningful positions (these are the page's actual sections, in actual order), and
+removing them left every section unlabeled when it had no style, which is not
+useful either. And the missing-from-template cards still needed *some* indication
+of where the missing content belongs, just not a fabricated one.
+
+**Current, final design:** each card type gets its own genuinely-true index, worded
+to say what it actually is:
+- Page cards (`renderPageSection`): `Section {index + 1}` (plus `· {style}` if set)
+  — `index` is the card's real position among `currentSections`, the page's own
+  actual sections in actual order. True by construction.
+- Missing-from-template cards (`renderMissingSection`): `Template section
+  {referenceIndex + 1}` (plus `· {style}` if set) — `referenceIndex` is the
+  original position of that section within the full, unfiltered `referenceSections`
+  array (added back to `computeSectionStatuses`'s output specifically for this;
+  preserved correctly across the block-less-section filter, the same
+  index-preservation technique used in the now-reverted Task 12 pairing logic, just
+  for a different purpose this time — display, not data pairing). This tells the
+  author "this is where this block sits in the template's own structure," which is
+  a true fact about the template, without claiming to know exactly where it should
+  land in *their* page (a claim the design deliberately avoids elsewhere too, e.g.
+  the sequential-allocation heuristic above).
 4. A final "Beyond the template" strip listing Added blocks, styled the same
    neutral way as before — unchanged, kept for the same reason as always: a block
    type the reference never names at all is still worth naming as "beyond it,"

@@ -12,6 +12,7 @@ import {
   computeAddedBlocks,
   findReferenceBlockHtml,
   extractMetadataFields,
+  checkPageMetadata,
   diffSets,
   buildBlockTableHtml,
 } from './template-governance-utils.js';
@@ -32,7 +33,10 @@ async function fetchText(url, token) {
 
 async function fetchReferenceHtml(templatesJsonUrl, templateName, token) {
   const json = JSON.parse(await fetchText(templatesJsonUrl, token));
-  const entry = findTemplateEntry(json.data || [], templateName);
+  // DA sheets come in two shapes: single-sheet (`data` is the row array)
+  // and multi-sheet (`data` is `{ data: [...] }`, keyed by `:names`).
+  const rows = Array.isArray(json.data) ? json.data : json.data?.data || [];
+  const entry = findTemplateEntry(rows, templateName);
   if (!entry || typeof entry.value !== 'string') return null;
   if (!parseContentDaUrl(entry.value)) return null;
   return fetchText(entry.value, token);
@@ -51,10 +55,7 @@ async function buildReport(org, repo, currentHtml, token) {
   const currentCounts = countBlockOccurrences(currentSections);
   const referenceCounts = countBlockOccurrences(referenceSections);
 
-  const sections = computeSectionStatuses(referenceSections, currentCounts);
-  const missingSections = sections.filter(
-    (section) => section.blocks.some((block) => block.status === 'missing'),
-  );
+  const sections = computeSectionStatuses(referenceSections, currentSections);
   const addedBlocks = computeAddedBlocks(currentCounts, referenceCounts);
 
   const totalExpected = Object.values(referenceCounts).reduce((sum, n) => sum + n, 0);
@@ -72,13 +73,13 @@ async function buildReport(org, repo, currentHtml, token) {
     status: 'ready',
     template: templateName,
     referenceHtml,
-    currentSections,
-    missingSections,
+    sections,
     addedBlocks,
     totalExpected,
     totalPresent,
     missingMeta: metaDiff.missing,
     addedMeta: metaDiff.added,
+    pageMetadata: checkPageMetadata(currentHtml),
   };
 }
 
@@ -226,23 +227,35 @@ class TemplateGovernanceReport extends LitElement {
     `;
   }
 
-  renderPageSection(section) {
+  renderTemplateSection(section) {
+    const label = section.style
+      ? `Section ${section.referenceIndex + 1} · ${section.style}`
+      : `Section ${section.referenceIndex + 1}`;
     return html`
       <div class="section-card">
-        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
-        ${section.defaultContent.length ? html`
-          <div class="block-chip block-chip-default-content">${section.defaultContent.join(', ')}</div>
-        ` : ''}
-        ${section.blocks.map((name) => html`<div class="block-chip">${name}</div>`)}
+        <p class="section-label">${label}</p>
+        ${section.blocks.map((block) => this.renderBlock(block))}
       </div>
     `;
   }
 
-  renderMissingSection(section) {
+  renderPageMetadata() {
+    const { present, isLast, missingFields } = this._report.pageMetadata;
+    const issues = [];
+    if (!present) {
+      issues.push('No metadata block found — every page needs one at the end of the page.');
+    } else {
+      if (!isLast) issues.push('The metadata block should be the last section on the page.');
+      missingFields.forEach((field) => issues.push(`Metadata is missing "${field}".`));
+    }
     return html`
-      <div class="section-card">
-        ${section.style ? html`<p class="section-label">${section.style}</p>` : ''}
-        ${section.blocks.map((block) => this.renderBlock(block))}
+      <div class="report-section ${issues.length ? 'report-section-missing' : ''}">
+        <p class="report-section-title">Page metadata</p>
+        ${issues.length ? html`
+          <ul class="finding-list">
+            ${issues.map((issue) => html`<li class="finding-item">${issue}</li>`)}
+          </ul>
+        ` : html`<p class="finding-empty">Metadata block found, last on the page, with template, title, and image.</p>`}
       </div>
     `;
   }
@@ -287,15 +300,10 @@ class TemplateGovernanceReport extends LitElement {
         ${this.renderBar()}
         <p class="add-hint">Click where you want new content in the page, then use + to add it there.</p>
         <div class="anatomy">
-          ${this._report.currentSections.map((section) => this.renderPageSection(section))}
+          ${this._report.sections.map((section) => this.renderTemplateSection(section))}
         </div>
-        ${this._report.missingSections.length ? html`
-          <p class="missing-from-template-label">Missing from template</p>
-          <div class="anatomy">
-            ${this._report.missingSections.map((section) => this.renderMissingSection(section))}
-          </div>
-        ` : ''}
         ${this.renderAdded()}
+        ${this.renderPageMetadata()}
         ${this.renderFindingList(
           'Missing metadata',
           this._report.missingMeta.map((name) => ({ type: 'metadata', name })),
