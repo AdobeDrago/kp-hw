@@ -1,0 +1,161 @@
+/*
+ * Doctor Locator — card list.
+ * Colours/type come from the --ds-* design-system tokens (styles/ds-tokens.css).
+ */
+
+.doctor-locator {
+  --dl-blue: var(--ds-color-kp-blue, #0078b3);
+  --dl-ink: var(--ds-color-inky, #00182b);
+  --dl-border: var(--ds-color-graphite, #e1e3e7);
+}
+
+.doctor-locator .dl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- card ------------------------------------------------------------- */
+.doctor-locator .dl-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 28px;
+  padding: 28px 32px;
+  background: var(--ds-color-white, #fff);
+  border: 1px solid var(--dl-border);
+  border-radius: 12px;
+}
+
+/* photo tile + placeholder silhouette */
+.doctor-locator .dl-photo {
+  overflow: hidden;
+  width: 130px;
+  height: 130px;
+  border-radius: 8px;
+  background: var(--ds-color-graphite-dark, #d6d9de);
+}
+
+.doctor-locator .dl-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--ds-color-white, #fff);
+}
+
+/* numbered map pin, top-right */
+.doctor-locator .dl-pin {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  width: 34px;
+  height: 45px;
+  color: var(--dl-blue);
+}
+
+.doctor-locator .dl-pin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.doctor-locator .dl-pin-num {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  color: var(--ds-on-kp-blue, #fff);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* --- body ------------------------------------------------------------- */
+.doctor-locator .dl-body {
+  min-width: 0;
+  color: var(--dl-ink);
+  font-size: var(--ds-text-p1-size, 18px);
+  line-height: var(--ds-text-p1-line-height, 24px);
+}
+
+.doctor-locator .dl-body > * {
+  margin: 0 0 12px;
+}
+
+.doctor-locator .dl-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.doctor-locator .dl-name {
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.doctor-locator .dl-specialty {
+  color: var(--dl-ink);
+}
+
+.doctor-locator .dl-location {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.doctor-locator .dl-address {
+  font-style: normal;
+  line-height: 1.4;
+}
+
+.doctor-locator .dl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+}
+
+.doctor-locator .dl-plans {
+  max-width: 68ch;
+}
+
+/* links share the KP-blue underlined treatment from the image */
+.doctor-locator .dl-name a,
+.doctor-locator .dl-location a,
+.doctor-locator .dl-actions a {
+  color: var(--dl-blue);
+  text-decoration: underline;
+}
+
+.doctor-locator .dl-name a:hover,
+.doctor-locator .dl-location a:hover,
+.doctor-locator .dl-actions a:hover {
+  text-decoration: none;
+}
+
+/* --- status / empty / error ------------------------------------------ */
+.doctor-locator .dl-status,
+.doctor-locator .dl-empty,
+.doctor-locator .dl-error {
+  margin: 0;
+  padding: 24px 0;
+  color: var(--ds-color-gray-dark, #525764);
+  font-size: var(--ds-text-p1-size, 18px);
+}
+
+/* --- responsive ------------------------------------------------------- */
+@media (width <= 600px) {
+  .doctor-locator .dl-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .doctor-locator .dl-pin {
+    top: 16px;
+    right: 20px;
+  }
+
+  .doctor-locator .dl-name {
+    font-size: 22px;
+    padding-right: 40px; /* keep the name clear of the pin */
+  }
+}
