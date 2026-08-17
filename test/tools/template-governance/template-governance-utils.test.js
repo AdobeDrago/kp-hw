@@ -180,7 +180,8 @@ describe('template-governance-utils.js', () => {
   describe('computeSectionStatuses', () => {
     it('marks a single-occurrence block present when the page has it', () => {
       const reference = [{ style: null, blocks: ['columns-media'] }];
-      const statuses = computeSectionStatuses(reference, { 'columns-media': 1 });
+      const current = [{ style: null, blocks: ['columns-media'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses).to.deep.equal([
         { style: null, referenceIndex: 0, blocks: [{ name: 'columns-media', status: 'present' }] },
       ]);
@@ -188,19 +189,41 @@ describe('template-governance-utils.js', () => {
 
     it('marks a single-occurrence block missing when the page lacks it', () => {
       const reference = [{ style: null, blocks: ['tabs'] }];
-      const statuses = computeSectionStatuses(reference, {});
+      const statuses = computeSectionStatuses(reference, []);
       expect(statuses).to.deep.equal([
         { style: null, referenceIndex: 0, blocks: [{ name: 'tabs', status: 'missing' }] },
       ]);
     });
 
-    it('allocates repeated-block instances to reference sections in document order, first-come-first-served', () => {
+    it('matches a present block to its true position instead of an earlier occurrence of the same name', () => {
+      // The template has hero at position 1 (landing) and position 3 (later in the
+      // page). The page only kept the later one — surrounded by the same "columns"
+      // neighbor as the template — so that's the occurrence that must read "present",
+      // not position 1. This is the exact case a simple per-name counter gets backwards.
+      const reference = [
+        { style: null, blocks: ['hero'] },
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const current = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['hero'] },
+      ];
+      const statuses = computeSectionStatuses(reference, current);
+      expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'present', 'present']);
+    });
+
+    it('matches repeated-block instances to the earliest reference slots when nothing else distinguishes them', () => {
       const reference = [
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
       ];
-      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      const current = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present', 'missing']);
     });
 
@@ -209,7 +232,11 @@ describe('template-governance-utils.js', () => {
         { style: null, blocks: ['columns'] },
         { style: null, blocks: ['columns'] },
       ];
-      const statuses = computeSectionStatuses(reference, { columns: 2 });
+      const current = [
+        { style: null, blocks: ['columns'] },
+        { style: null, blocks: ['columns'] },
+      ];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['present', 'present']);
     });
 
@@ -218,13 +245,14 @@ describe('template-governance-utils.js', () => {
         { style: null, blocks: ['hero'] },
         { style: null, blocks: ['hero'] },
       ];
-      const statuses = computeSectionStatuses(reference, {});
+      const statuses = computeSectionStatuses(reference, []);
       expect(statuses.map((s) => s.blocks[0].status)).to.deep.equal(['missing', 'missing']);
     });
 
     it('allocates independently across multiple instances of the same block within one section', () => {
       const reference = [{ style: null, blocks: ['card', 'card', 'card'] }];
-      const statuses = computeSectionStatuses(reference, { card: 1 });
+      const current = [{ style: null, blocks: ['card'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses[0].blocks.map((b) => b.status)).to.deep.equal(['present', 'missing', 'missing']);
     });
 
@@ -233,7 +261,8 @@ describe('template-governance-utils.js', () => {
         { style: null, blocks: ['hero'] },
         { style: 'footnotes', blocks: [] },
       ];
-      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      const current = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses).to.have.lengthOf(1);
     });
 
@@ -242,7 +271,8 @@ describe('template-governance-utils.js', () => {
         { style: 'footnotes', blocks: [] },
         { style: null, blocks: ['hero'] },
       ];
-      const statuses = computeSectionStatuses(reference, { hero: 1 });
+      const current = [{ style: null, blocks: ['hero'] }];
+      const statuses = computeSectionStatuses(reference, current);
       expect(statuses).to.have.lengthOf(1);
       expect(statuses[0].referenceIndex).to.equal(1);
     });

@@ -55,7 +55,7 @@ async function buildReport(org, repo, currentHtml, token) {
   const currentCounts = countBlockOccurrences(currentSections);
   const referenceCounts = countBlockOccurrences(referenceSections);
 
-  const sections = computeSectionStatuses(referenceSections, currentCounts);
+  const sections = computeSectionStatuses(referenceSections, currentSections);
   const addedBlocks = computeAddedBlocks(currentCounts, referenceCounts);
 
   const totalExpected = Object.values(referenceCounts).reduce((sum, n) => sum + n, 0);
