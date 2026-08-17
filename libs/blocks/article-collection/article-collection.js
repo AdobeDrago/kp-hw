@@ -1,4 +1,4 @@
-import { callProxy } from '../../utils/kp-api.js';
+import { callProxy } from '../../scripts/utils/kp-api.js';
 
 // KP Lucid Search — articles source (consumernet / AEM DHO articles).
 const KP_SEARCH_BASE = 'https://apims.kaiserpermanente.org/kp/care/api/sda/kp-search-api/v1/api/kporg/search/v1';

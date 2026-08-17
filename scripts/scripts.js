@@ -1,8 +1,26 @@
-import { loadArea, setConfig, getConfig } from './ak.js';
+// kp-hw CONSUMER bootstrap. kp-hw is both the federated libs provider (/libs) and
+// its own consuming site; this file is the consumer half. It resolves where /libs
+// lives, loads the federated runtime + styles from there, and passes kp-hw's own
+// codeBase (used for site-owned templates). All blocks now live in /libs.
+// Mirrors author-kit/ak-consumer-1's scripts/scripts.js.
 
-// The site-config loader lives in a standalone module (no page-bootstrap side
-// effects) so blocks/utils can import it freely; re-exported here for convenience.
-export { getSiteConfig } from '../utils/site-config.js';
+// Where the federated libs project is served from:
+//  - production (real domain): same-origin `/libs` (CDN-mapped → no DNS/SSL/CORS cost)
+//  - preview/local (.aem/.hlx/localhost): `?libs=<branch>` deploy, or `local`
+const libsBase = (() => {
+  // kp-hw hosts its own /libs, so the default is ALWAYS same-origin `/libs`
+  // (production CDN-mapped, and served directly under preview / `aem up` / tests).
+  // Only an explicit `?libs=` override points elsewhere — for testing a libs
+  // branch against this content (the spec's blast-radius workflow).
+  const branch = new URLSearchParams(window.location.search).get('libs');
+  if (!branch) return '/libs';
+  if (!/^[a-zA-Z0-9_-]+$/.test(branch)) throw new Error('Invalid libs branch name.');
+  if (branch === 'local') return 'http://localhost:3000/libs';
+  return `https://${branch}--kp-hw--adobedrago.aem.live/libs`;
+})();
+
+// kp-hw's own code root (its /blocks, /templates, /img live here).
+const codeBase = import.meta.url.replace('/scripts/scripts.js', '');
 
 const hostnames = ['authorkit.dev'];
 
@@ -45,14 +63,26 @@ const locales = {
   '/zh': { lang: 'zh' },
 };
 
-const linkBlocks = [
-  { fragment: '/fragments/' },
-  { schedule: '/schedules/' },
-  { youtube: 'https://www.youtube' },
-];
+// The federated auto-blocks (lib-fragment/schedule/youtube) and self-styled
+// components come from the libs defaults (DEF_LINK_BLOCKS/DEF_COMPONENTS in ak.js).
+// These arrays are for kp-hw's OWN site-specific link-blocks/components (none yet).
+const linkBlocks = [];
+const components = [];
 
-// Blocks with self-managed styles
-const components = ['fragment', 'schedule'];
+// Load the federated global styles from libs. kp-hw's own styles.css (linked in
+// head.html) is a heavy sub-brand override that must WIN, so — unlike a light
+// ak-consumer — we insert libs styles BEFORE the site sheet in the DOM (libs is
+// the base; kp-hw's styles.css, later in the cascade, overrides it).
+function ensureLibsStyles() {
+  const href = `${libsBase}/styles/styles.css`;
+  const sheets = [...document.querySelectorAll('link[rel="stylesheet"]')];
+  if (sheets.some((l) => l.href.replace(/\/$/, '').endsWith('/libs/styles/styles.css'))) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = href;
+  if (sheets[0]) sheets[0].before(link);
+  else document.head.append(link);
+}
 
 function setMetaOverride(name, content) {
   let meta = document.head.querySelector(`meta[name="${name}"]`);
@@ -103,28 +133,28 @@ const decorateArea = ({ area = document }) => {
   });
 };
 
+// Load the federated runtime FROM the libs project.
+const { setConfig, loadArea, getConfig } = await import(`${libsBase}/scripts/ak.js`);
+
 /**
  * ak.js loads a template's CSS but not its JS. This loads the matching JS
  * module (templates/<template>/<template>.js) if the page declares a template
- * and the module exists. Runs after loadArea() so the DOM is fully decorated.
+ * and the module exists. Templates are site-owned, so they resolve from codeBase.
  */
 async function loadTemplateJS() {
   let template = document.head.querySelector('meta[name="template"]')?.content;
 
   // Fallback: health-article pages are identified by the `healtharticle` URL
-  // convention; the imported pages don't declare a template meta. (Production-clean
-  // alternative: set `template: article` via metadata.json for the article path —
-  // then this fallback is unnecessary.) When we assign the template here, ak.js has
-  // already run without loading its CSS, so we load it below.
+  // convention; the imported pages don't declare a template meta.
   const assignedByUrl = !template && /\/healtharticle[.-]/.test(window.location.pathname);
   if (assignedByUrl) template = 'article';
   if (!template) return;
 
   const name = template.replaceAll(' ', '-').toLowerCase();
-  const { codeBase } = getConfig();
+  const { codeBase: base } = getConfig();
 
   if (assignedByUrl) {
-    const cssHref = `${codeBase}/templates/${name}/${name}.css`;
+    const cssHref = `${base}/templates/${name}/${name}.css`;
     if (!document.querySelector(`link[href="${cssHref}"]`)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -134,7 +164,7 @@ async function loadTemplateJS() {
   }
 
   try {
-    const mod = await import(`${codeBase}/templates/${name}/${name}.js`);
+    const mod = await import(`${base}/templates/${name}/${name}.js`);
     if (typeof mod.default === 'function') await mod.default();
   } catch {
     /* template has no JS module — nothing to do */
@@ -142,8 +172,9 @@ async function loadTemplateJS() {
 }
 
 export async function loadPage() {
+  ensureLibsStyles();
   setConfig({
-    hostnames, locales, linkBlocks, components, decorateArea, env: getEnv(),
+    codeBase, hostnames, locales, linkBlocks, components, decorateArea, env: getEnv(),
   });
   suppressFragmentChrome();
   suppressLibraryChrome();
@@ -165,7 +196,7 @@ if (window.location.hostname.includes('ue.da.live')) {
 (function da() {
   const { searchParams } = new URL(window.location.href);
   const hasPreview = searchParams.has('dapreview');
-  if (hasPreview) import('../tools/da/da.js').then((mod) => mod.default(loadPage));
+  if (hasPreview) import(`${libsBase}/tools/da/da.js`).then((mod) => mod.default(loadPage));
   const hasQE = searchParams.has('quick-edit');
-  if (hasQE) import('../tools/quick-edit/quick-edit.js').then((mod) => mod.default());
+  if (hasQE) import(`${libsBase}/tools/quick-edit/quick-edit.js`).then((mod) => mod.default());
 }());

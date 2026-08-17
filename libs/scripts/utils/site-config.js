@@ -18,7 +18,7 @@
  * this module is pulled in by blocks/utils that must not trigger that.
  */
 
-import { getConfig } from '../scripts/ak.js';
+import { getConfig } from '../ak.js';
 
 let siteConfigPromise;
 

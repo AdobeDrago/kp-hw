@@ -10,6 +10,24 @@
  * governing permissions and limitations under the License.
  */
 
+// Widgets / link-based auto-blocks — federated, so `lib-` prefixed.
+const DEF_LINK_BLOCKS = [
+  { 'lib-fragment': '/fragments/' },
+  { 'lib-schedule': '/schedules/' },
+  { 'lib-youtube': 'https://www.youtube' },
+];
+
+// Blocks with self-managed styles (skip CSS load). Names are post-prefix-strip.
+const DEF_COMPONENTS = ['fragment', 'schedule'];
+
+// Block providers, matched by class-name prefix (`lib-columns` → the `lib`
+// provider → loaded from /libs). A block with NO matching prefix loads from the
+// consuming site (codeBase). This is the ak-libs resolution model — no manifest.
+// Add more providers (blog, commerce, …) here, each with its own origin.
+const PROVIDERS = [
+  { prefix: 'lib', pathPrefix: '/libs', local: 3000 },
+];
+
 const LOG = async (ex, el) => (await import('./utils/error.js')).default(ex, el);
 
 export function getMetadata(name) {
@@ -26,21 +44,61 @@ export function getLocale(locales = { '': {} }) {
   return { prefix, ...locales[prefix] };
 }
 
+function getEnv() {
+  const { host } = window.location;
+  if (!['--', 'local'].some((c) => host.includes(c))) return 'prod';
+  if (host.includes('--')) return 'stage';
+  return 'dev';
+}
+
 export const [setConfig, getConfig] = (() => {
   let config;
+  // `libsBase` = the federated project root, derived from THIS runtime's own URL
+  // (ak.js is served from `/libs/scripts/`). A consumer imports ak.js from its
+  // chosen libs deployment, so import.meta always points back at that libs project.
+  const libsBase = `${import.meta.url.replace('/scripts/ak.js', '')}`;
   return [
     (conf = {}) => {
       config = {
         ...conf,
         log: conf.log || LOG,
+        // Consumers may pass their own env (kp-hw maps it to a site-config sheet).
+        env: conf.env ?? getEnv(),
+        linkBlocks: [...DEF_LINK_BLOCKS, ...(conf.linkBlocks ?? [])],
+        components: [...DEF_COMPONENTS, ...(conf.components ?? [])],
+        providers: PROVIDERS,
         locale: getLocale(conf.locales),
-        codeBase: `${import.meta.url.replace('/scripts/ak.js', '')}`,
+        // `codeBase` = the consuming site's own root; a libs project rendering its
+        // own pages omits it and defaults to libsBase. (Mirrors ak-libs.)
+        codeBase: conf.codeBase ?? libsBase,
+        libsBase,
       };
       return config;
     },
     () => (config || setConfig()),
   ];
 })();
+
+/**
+ * Resolve the base a block loads from, given its provider (or none).
+ *   - no provider → the consuming site (codeBase)
+ *   - `lib` provider (no origin) → the libs project (libsBase); `?lib=local` → localhost
+ *   - a provider with its own origin → prod: same-origin CDN path; else branch deploy
+ * (Mirrors ak-libs's getCodeBase.)
+ */
+function getCodeBase(env, libsBase, codeBase, provider) {
+  if (!provider) return codeBase;
+  const branch = new URLSearchParams(window.location.search).get(provider.prefix) || 'main';
+  if (!provider.origin) {
+    return branch === 'local'
+      ? `http://localhost:${provider.local}${provider.pathPrefix}`
+      : libsBase;
+  }
+  if (env === 'prod') return `${window.location.origin}${provider.pathPrefix}`;
+  return branch === 'local'
+    ? `http://localhost:${provider.local}${provider.pathPrefix}`
+    : `${provider.origin.replace('main', branch)}${provider.pathPrefix}`;
+}
 
 export async function loadStyle(href) {
   return new Promise((resolve) => {
@@ -58,11 +116,30 @@ export async function loadStyle(href) {
 }
 
 export async function loadBlock(block) {
-  const { codeBase, log, components } = getConfig();
+  const {
+    env, codeBase, libsBase, providers, log, components,
+  } = getConfig();
   const { classList } = block;
-  const name = classList[0];
+  let name = classList[0];
+  // Not a real block: a class-less div, or the runtime's own section wrappers
+  // (`block-content` / `default-content`). These get here if the area is decorated
+  // more than once (e.g. the DA live-preview re-render wraps already-grouped
+  // sections). Skip — there is no `/blocks/block-content` to load.
+  if (!name || name === 'block-content' || name === 'default-content') return block;
+  // A provider owns the block when its class starts with `<prefix>-`
+  // (e.g. `lib-columns` → the `lib` provider → loaded from /libs). No prefix →
+  // the block loads from the consuming site. `data-libs` marks the federated split.
+  const provider = providers?.find((pr) => name.startsWith(`${pr.prefix}-`));
+  if (provider) {
+    name = name.replace(`${provider.prefix}-`, '');
+    // Bridge: add the base class so the block's CSS (scoped to the base name,
+    // e.g. `.columns`) applies to the prefixed element.
+    classList.add(name);
+    block.dataset.libs = 'true';
+  }
   block.dataset.blockName = name;
-  const blockPath = `${codeBase}/blocks/${name}/${name}`;
+  const base = getCodeBase(env, libsBase, codeBase, provider);
+  const blockPath = `${base}/blocks/${name}/${name}`;
   const loading = [new Promise((resolve) => {
     (async () => {
       try {
@@ -260,7 +337,7 @@ function decorateSections(parent, isDoc) {
 function decorateHeader() {
   const header = document.querySelector('header');
   if (!header) return;
-  const meta = getMetadata('header') || 'header';
+  const meta = getMetadata('header') || 'lib-header';
   if (meta === 'off') {
     document.body.classList.add('no-header');
     header.remove();

@@ -1,3 +1,4 @@
+import { getConfig } from '../../scripts/ak.js';
 import { NON_AUTH, AUTH } from './kp-markup.js';
 
 // KP production header (.kp-header) with a localStorage-driven auth toggle:
@@ -51,10 +52,7 @@ function primaryNavItems(fragment) {
 // Replace the shell's primary nav with the fragment's links (author-editable).
 async function applyFragmentNav(authed, root) {
   try {
-    const [{ loadFragment }, { getConfig }] = await Promise.all([
-      import('../fragment/fragment.js'),
-      import('../../scripts/ak.js'),
-    ]);
+    const { loadFragment } = await import('../fragment/fragment.js');
     const prefix = getConfig()?.locale?.prefix || '';
     const fragment = await loadFragment(`${prefix}${authed ? NAV_PATH.auth : NAV_PATH.nonAuth}`);
     const list = fragment && root.querySelector(PRIMARY_NAV);
@@ -118,10 +116,62 @@ function wireDropdowns(root) {
   });
 }
 
+const getUseHref = (u) => u.getAttribute('href') || u.getAttribute('xlink:href') || '';
+
+// The vendored shell markup references assets with root-relative paths
+// (`/libs/blocks/header/assets/…`). On a CONSUMING site those resolve to the
+// consumer's own origin (no /libs) → 404. Fix both kinds:
+//  - `<img>`/`src`: cross-origin loads fine → repoint at the libs origin.
+//  - SVG `<use>` sprites: cross-origin is BLOCKED by the browser ("Unsafe attempt
+//    to load URL … from frame"). Point `<use>` at a LOCAL fragment now (so nothing
+//    cross-origin is attempted) and return the sprite files to inline afterward.
+function rewriteLibsAssets(root) {
+  const { libsBase } = getConfig();
+  if (!libsBase) return [];
+  root.querySelectorAll('[src^="/libs/"]').forEach((node) => {
+    node.setAttribute('src', node.getAttribute('src').replace(/^\/libs/, libsBase));
+  });
+  const sprites = new Set();
+  root.querySelectorAll('use').forEach((use) => {
+    const href = getUseHref(use);
+    if (!href.startsWith('/libs/')) return;
+    const [file, frag] = href.split('#');
+    sprites.add(file);
+    if (frag) {
+      use.setAttribute('href', `#${frag}`);
+      use.removeAttribute('xlink:href');
+    }
+  });
+  return [...sprites];
+}
+
+// Fetch each libs SVG sprite once and inline it (same-origin) so the local `<use>`
+// fragments resolve. Failures are silent — worst case the icon is absent, no error.
+async function inlineLibsSprites(files) {
+  const { libsBase } = getConfig();
+  if (!libsBase) return;
+  await Promise.all(files.map(async (file) => {
+    const id = `libs-sprite-${file.split('/').pop().replace(/\W/g, '-')}`;
+    if (document.getElementById(id)) return;
+    try {
+      const res = await fetch(`${libsBase}${file.replace(/^\/libs/, '')}`);
+      if (!res.ok) return;
+      const holder = document.createElement('div');
+      holder.id = id;
+      holder.setAttribute('aria-hidden', 'true');
+      holder.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+      holder.innerHTML = await res.text();
+      document.body.prepend(holder);
+    } catch { /* icon just won't render — no console error */ }
+  }));
+}
+
 export default function init(el) {
   const authed = isAuthenticated();
   const header = elFromHTML(authed ? AUTH : NON_AUTH);
+  const sprites = rewriteLibsAssets(header);
   el.replaceChildren(header);
+  inlineLibsSprites(sprites);
   applyFragmentNav(authed, header);
   wireDropdowns(header);
 }

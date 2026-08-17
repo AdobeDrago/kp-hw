@@ -350,7 +350,6 @@ main .section:has(.hero.landing) > .block-content {
   .hero.landing .hero-foreground .fg-text .hero-heading {
     font-size: var(--heading-font-size-xxl);
     line-height: 1.2;
-    color: #000;
     margin-top: 0;
   }
 

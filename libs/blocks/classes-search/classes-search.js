@@ -1,6 +1,6 @@
 import {
   DEFAULT_ROP, zipToRop, latToRop, fetchTopics,
-} from '../../utils/kp-api.js';
+} from '../../scripts/utils/kp-api.js';
 
 // Reads the results-page path authored in the block (a link or a plain-text
 // cell), e.g. "northern-california/health-wellness/classes-programs/search-results".

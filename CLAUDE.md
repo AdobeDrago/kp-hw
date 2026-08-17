@@ -194,6 +194,6 @@ const page = await callProxy(buildKpSearchUrl({
 ---
 
 ## 7. Reference implementations
-- `blocks/classes-search/` — search entry: ZIP/geolocation + dynamic topic dropdown (`list-show=0`), validation, redirect to the results page with `user_zip`/`distance_label`/`health_topic` params.
-- `blocks/classes-results/` — results consumer: reads those URL params, runs the search (`list-show=10`), renders the grouped listing, faceted sidebar filters, and "View more" pagination.
+- `libs/blocks/classes-search/` — search entry: ZIP/geolocation + dynamic topic dropdown (`list-show=0`), validation, redirect to the results page with `user_zip`/`distance_label`/`health_topic` params. (Federated; authored as `lib-classes-search`.)
+- `libs/blocks/classes-results/` — results consumer: reads those URL params, runs the search (`list-show=10`), renders the grouped listing, faceted sidebar filters, and "View more" pagination. (Federated; authored as `lib-classes-results`.)
 - Styling: both blocks are derived from the Storybook design system (see `STORYBOOK.md` / `scripts/slice-block-css.mjs` and the `--ds-*` tokens in `styles/ds-tokens.css`).

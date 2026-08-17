@@ -13,10 +13,22 @@
 // Block JS (lazy) + block CSS (inlined). blocks/ is NOT a staticDir, so Vite's
 // ?inline transform applies cleanly here. styles/ IS a staticDir (for fonts), so
 // global styles are loaded by <link> instead — see ensureGlobalStyles.
-const blockJs = import.meta.glob('../../blocks/*/*.js');
+// Federated blocks live under /libs/blocks (the Libs Architecture); site blocks
+// under /blocks. Glob both, then normalize the libs keys to the `../../blocks/<name>`
+// shape the harness looks up by, so a block renders the same regardless of tree.
+const normalizeLibsKeys = (map) => Object.fromEntries(
+  Object.entries(map).map(([k, v]) => [k.replace('/libs/blocks/', '/blocks/'), v]),
+);
+const blockJs = {
+  ...normalizeLibsKeys(import.meta.glob('../../libs/blocks/*/*.js')),
+  ...import.meta.glob('../../blocks/*/*.js'),
+};
 // Exclude the header's ~1.6MB kp-header CSS from eager inlining (the header harness
 // loads it via a served <link> instead) so it doesn't bloat every story's bundle.
-const blockCss = import.meta.glob(['../../blocks/*/*.css', '!../../blocks/header/header.css'], { query: '?inline', import: 'default', eager: true });
+const blockCss = {
+  ...normalizeLibsKeys(import.meta.glob('../../libs/blocks/*/*.css', { query: '?inline', import: 'default', eager: true })),
+  ...import.meta.glob(['../../blocks/*/*.css', '!../../blocks/header/header.css'], { query: '?inline', import: 'default', eager: true }),
+};
 
 const injected = new Set();
 

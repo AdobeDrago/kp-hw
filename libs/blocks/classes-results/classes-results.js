@@ -1,6 +1,6 @@
 import {
   DEFAULT_ROP, zipToRop, latToRop, fetchTopics, fetchResults,
-} from '../../utils/kp-api.js';
+} from '../../scripts/utils/kp-api.js';
 
 const DISTANCE_OPTIONS = [5, 10, 25, 50, 75, 100];
 const DEFAULT_DISTANCE = 50;
