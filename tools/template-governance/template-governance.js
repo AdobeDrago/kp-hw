@@ -32,7 +32,10 @@ async function fetchText(url, token) {
 
 async function fetchReferenceHtml(templatesJsonUrl, templateName, token) {
   const json = JSON.parse(await fetchText(templatesJsonUrl, token));
-  const entry = findTemplateEntry(json.data || [], templateName);
+  // DA sheets come in two shapes: single-sheet (`data` is the row array)
+  // and multi-sheet (`data` is `{ data: [...] }`, keyed by `:names`).
+  const rows = Array.isArray(json.data) ? json.data : json.data?.data || [];
+  const entry = findTemplateEntry(rows, templateName);
   if (!entry || typeof entry.value !== 'string') return null;
   if (!parseContentDaUrl(entry.value)) return null;
   return fetchText(entry.value, token);
