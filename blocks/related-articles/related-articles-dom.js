@@ -65,24 +65,43 @@ function buildGrid(articles, opts) {
   return group;
 }
 
-// Map of tag → articles sorted by descending article count.
+// Map of tag → articles, ordered by descending article count. Tags are grouped
+// case-insensitively so casing variants (e.g. "healthy eating" vs "Healthy
+// eating") merge into one topic instead of splitting into separate tabs; the
+// most common casing becomes the display label. Input order is preserved within
+// each group, so an upstream sort (e.g. newest-first) carries into every tab.
 function groupByTag(articles) {
-  const groups = new Map();
+  const byKey = new Map(); // lowercased tag → { list, casings: Map<label, count> }
   articles.forEach((a) => {
     (a.tags || []).forEach((t) => {
-      if (!groups.has(t)) groups.set(t, []);
-      groups.get(t).push(a);
+      const key = t.toLowerCase();
+      let g = byKey.get(key);
+      if (!g) {
+        g = { list: [], casings: new Map() };
+        byKey.set(key, g);
+      }
+      g.list.push(a);
+      g.casings.set(t, (g.casings.get(t) || 0) + 1);
     });
   });
-  return new Map([...groups.entries()].sort((a, b) => b[1].length - a[1].length));
+  const labelOf = (g) => [...g.casings.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  return new Map(
+    [...byKey.values()]
+      .map((g) => [labelOf(g), g.list])
+      .sort((a, b) => b[1].length - a[1].length),
+  );
 }
 
-// Resolve which tab groups to show: author allowlist → top-N by count.
+// Resolve which tab groups to show: author allowlist → top-N by count. The
+// allowlist is matched case-insensitively against the (already merged) groups.
 function resolveGroups(groups, topics, maxTabs) {
   if (topics && topics.length) {
+    const byLower = new Map(
+      [...groups.entries()].map(([label, list]) => [label.toLowerCase(), [label, list]]),
+    );
     return topics
-      .map((t) => [t, groups.get(t)])
-      .filter(([, list]) => list && list.length);
+      .map((t) => byLower.get(t.trim().toLowerCase()))
+      .filter((entry) => entry && entry[1].length);
   }
   return [...groups.entries()].slice(0, maxTabs);
 }

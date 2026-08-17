@@ -19,6 +19,21 @@ function cleanTitle(raw) {
   return String(raw || '').split('|')[0].trim() || String(raw || '').trim();
 }
 
+// query-index `date` comes from the `publication-date` meta as a
+// "Month DD, YYYY" string (e.g. "August 19, 2026"), and is often empty.
+// Some Helix dateValue configs emit a numeric day-serial instead, so handle
+// both. Returns a sortable epoch-ms timestamp, or null when undated/invalid.
+function articleTimestamp(raw) {
+  if (raw == null || raw === '') return null;
+  const s = String(raw).trim();
+  if (/^\d+$/.test(s)) {
+    // Spreadsheet serial: days since 1899-12-30 (UTC).
+    return Date.UTC(1899, 11, 30) + Number(s) * 86400000;
+  }
+  const t = Date.parse(s);
+  return Number.isNaN(t) ? null : t;
+}
+
 function parseTags(raw) {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw.map(String).map((t) => t.trim()).filter(Boolean);
@@ -109,7 +124,17 @@ export default async function init(el) {
           alt: cleanTitle(r.title),
           image: r.image,
           tags: parseTags(r.tags),
+          ts: articleTimestamp(r.date),
         }));
+
+      // Most recent first. Undated/invalid entries sort to the end while
+      // keeping their original (index) order among themselves (stable sort).
+      articles.sort((a, b) => {
+        if (a.ts == null && b.ts == null) return 0;
+        if (a.ts == null) return 1;
+        if (b.ts == null) return -1;
+        return b.ts - a.ts;
+      });
     } else {
       log(`related-articles: index fetch failed (${resp.status})`, el);
     }
