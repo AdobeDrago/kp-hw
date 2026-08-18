@@ -168,4 +168,5 @@ if (window.location.hostname.includes('ue.da.live')) {
   if (hasPreview) import('../tools/da/da.js').then((mod) => mod.default(loadPage));
   const hasQE = searchParams.has('quick-edit');
   if (hasQE) import('../tools/quick-edit/quick-edit.js').then((mod) => mod.default());
+  if (hasQE) import('../tools/style-switcher/quick-edit-style-switcher.js').then((mod) => mod.default());
 }());
