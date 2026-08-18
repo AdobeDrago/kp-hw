@@ -1,19 +1,39 @@
 import { expect } from '@esm-bundle/chai';
-import { blockVariants } from '../../../tools/style-switcher/quick-edit-style-switcher.js';
+import { variantTokens, activeVariants } from '../../../tools/style-switcher/quick-edit-style-switcher.js';
 
 describe('quick-edit-style-switcher.js', () => {
-  describe('blockVariants', () => {
-    it('returns variant classes, excluding the block name', () => {
-      expect(blockVariants(['columns', 'align-vertically'], 'columns')).to.deep.equal(['align-vertically']);
+  describe('variantTokens', () => {
+    it('extracts a single compound variant', () => {
+      expect(variantTokens('columns', '.columns.topics .topic-pills')).to.deep.equal(['topics']);
     });
 
-    it('returns [] when the block has no variant', () => {
-      expect(blockVariants(['tabs'], 'tabs')).to.deep.equal([]);
+    it('extracts several across a selector list', () => {
+      expect(variantTokens('section', '.section.center, .section.pale-blue .default-content'))
+        .to.deep.equal(['center', 'pale-blue']);
     });
 
-    it('excludes the structural block / block-content classes', () => {
-      expect(blockVariants(['columns', 'block', 'block-content', 'topics'], 'columns'))
-        .to.deep.equal(['topics']);
+    it('ignores :not() and prefixed (computed/internal) classes', () => {
+      expect(variantTokens('hero', '.hero:not(.landing) .hero-foreground')).to.deep.equal([]);
+      expect(variantTokens('columns-media', '.columns-media-2-cols')).to.deep.equal([]);
+    });
+
+    it('handles a hyphenated base and variant', () => {
+      expect(variantTokens('plan-compare', '.plan-compare.wide')).to.deep.equal(['wide']);
+    });
+
+    it('returns [] for empty input', () => {
+      expect(variantTokens('', '.a.b')).to.deep.equal([]);
+      expect(variantTokens('x', '')).to.deep.equal([]);
+    });
+  });
+
+  describe('activeVariants', () => {
+    it('returns the options applied on the element', () => {
+      expect(activeVariants(['columns', 'topics'], ['topics', 'dark'])).to.deep.equal(['topics']);
+    });
+
+    it('returns [] when none of the options are applied', () => {
+      expect(activeVariants(['section'], ['center', 'pale-blue'])).to.deep.equal([]);
     });
   });
 });

@@ -5,27 +5,41 @@ body {
   color: #1d1d1d;
 }
 
+.ss-group {
+  margin-bottom: 16px;
+}
+
+.ss-group:last-child {
+  margin-bottom: 0;
+}
+
 .ss-lbl {
-  margin: 0 0 4px;
+  margin: 0 0 8px;
   color: #6e6e6e;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.ss-name {
-  margin: 0;
   font-weight: 700;
-  font-size: 20px;
-  line-height: 1.2;
-  word-break: break-word;
 }
 
-.ss-variants {
-  margin: 6px 0 0;
-  color: #1473e6;
-  font-size: 13px;
+.ss-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ss-chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #f0f0f0;
+  color: #555;
+  font-size: 12px;
   font-weight: 600;
+}
+
+.ss-chip.ss-on {
+  background: #1473e6;
+  color: #fff;
 }
 
 .ss-empty {
