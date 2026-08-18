@@ -11,7 +11,9 @@
 // origins.
 
 const CHANNEL = 'kp-style-switcher';
+const VERSION = 'v6';
 const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel(CHANNEL) : null;
+let msgCount = 0;
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"]/g, (c) => ({
@@ -36,18 +38,20 @@ function group(title, scope, data) {
 function render(data) {
   const app = document.getElementById('app');
   if (!app) return;
-  if (!data || (!data.block && !data.section)) {
-    app.innerHTML = '<p class="ss-empty">Click inside a block in the page.</p>';
-    return;
-  }
-  app.innerHTML = group('Block', 'block', data.block) + group('Section', 'section', data.section);
+  const body = (!data || (!data.block && !data.section))
+    ? '<p class="ss-empty">Click inside a block in the page.</p>'
+    : group('Block', 'block', data.block) + group('Section', 'section', data.section);
+  app.innerHTML = `${body}<p class="ss-foot">${VERSION} · msgs ${msgCount}</p>`;
 }
 
 if (channel) {
   // Render any state message the canvas sends. We intentionally don't require a `type`
   // field: a cached older canvas may post a bare { block, section }, and this still renders
   // it rather than leaving the panel blank on a version skew.
-  channel.onmessage = (e) => render(e.data);
+  channel.onmessage = (e) => {
+    msgCount += 1;
+    render(e.data);
+  };
 }
 
 document.addEventListener('click', (e) => {
