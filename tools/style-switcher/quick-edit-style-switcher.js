@@ -1,11 +1,15 @@
-// Quick-edit block detector → broadcasts the selected block + its styles to the right-rail plugin.
+// Quick-edit block detector + style switcher (canvas side).
 //
 // Loaded by scripts.js when `?quick-edit` is present, so it only runs inside the quick-edit
 // editor. On each click it detects the block at the cursor and its enclosing section,
 // discovers the styles each supports by fetching + parsing the relevant CSS (compound
-// selectors like `.columns.topics`, `.section.center`), and broadcasts it all on a
-// same-origin BroadcastChannel. The DA library plugin (tools/style-switcher/style-switcher.js)
-// in the editor's right rail renders it — the canvas iframe can't draw into DA's rail itself.
+// selectors like `.columns.topics`, `.section.center`), and broadcasts it on a same-origin
+// BroadcastChannel. The DA library plugin (tools/style-switcher/style-switcher.js) in the
+// editor's right rail renders it and, when the author clicks a style chip, sends a `toggle`
+// command back here, which we apply to the live element.
+//
+// NOTE: toggling the class updates the page live; persisting the change to DA is not wired
+// yet (class changes aren't part of quick-edit's synced content).
 //
 // A block is a `[data-block-name]` element under `main > .section > .block-content` (no
 // `.ProseMirror` wrapper). We listen on click / focusin / keyup in the capture phase, not
@@ -39,6 +43,7 @@ export function activeVariants(classList, available) {
 
 const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel(CHANNEL) : null;
 const cache = new Map();
+const current = { block: null, section: null };
 let started = false;
 let requestId = 0;
 
@@ -96,6 +101,18 @@ async function describe(el, base) {
   return { name: base, available, active: activeVariants(el.classList, available) };
 }
 
+// Re-read the current block + section and broadcast their state to the rail.
+async function publish() {
+  requestId += 1;
+  const id = requestId;
+  const [block, section] = await Promise.all([
+    describe(current.block, current.block && current.block.dataset.blockName),
+    describe(current.section, 'section'),
+  ]);
+  if (id !== requestId) return; // a newer update superseded this one
+  if (channel) channel.postMessage({ type: 'state', block, section });
+}
+
 function nodeFromEvent(e) {
   if (e && e.type === 'keyup') {
     const sel = document.getSelection();
@@ -104,24 +121,30 @@ function nodeFromEvent(e) {
   return e && e.target;
 }
 
-async function update(e) {
+function update(e) {
   const node = nodeFromEvent(e);
   if (!node) return;
-  const blockEl = findBlock(node);
-  const sectionEl = findSection(node);
-  requestId += 1;
-  const id = requestId;
-  const [block, section] = await Promise.all([
-    describe(blockEl, blockEl && blockEl.dataset.blockName),
-    describe(sectionEl, 'section'),
-  ]);
-  if (id !== requestId) return; // a newer click superseded this one
-  if (channel) channel.postMessage({ block, section });
+  current.block = findBlock(node);
+  current.section = findSection(node);
+  publish();
+}
+
+// Apply a style toggle sent from the rail to the live element, then re-publish state.
+function applyToggle(scope, variant) {
+  const el = current[scope];
+  if (!el || !variant) return;
+  el.classList.toggle(variant);
+  publish();
 }
 
 export default function init() {
   if (started) return;
   started = true;
+  if (channel) {
+    channel.onmessage = (e) => {
+      if (e.data && e.data.type === 'toggle') applyToggle(e.data.scope, e.data.variant);
+    };
+  }
   // Capture phase so the editor can't stop these reaching us. keyup covers caret movement
   // via the keyboard, where there's no click.
   document.addEventListener('click', update, true);

@@ -30,16 +30,27 @@ body {
 
 .ss-chip {
   padding: 4px 12px;
+  border: none;
   border-radius: 999px;
   background: #f0f0f0;
   color: #555;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.ss-chip:hover {
+  background: #e2e2e2;
 }
 
 .ss-chip.ss-on {
   background: #1473e6;
   color: #fff;
+}
+
+.ss-chip.ss-on:hover {
+  background: #0d66d0;
 }
 
 .ss-empty {
