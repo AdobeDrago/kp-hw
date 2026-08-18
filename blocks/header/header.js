@@ -88,6 +88,26 @@ function populatePlaceholder(pattern) {
   }
 }
 
+// Auto-select the region whose name appears in the URL path — e.g. /en/colorado/ and
+// /es/colorado/ both select "Colorado". We loop the dropdown's own options and match
+// each label against the path, so this is language-prefix-agnostic (works for any
+// locale without hard-coding slugs). Only region dropdowns are considered.
+function selectRegionFromUrl(pattern) {
+  if (!/^region/.test(pattern.dataset.menuType || '')) return;
+  const path = window.location.pathname.toLowerCase();
+  const options = [...pattern.querySelectorAll('.drop-menu-list-op')];
+  const match = options.find((li) => {
+    const text = li.querySelector('.drop-menu-list-text')?.textContent.trim().toLowerCase();
+    return text && path.includes(text);
+  });
+  if (!match) return;
+  options.forEach((li) => li.classList.remove('active'));
+  match.classList.add('active');
+  const label = pattern.querySelector('.drop-menu-button-text');
+  const text = match.querySelector('.drop-menu-list-text')?.textContent.trim();
+  if (label && text) label.textContent = text;
+}
+
 function wireDropdowns(root) {
   const triggers = [...root.querySelectorAll('.drop-menu-dropdown')];
   if (!triggers.length) return;
@@ -97,6 +117,7 @@ function wireDropdowns(root) {
     // and the show/hide rules — without it the dropdown is unstyled.
     if (p.dataset.menuType) p.classList.add(`--${p.dataset.menuType}`);
     populatePlaceholder(p);
+    selectRegionFromUrl(p);
   });
 
   const closeAll = () => triggers.forEach((b) => b.setAttribute('aria-expanded', 'false'));
