@@ -6,7 +6,11 @@
 //
 // In the quick-edit DOM a block is a `[data-block-name]` element sitting under
 // `main > .section > .block-content` — there is no `.ProseMirror` wrapper around it, so we
-// simply walk up from the caret to the nearest `[data-block-name]`.
+// simply walk up from the clicked node to the nearest `[data-block-name]`.
+//
+// We listen on `click` / `focusin` (capture phase, so the editor can't swallow them) rather
+// than `selectionchange`: in this editor each block is its own contenteditable, so the
+// document's `selectionchange` does NOT fire when the caret moves between blocks.
 
 const PANEL_CSS = `
   .ss-panel{font:13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#1d1d1d;border:1px solid #ddd;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:12px 14px;min-width:180px;max-width:280px}
@@ -35,6 +39,21 @@ function escapeHtml(value) {
 let host;
 let root;
 let started = false;
+
+// Same-origin channel to the right-rail DA plugin (tools/style-switcher/style-switcher.js),
+// which renders the block in the editor's rail. Works only when the plugin is registered on
+// the same host as this canvas.
+const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('kp-style-switcher') : null;
+
+function broadcast(blockEl) {
+  if (!channel) return;
+  if (!blockEl) {
+    channel.postMessage(null);
+    return;
+  }
+  const name = blockEl.dataset.blockName;
+  channel.postMessage({ name, variants: blockVariants(blockEl.classList, name) });
+}
 
 function findBlock(node) {
   let el = node && node.nodeType === 3 ? node.parentElement : node;
@@ -69,16 +88,31 @@ function render(blockEl) {
     </div>`;
 }
 
-function onSelectionChange() {
-  const sel = document.getSelection();
-  if (!sel || !sel.anchorNode) return;
-  if (host && host.contains(sel.anchorNode)) return; // ignore selections inside our panel
+function nodeFromEvent(e) {
+  if (e && e.type === 'keyup') {
+    const sel = document.getSelection();
+    return sel && sel.anchorNode;
+  }
+  return e && e.target;
+}
+
+function update(e) {
+  const node = nodeFromEvent(e);
+  if (!node) return;
+  const el = node.nodeType === 3 ? node.parentElement : node;
+  if (host && el && host.contains(el)) return; // ignore interactions with our own panel
+  const blockEl = findBlock(node);
   mount();
-  render(findBlock(sel.anchorNode));
+  render(blockEl);
+  broadcast(blockEl);
 }
 
 export default function init() {
   if (started) return;
   started = true;
-  document.addEventListener('selectionchange', onSelectionChange);
+  // Capture phase so the editor can't stop these from reaching us. keyup covers caret
+  // movement via the keyboard, where there's no click.
+  document.addEventListener('click', update, true);
+  document.addEventListener('focusin', update, true);
+  document.addEventListener('keyup', update, true);
 }
