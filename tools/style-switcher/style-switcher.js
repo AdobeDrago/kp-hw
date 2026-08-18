@@ -52,18 +52,17 @@ class StyleSwitcherPanel extends LitElement {
     this._requestId = 0;
     this._pollHandle = null;
 
+    // Poll unconditionally. Browsers already throttle timers in backgrounded tabs, so we
+    // don't gate on document.hidden — doing that left the panel dead whenever it mounted in
+    // a hidden/embedded context and never saw a visibility change. visibilitychange only
+    // triggers an immediate refresh when the author returns to the tab.
     this.poll();
+    this.startPolling();
 
     this._visibilityHandler = () => {
-      if (document.hidden) {
-        this.stopPolling();
-      } else {
-        this.startPolling();
-        this.poll();
-      }
+      if (!document.hidden) this.poll();
     };
     document.addEventListener('visibilitychange', this._visibilityHandler);
-    if (!document.hidden) this.startPolling();
   }
 
   disconnectedCallback() {
