@@ -44,9 +44,10 @@ function render(data) {
 }
 
 if (channel) {
-  channel.onmessage = (e) => {
-    if (e.data && e.data.type === 'state') render(e.data);
-  };
+  // Render any state message the canvas sends. We intentionally don't require a `type`
+  // field: a cached older canvas may post a bare { block, section }, and this still renders
+  // it rather than leaving the panel blank on a version skew.
+  channel.onmessage = (e) => render(e.data);
 }
 
 document.addEventListener('click', (e) => {
