@@ -1,0 +1,409 @@
+{
+  "$defs": {
+    "Address": {
+      "type": "object",
+      "title": "Address",
+      "required": [
+        "line1",
+        "city",
+        "state",
+        "zip"
+      ],
+      "properties": {
+        "line1": {
+          "type": "string",
+          "title": "Street Address"
+        },
+        "line2": {
+          "type": "string",
+          "title": "Address Line 2 (e.g. floor/suite)"
+        },
+        "city": {
+          "type": "string",
+          "title": "City"
+        },
+        "state": {
+          "type": "string",
+          "title": "State",
+          "minLength": 2,
+          "maxLength": 2
+        },
+        "zip": {
+          "type": "string",
+          "title": "ZIP Code",
+          "pattern": "^[0-9]{5}(-[0-9]{4})?$"
+        }
+      }
+    },
+    "PracticeLocation": {
+      "type": "object",
+      "title": "Practice Location",
+      "required": [
+        "name",
+        "address"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Facility Name"
+        },
+        "department": {
+          "type": "string",
+          "title": "Department (e.g. Women's Health)"
+        },
+        "photo": {
+          "type": "string",
+          "title": "Facility Photo",
+          "format": "uri"
+        },
+        "address": {
+          "$ref": "#/$defs/Address"
+        },
+        "phone": {
+          "type": "string",
+          "title": "Phone Number",
+          "pattern": "^1?-?[0-9]{3}-[0-9]{3}-[0-9]{4}$"
+        },
+        "infoUrl": {
+          "type": "string",
+          "title": "Facility Info URL",
+          "format": "uri"
+        },
+        "directionsUrl": {
+          "type": "string",
+          "title": "Directions URL",
+          "format": "uri"
+        },
+        "notifications": {
+          "type": "array",
+          "title": "Notifications (e.g. telehealth offered)",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Specialty": {
+      "type": "object",
+      "title": "Specialty",
+      "required": [
+        "label"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "title": "Specialty Name"
+        },
+        "url": {
+          "type": "string",
+          "title": "Specialty Page URL",
+          "format": "uri"
+        }
+      }
+    },
+    "SchoolEntry": {
+      "type": "object",
+      "title": "School Entry",
+      "required": [
+        "institution"
+      ],
+      "properties": {
+        "institution": {
+          "type": "string",
+          "title": "Institution Name"
+        },
+        "city": {
+          "type": "string",
+          "title": "City"
+        },
+        "state": {
+          "type": "string",
+          "title": "State"
+        }
+      }
+    },
+    "EducationTraining": {
+      "type": "object",
+      "title": "Education & Training",
+      "properties": {
+        "medicalEducation": {
+          "type": "array",
+          "title": "Medical Education",
+          "items": {
+            "$ref": "#/$defs/SchoolEntry"
+          }
+        },
+        "residency": {
+          "type": "array",
+          "title": "Residency",
+          "items": {
+            "$ref": "#/$defs/SchoolEntry"
+          }
+        },
+        "providerType": {
+          "type": "string",
+          "title": "Provider Type"
+        },
+        "culturalCompetencyTrainingStatus": {
+          "type": "string",
+          "title": "Cultural Competency Training Status",
+          "enum": [
+            "Completed",
+            "Not Completed",
+            "In Progress"
+          ]
+        }
+      }
+    },
+    "License": {
+      "type": "object",
+      "title": "License",
+      "required": [
+        "number",
+        "status"
+      ],
+      "properties": {
+        "number": {
+          "type": "string",
+          "title": "License Number"
+        },
+        "status": {
+          "type": "string",
+          "title": "Status",
+          "enum": [
+            "Active",
+            "Inactive",
+            "Expired"
+          ]
+        },
+        "degreeType": {
+          "type": "string",
+          "title": "Degree Type (e.g. Doctor of Medicine)"
+        },
+        "stateIssued": {
+          "type": "string",
+          "title": "State Issued"
+        }
+      }
+    },
+    "Certifications": {
+      "type": "object",
+      "title": "Certifications & Licensing",
+      "properties": {
+        "boardCertifications": {
+          "type": "array",
+          "title": "Board Certifications",
+          "items": {
+            "type": "string"
+          }
+        },
+        "hospitalAdmittingPrivileges": {
+          "type": "string",
+          "title": "Hospital Admitting Privileges"
+        },
+        "licenses": {
+          "type": "array",
+          "title": "Licenses",
+          "items": {
+            "$ref": "#/$defs/License"
+          }
+        },
+        "groupAffiliation": {
+          "type": "string",
+          "title": "Group Affiliation"
+        },
+        "npi": {
+          "type": "string",
+          "title": "National Provider Identifier",
+          "pattern": "^[0-9]{10}$"
+        }
+      }
+    },
+    "ResourceLink": {
+      "type": "object",
+      "title": "Resource Link",
+      "required": [
+        "title",
+        "url"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "title": "Link Title"
+        },
+        "url": {
+          "type": "string",
+          "title": "URL",
+          "format": "uri"
+        }
+      }
+    },
+    "MedicalTopicGroup": {
+      "type": "object",
+      "title": "Medical Topic Group",
+      "required": [
+        "links"
+      ],
+      "properties": {
+        "groupLabel": {
+          "type": "string",
+          "title": "Group Label (e.g. Staying Healthy for Women)"
+        },
+        "links": {
+          "type": "array",
+          "title": "Topic Links",
+          "items": {
+            "$ref": "#/$defs/ResourceLink"
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "title": "Doctor Profile",
+  "required": [
+    "name",
+    "primarySpecialty",
+    "acceptingNewPatients",
+    "practiceLocations",
+    "plansAccepted"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Name (with credentials)",
+      "minLength": 2,
+      "maxLength": 80
+    },
+    "profileUrl": {
+      "type": "string",
+      "title": "Profile URL",
+      "format": "uri"
+    },
+    "selectDoctorUrl": {
+      "type": "string",
+      "title": "\"Select as Doctor\" URL",
+      "format": "uri"
+    },
+    "photo": {
+      "type": "string",
+      "title": "Photo",
+      "format": "uri"
+    },
+    "primarySpecialty": {
+      "type": "string",
+      "title": "Primary Specialty (display)",
+      "minLength": 2,
+      "maxLength": 80
+    },
+    "gender": {
+      "type": "string",
+      "title": "Gender",
+      "enum": [
+        "Female",
+        "Male",
+        "Non-binary",
+        "Not specified"
+      ]
+    },
+    "languages": {
+      "type": "array",
+      "title": "Languages Spoken",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "interpreterServicesUrl": {
+      "type": "string",
+      "title": "Interpreter Services URL",
+      "format": "uri"
+    },
+    "appointmentsPhone": {
+      "type": "string",
+      "title": "Appointments & Advice Phone",
+      "pattern": "^1?-?[0-9]{3}-[0-9]{3}-[0-9]{4}$"
+    },
+    "acceptingNewPatients": {
+      "type": "boolean",
+      "title": "Accepting New Patients",
+      "default": true
+    },
+    "lastDirectoryUpdate": {
+      "type": "string",
+      "title": "Last Directory Update",
+      "format": "date"
+    },
+    "bio": {
+      "type": "string",
+      "title": "About Me (Bio)",
+      "maxLength": 2000
+    },
+    "rolesAndResponsibilities": {
+      "type": "string",
+      "title": "Roles and Responsibilities",
+      "maxLength": 1000
+    },
+    "professionalAffiliations": {
+      "type": "array",
+      "title": "Professional Affiliations",
+      "items": {
+        "type": "string"
+      }
+    },
+    "myTeam": {
+      "type": "string",
+      "title": "My Team",
+      "maxLength": 1000
+    },
+    "personalInterests": {
+      "type": "string",
+      "title": "Personal Interests",
+      "maxLength": 2000
+    },
+    "specialties": {
+      "type": "array",
+      "title": "My Specialties",
+      "items": {
+        "$ref": "#/$defs/Specialty"
+      }
+    },
+    "educationTraining": {
+      "$ref": "#/$defs/EducationTraining"
+    },
+    "certifications": {
+      "$ref": "#/$defs/Certifications"
+    },
+    "practiceLocations": {
+      "type": "array",
+      "title": "My Practice Locations",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/PracticeLocation"
+      }
+    },
+    "medicalTopics": {
+      "type": "array",
+      "title": "Medical Topics (Resources & Learning)",
+      "items": {
+        "$ref": "#/$defs/MedicalTopicGroup"
+      }
+    },
+    "quickLinks": {
+      "type": "array",
+      "title": "Quick Links (Resources & Learning)",
+      "items": {
+        "$ref": "#/$defs/ResourceLink"
+      }
+    },
+    "plansAccepted": {
+      "type": "array",
+      "title": "Plans Accepted",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "title": "Plan"
+      }
+    }
+  }
+}
