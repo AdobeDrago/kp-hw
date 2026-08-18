@@ -40,6 +40,21 @@ let host;
 let root;
 let started = false;
 
+// Same-origin channel to the right-rail DA plugin (tools/style-switcher/style-switcher.js),
+// which renders the block in the editor's rail. Works only when the plugin is registered on
+// the same host as this canvas.
+const channel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('kp-style-switcher') : null;
+
+function broadcast(blockEl) {
+  if (!channel) return;
+  if (!blockEl) {
+    channel.postMessage(null);
+    return;
+  }
+  const name = blockEl.dataset.blockName;
+  channel.postMessage({ name, variants: blockVariants(blockEl.classList, name) });
+}
+
 function findBlock(node) {
   let el = node && node.nodeType === 3 ? node.parentElement : node;
   while (el && el !== document.documentElement) {
@@ -86,8 +101,10 @@ function update(e) {
   if (!node) return;
   const el = node.nodeType === 3 ? node.parentElement : node;
   if (host && el && host.contains(el)) return; // ignore interactions with our own panel
+  const blockEl = findBlock(node);
   mount();
-  render(findBlock(node));
+  render(blockEl);
+  broadcast(blockEl);
 }
 
 export default function init() {
