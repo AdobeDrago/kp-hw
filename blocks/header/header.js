@@ -93,6 +93,16 @@ function populatePlaceholder(pattern) {
 // segment collapse to "california-northern".
 const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
+// Mark one option as selected: activate it, clear the others, and mirror its text
+// into the dropdown button label.
+function selectOption(pattern, option) {
+  pattern.querySelectorAll('.drop-menu-list-op').forEach((li) => li.classList.remove('active'));
+  option.classList.add('active');
+  const label = pattern.querySelector('.drop-menu-button-text');
+  const text = option.querySelector('.drop-menu-list-text')?.textContent.trim();
+  if (label && text) label.textContent = text;
+}
+
 // Auto-select the region whose name matches a segment of the URL path — e.g.
 // /en/colorado/ and /es/colorado/ → "Colorado"; /california-northern/ →
 // "California - Northern". We loop the dropdown's own options and slug-match each
@@ -102,17 +112,33 @@ const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|
 function selectRegionFromUrl(pattern) {
   if (!/^region/.test(pattern.dataset.menuType || '')) return;
   const segments = window.location.pathname.split('/').map(slugify).filter(Boolean);
-  const options = [...pattern.querySelectorAll('.drop-menu-list-op')];
-  const match = options.find((li) => {
+  const match = [...pattern.querySelectorAll('.drop-menu-list-op')].find((li) => {
     const text = li.querySelector('.drop-menu-list-text')?.textContent.trim();
     return text && segments.includes(slugify(text));
   });
-  if (!match) return;
-  options.forEach((li) => li.classList.remove('active'));
-  match.classList.add('active');
-  const label = pattern.querySelector('.drop-menu-button-text');
-  const text = match.querySelector('.drop-menu-list-text')?.textContent.trim();
-  if (label && text) label.textContent = text;
+  if (match) selectOption(pattern, match);
+}
+
+// Dropdown label per resolved locale code. English is the root/no-prefix default;
+// codes mirror the locales in scripts.js (es and zh are the ones with an option).
+const LANG_LABEL_BY_CODE = { en: 'English', es: 'Español', zh: '中文' };
+
+// Auto-select the language for the current locale. getLocale() (scripts/ak.js) resolves
+// the URL prefix (/es, /zh, …) — or a `locale` meta override — and sets <html lang>, so
+// we read that (unlike region, the option labels don't match the URL codes). Falls back
+// to the URL's first path segment if <html lang> isn't set yet (e.g. Storybook). A
+// locale with no dropdown option (e.g. /fr) leaves the default untouched.
+function selectLanguageFromUrl(pattern) {
+  if (pattern.dataset.menuType !== 'language') return;
+  const raw = document.documentElement.lang
+    || window.location.pathname.split('/').filter(Boolean)[0]
+    || 'en';
+  const label = LANG_LABEL_BY_CODE[raw.toLowerCase().split('-')[0]];
+  if (!label) return;
+  const match = [...pattern.querySelectorAll('.drop-menu-list-op')].find(
+    (li) => li.querySelector('.drop-menu-list-text')?.textContent.trim() === label,
+  );
+  if (match) selectOption(pattern, match);
 }
 
 function wireDropdowns(root) {
@@ -125,6 +151,7 @@ function wireDropdowns(root) {
     if (p.dataset.menuType) p.classList.add(`--${p.dataset.menuType}`);
     populatePlaceholder(p);
     selectRegionFromUrl(p);
+    selectLanguageFromUrl(p);
   });
 
   const closeAll = () => triggers.forEach((b) => b.setAttribute('aria-expanded', 'false'));
