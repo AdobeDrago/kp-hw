@@ -88,17 +88,24 @@ function populatePlaceholder(pattern) {
   }
 }
 
-// Auto-select the region whose name appears in the URL path — e.g. /en/colorado/ and
-// /es/colorado/ both select "Colorado". We loop the dropdown's own options and match
-// each label against the path, so this is language-prefix-agnostic (works for any
-// locale without hard-coding slugs). Only region dropdowns are considered.
+// Normalize a label or a URL path segment to a comparable slug, so separators and
+// casing don't matter: both "California - Northern" and a "california-northern" path
+// segment collapse to "california-northern".
+const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Auto-select the region whose name matches a segment of the URL path — e.g.
+// /en/colorado/ and /es/colorado/ → "Colorado"; /california-northern/ →
+// "California - Northern". We loop the dropdown's own options and slug-match each
+// label against the path segments, so this is separator- and language-prefix-
+// agnostic (works for any locale without hard-coding slugs). Only region dropdowns
+// are considered.
 function selectRegionFromUrl(pattern) {
   if (!/^region/.test(pattern.dataset.menuType || '')) return;
-  const path = window.location.pathname.toLowerCase();
+  const segments = window.location.pathname.split('/').map(slugify).filter(Boolean);
   const options = [...pattern.querySelectorAll('.drop-menu-list-op')];
   const match = options.find((li) => {
-    const text = li.querySelector('.drop-menu-list-text')?.textContent.trim().toLowerCase();
-    return text && path.includes(text);
+    const text = li.querySelector('.drop-menu-list-text')?.textContent.trim();
+    return text && segments.includes(slugify(text));
   });
   if (!match) return;
   options.forEach((li) => li.classList.remove('active'));
